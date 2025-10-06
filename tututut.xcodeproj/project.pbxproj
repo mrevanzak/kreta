@@ -61,6 +61,7 @@
 		8DE398FF2D0E141800AA3029 /* EnvironmentValues+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE398FE2D0E141800AA3029 /* EnvironmentValues+Extensions.swift */; };
 		8DEC814F2CAED9DD006C4DA5 /* TokenValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEC814E2CAED9DD006C4DA5 /* TokenValidator.swift */; };
 		8DF13AF02C99262700898DFF /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF13AEF2C99262700898DFF /* ImagePicker.swift */; };
+		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -114,6 +115,7 @@
 			files = (
 				8D8021892CFCF28E006C709C /* StripePayments in Frameworks */,
 				8D8021872CFCF28E006C709C /* StripePaymentSheet in Frameworks */,
+				C57893C42E93769300375616 /* ConvexMobile in Frameworks */,
 				8D5B74462CAF70C200AA4BAC /* JWTDecode in Frameworks */,
 				8D8021832CFCF28E006C709C /* StripeFinancialConnections in Frameworks */,
 				8D80217F2CFCF28E006C709C /* StripeApplePay in Frameworks */,
@@ -330,6 +332,7 @@
 				8D8021862CFCF28E006C709C /* StripePaymentSheet */,
 				8D8021882CFCF28E006C709C /* StripePayments */,
 				8D80218A2CFCF28F006C709C /* StripePaymentsUI */,
+				C57893C32E93769300375616 /* ConvexMobile */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* tututut.app */;
@@ -362,6 +365,7 @@
 			packageReferences = (
 				8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */,
 				8D80217B2CFCF28E006C709C /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
+				C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -656,6 +660,14 @@
 				minimumVersion = 24.1.0;
 			};
 		};
+		C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/get-convex/convex-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.6;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -708,6 +720,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D80217B2CFCF28E006C709C /* XCRemoteSwiftPackageReference "stripe-ios-spm" */;
 			productName = StripePaymentsUI;
+		};
+		C57893C32E93769300375616 /* ConvexMobile */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */;
+			productName = ConvexMobile;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

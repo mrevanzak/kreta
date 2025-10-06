@@ -5,56 +5,58 @@
 //  Created by Mohammad Azam on 9/5/24.
 //
 
-import SwiftUI
-import UIKit
 import JWTDecode
 @preconcurrency import Stripe
+import SwiftUI
+import UIKit
 
 @main
 struct HelloMarketClientApp: App {
-    
-    @State private var productStore = ProductStore(httpClient: HTTPClient())
-    @State private var cartStore = CartStore(httpClient: HTTPClient())
-    @State private var userStore = UserStore(httpClient: HTTPClient())
-    @State private var authenticationController = AuthenticationController(httpClient: HTTPClient())
-    @State private var paymentController = PaymentController(httpClient: HTTPClient())
-    @State private var orderStore = OrderStore(httpClient: HTTPClient())
-    
-    @AppStorage("isAuthenticated") private var isAuthenticated = false
-    
-    init() {
-        StripeAPI.defaultPublishableKey = ProcessInfo.processInfo.environment["STRIPE_PUBLISHABLE_KEY"] ?? ""
+
+  @State private var productStore = ProductStore(httpClient: HTTPClient())
+  @State private var cartStore = CartStore(httpClient: HTTPClient())
+  @State private var userStore = UserStore(httpClient: HTTPClient())
+  @State private var authenticationController = AuthenticationController(httpClient: HTTPClient())
+  @State private var paymentController = PaymentController(httpClient: HTTPClient())
+  @State private var orderStore = OrderStore(httpClient: HTTPClient())
+
+  @State private var convexClient = ConvexClient(deploymentUrl: Constants.Convex.deploymentUrl)
+
+  @AppStorage("isAuthenticated") private var isAuthenticated = false
+
+  init() {
+    StripeAPI.defaultPublishableKey =
+      ProcessInfo.processInfo.environment["STRIPE_PUBLISHABLE_KEY"] ?? ""
+  }
+
+  private func loadUserInfoAndCart() async {
+
+    await cartStore.loadCart()
+
+    do {
+      try await userStore.loadUserInfo()
+    } catch {
+      print(error.localizedDescription)
     }
-    
-    private func loadUserInfoAndCart() async {
-        
-        await cartStore.loadCart()
-        
-        do {
-            try await userStore.loadUserInfo()
-        } catch {
-            print(error.localizedDescription)
+  }
+
+  var body: some Scene {
+    WindowGroup {
+      HomeScreen()
+        .environment(\.convexClient, convexClient)
+        .environment(productStore)
+        .environment(cartStore)
+        .environment(userStore)
+        .environment(orderStore)
+        .environment(\.authenticationController, authenticationController)
+        .environment(\.paymentController, paymentController)
+        .environment(\.uploaderDownloader, ImageUploaderDownloader(httpClient: .development))
+        .withMessageView()
+        .task(id: isAuthenticated) {
+          if isAuthenticated {
+            await loadUserInfoAndCart()
+          }
         }
     }
-    
-    var body: some Scene {
-        WindowGroup {
-            HomeScreen()
-            .environment(productStore)
-            .environment(cartStore)
-            .environment(userStore)
-            .environment(orderStore)
-            .environment(\.authenticationController, authenticationController)
-            .environment(\.paymentController, paymentController)
-            .environment(\.uploaderDownloader, ImageUploaderDownloader(httpClient: .development))
-            .withMessageView()
-            .task(id: isAuthenticated) {
-                if isAuthenticated {
-                    await loadUserInfoAndCart()
-                }
-            }
-        }
-    }
+  }
 }
-
-
