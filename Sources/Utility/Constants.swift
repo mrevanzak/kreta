@@ -12,7 +12,7 @@ struct Constants {
   struct Convex {
     // Point this to your Convex deployment; consider swapping via build configs
     static let deploymentUrl: String =
-      ProcessInfo.processInfo.environment["CONVEX_DEPLOYMENT_URL"]
+      ProcessInfo.processInfo.environment["CONVEX_URL"]
       ?? "https://YOUR-DEPLOYMENT.convex.cloud"
   }
 
