@@ -1,37 +1,10 @@
 import SwiftUI
 
-enum TabScreen: Hashable, Identifiable, CaseIterable {
-  case home
-
-  var id: TabScreen { self }
-}
-
-extension TabScreen {
-  @ViewBuilder
-  var label: some View {
-    switch self {
-    case .home:
-      Label("Home", systemImage: "heart")
-    }
-  }
-
-  @MainActor
-  @ViewBuilder
-  var destination: some View {
-    switch self {
-    case .home:
-      NavigationStack {
-        Text("Home")
-      }
-    }
-  }
-}
-
 struct MainTabNavigator: View {
-  @State var selection: TabScreen?
+  @State var router: Router = .init(level: 0, identifierTab: nil)
 
   var body: some View {
-    TabView(selection: $selection) {
+    TabView(selection: $router.selectedTab) {
       ForEach(TabScreen.allCases) { screen in
         screen.destination
           .tag(screen as TabScreen?)
