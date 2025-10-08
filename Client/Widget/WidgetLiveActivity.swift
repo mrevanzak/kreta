@@ -7,74 +7,100 @@
 
 import ActivityKit
 import SwiftUI
+import UIKit
 import WidgetKit
 
-struct WidgetAttributes: ActivityAttributes {
-  public struct ContentState: Codable, Hashable {
-    // Dynamic stateful properties about your activity go here!
-    var emoji: String
-  }
-
-  // Fixed non-changing properties about your activity go here!
-  var name: String
-}
-
+@available(iOSApplicationExtension 16.1, *)
 struct WidgetLiveActivity: Widget {
   var body: some WidgetConfiguration {
-    ActivityConfiguration(for: WidgetAttributes.self) { context in
-      // Lock screen/banner UI goes here
-      VStack {
-        Text("Hello \(context.state.emoji)")
+    ActivityConfiguration(for: TrainActivityAttributes.self) { context in
+      // Lock screen / banner UI
+      VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 8) {
+          Text("🚆")
+          Text("\(context.attributes.from) → \(context.attributes.destination)")
+            .font(.headline)
+        }
+        Text("Next: \(context.state.nextStation)")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+        HStack(spacing: 6) {
+          Image(systemName: "clock")
+          // Relative time remaining until the destination ETA
+          Text(context.state.estimatedArrival, style: .relative)
+            .font(.title3).monospacedDigit()
+        }
       }
-      .activityBackgroundTint(Color.cyan)
-      .activitySystemActionForegroundColor(Color.black)
+      .padding(.vertical, 8)
+      .activityBackgroundTint(Color(uiColor: .systemBackground))
+      .activitySystemActionForegroundColor(Color.accentColor)
 
     } dynamicIsland: { context in
       DynamicIsland {
-        // Expanded UI goes here.  Compose the expanded UI through
-        // various regions, like leading/trailing/center/bottom
+        // Expanded regions
         DynamicIslandExpandedRegion(.leading) {
-          Text("Leading")
+          Text("🚆")
         }
+
         DynamicIslandExpandedRegion(.trailing) {
-          Text("Trailing")
+          Text(context.state.estimatedArrival, style: .relative)
+            .monospacedDigit()
         }
+        DynamicIslandExpandedRegion(.center) {
+          VStack(spacing: 2) {
+            Text("\(context.attributes.from) → \(context.attributes.destination)")
+              .font(.subheadline).bold()
+            Text("Next: \(context.state.nextStation)")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+
         DynamicIslandExpandedRegion(.bottom) {
-          Text("Bottom \(context.state.emoji)")
-          // more content
+          EmptyView()
         }
       } compactLeading: {
-        Text("L")
+        Text("🚆")
       } compactTrailing: {
-        Text("T \(context.state.emoji)")
+        Text(context.state.estimatedArrival, style: .relative)
+          .monospacedDigit()
       } minimal: {
-        Text(context.state.emoji)
+        Text("🚆")
       }
-      .widgetURL(URL(string: "http://www.apple.com"))
+      .widgetURL(URL(string: "tututut://train"))
       .keylineTint(Color.red)
     }
   }
 }
 
-extension WidgetAttributes {
-  fileprivate static var preview: WidgetAttributes {
-    WidgetAttributes(name: "World")
+@available(iOSApplicationExtension 16.1, *)
+extension TrainActivityAttributes {
+  fileprivate static var preview: TrainActivityAttributes {
+    TrainActivityAttributes(from: "Jakarta", destination: "Bandung")
   }
 }
 
-extension WidgetAttributes.ContentState {
-  fileprivate static var smiley: WidgetAttributes.ContentState {
-    WidgetAttributes.ContentState(emoji: "😀")
+@available(iOSApplicationExtension 16.1, *)
+extension TrainActivityAttributes.ContentState {
+  fileprivate static var sample1: TrainActivityAttributes.ContentState {
+    TrainActivityAttributes.ContentState(
+      nextStation: "Bekasi",
+      estimatedArrival: Date().addingTimeInterval(60 * 45)
+    )
   }
 
-  fileprivate static var starEyes: WidgetAttributes.ContentState {
-    WidgetAttributes.ContentState(emoji: "🤩")
+  fileprivate static var sample2: TrainActivityAttributes.ContentState {
+    TrainActivityAttributes.ContentState(
+      nextStation: "Purwakarta",
+      estimatedArrival: Date().addingTimeInterval(60 * 15)
+    )
   }
 }
 
-#Preview("Notification", as: .content, using: WidgetAttributes.preview) {
+@available(iOSApplicationExtension 16.1, *)
+#Preview("Train Activity", as: .content, using: TrainActivityAttributes.preview) {
   WidgetLiveActivity()
 } contentStates: {
-  WidgetAttributes.ContentState.smiley
-  WidgetAttributes.ContentState.starEyes
+  TrainActivityAttributes.ContentState.sample1
+  TrainActivityAttributes.ContentState.sample2
 }
