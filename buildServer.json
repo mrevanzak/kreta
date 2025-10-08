@@ -12,8 +12,8 @@
 	"argv": [
 		"/opt/homebrew/bin/xcode-build-server"
 	],
-	"workspace": "/Users/rev/tututut/tututut.xcodeproj/project.xcworkspace",
-	"build_root": "/Users/rev/Library/Developer/Xcode/DerivedData/tututut-fniulhfjwklpcphcebyeyyxlzmue",
-	"scheme": "tututut",
+	"workspace": "/Users/rev/tututut/Client/tututut.xcodeproj/project.xcworkspace",
+	"build_root": "/Users/rev/Library/Developer/Xcode/DerivedData/tututut-emvoskrpxapbcbeolfpvegvttmxb",
+	"scheme": "WidgetExtension",
 	"kind": "xcode"
 }
