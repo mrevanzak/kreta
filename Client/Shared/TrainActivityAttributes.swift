@@ -1,25 +1,40 @@
-#if canImport(ActivityKit) && os(iOS)
-  import ActivityKit
-  import Foundation
+import ActivityKit
+import Foundation
 
-  @available(iOS 16.1, *)
-  public struct TrainActivityAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-      public var nextStation: String
-      public var estimatedArrival: Date
+public struct TrainStation: Codable, Hashable, Sendable {
+  public var name: String
+  public var code: String
+  public var estimatedArrival: Date?
+  public var estimatedDeparture: Date?
+}
 
-      public init(nextStation: String, estimatedArrival: Date) {
-        self.nextStation = nextStation
-        self.estimatedArrival = estimatedArrival
-      }
-    }
+public struct Train: Codable, Hashable, Sendable {
+  public var name: String
+  public var code: String
+}
 
-    public var from: String
-    public var destination: String
+public struct AdjacentStations: Codable, Hashable, Sendable {
+  public var previous: TrainStation
+  public var next: TrainStation
+}
 
-    public init(from: String, destination: String) {
-      self.from = from
-      self.destination = destination
+@available(iOS 16.1, *)
+public struct TrainActivityAttributes: ActivityAttributes, Sendable {
+  public struct ContentState: Codable, Hashable, Sendable {
+    public var stations: AdjacentStations
+
+    public init(previousStation: TrainStation, nextStation: TrainStation) {
+      self.stations = AdjacentStations(previous: previousStation, next: nextStation)
     }
   }
-#endif
+
+  public var train: Train
+  public var from: TrainStation
+  public var destination: TrainStation
+
+  public init(with train: Train, from: TrainStation, destination: TrainStation) {
+    self.train = train
+    self.from = from
+    self.destination = destination
+  }
+}

@@ -1,66 +1,57 @@
-#if canImport(ActivityKit) && os(iOS)
-  import ActivityKit
-  import Foundation
+import ActivityKit
+import Foundation
 
-  @available(iOS 16.1, *)
-  @MainActor
-  final class TrainLiveActivityService {
-    static let shared = TrainLiveActivityService()
+@MainActor
+final class TrainLiveActivityService {
+  static let shared = TrainLiveActivityService()
 
-    private init() {}
+  private init() {}
 
-    @discardableResult
-    func start(
-      from: String,
-      destination: String,
-      nextStation: String,
-      estimatedArrival: Date
-    ) async throws -> Activity<TrainActivityAttributes> {
-      let attributes = TrainActivityAttributes(from: from, destination: destination)
-      let content = TrainActivityAttributes.ContentState(
-        nextStation: nextStation,
-        estimatedArrival: estimatedArrival
-      )
-      let activity = try Activity<TrainActivityAttributes>.request(
-        attributes: attributes,
-        contentState: content
-      )
-      return activity
-    }
+  @discardableResult
+  func start(
+    train: Train,
+    from: TrainStation,
+    destination: TrainStation,
+    nextStation: TrainStation,
+  ) async throws -> Activity<TrainActivityAttributes> {
+    let attributes = TrainActivityAttributes(with: train, from: from, destination: destination)
+    let contentState = TrainActivityAttributes.ContentState(
+      previousStation: from, nextStation: nextStation
+    )
+    let content = ActivityContent(state: contentState, staleDate: nil)
+    let activity = try Activity<TrainActivityAttributes>.request(
+      attributes: attributes,
+      content: content
+    )
+    return activity
+  }
 
-    func update(
-      activityId: String,
-      nextStation: String,
-      estimatedArrival: Date
-    ) async {
-      let content = TrainActivityAttributes.ContentState(
-        nextStation: nextStation,
-        estimatedArrival: estimatedArrival
-      )
-      for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-        await activity.update(using: content)
-      }
-    }
-
-    func end(
-      activityId: String,
-      finalNextStation: String? = nil,
-      finalEstimatedArrival: Date? = nil,
-      dismissalPolicy: ActivityUIDismissalPolicy = .immediate
-    ) async {
-      let content = TrainActivityAttributes.ContentState(
-        nextStation: finalNextStation ?? "Arrived",
-        estimatedArrival: finalEstimatedArrival ?? Date()
-      )
-      for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-        await activity.end(using: content, dismissalPolicy: dismissalPolicy)
-      }
-    }
-
-    func endAllImmediately() async {
-      for activity in Activity<TrainActivityAttributes>.activities {
-        await activity.end(dismissalPolicy: .immediate)
-      }
+  func update(
+    activityId: String,
+    previousStation: TrainStation,
+    nextStation: TrainStation,
+  ) async {
+    let contentState = TrainActivityAttributes.ContentState(
+      previousStation: previousStation,
+      nextStation: nextStation,
+    )
+    for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
+      await activity.update(ActivityContent(state: contentState, staleDate: nil))
     }
   }
-#endif
+
+  func end(
+    activityId: String,
+    dismissalPolicy: ActivityUIDismissalPolicy = .immediate
+  ) async {
+    for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
+      await activity.end(dismissalPolicy: dismissalPolicy)
+    }
+  }
+
+  func endAllImmediately() async {
+    for activity in Activity<TrainActivityAttributes>.activities {
+      await activity.end(dismissalPolicy: .immediate)
+    }
+  }
+}
