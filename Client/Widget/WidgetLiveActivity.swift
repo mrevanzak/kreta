@@ -42,7 +42,7 @@ struct ActivityFamilyView: View {
   var body: some View {
     switch activityFamily {
     case .small:
-      EmptyView()
+      ActivityView(context: context)
     case .medium:
       ActivityView(context: context)
     @unknown default:
@@ -83,7 +83,11 @@ struct WidgetLiveActivity: Widget {
         DynamicIslandExpandedRegion(.leading) {
           VStack(alignment: .leading, spacing: 4) {
             Text(context.attributes.destination.code).font(.title3).bold()
-            Text(context.attributes.destination.name).font(.caption).foregroundStyle(.secondary)
+            Text(context.attributes.destination.name)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .truncationMode(.tail)
           }
           .padding(.leading)
         }
@@ -109,6 +113,9 @@ struct WidgetLiveActivity: Widget {
               .background(Color(.systemRed).opacity(0.2))
               .clipShape(Capsule())
               .foregroundColor(Color(.systemRed))
+              .minimumScaleFactor(0.1)
+              .lineLimit(1)
+
           }
           .padding(.trailing)
         }
@@ -127,26 +134,41 @@ struct WidgetLiveActivity: Widget {
             Image("kereta")
               .resizable()
               .scaledToFit()
-            HStack {
-              Spacer()
+            HStack(alignment: .center) {
               VStack(alignment: .leading, spacing: 4) {
                 Text(context.state.stations.previous.code).font(.body).bold()
-                Text(context.state.stations.previous.name).font(.caption).foregroundStyle(
-                  .secondary)
+                Text(context.state.stations.previous.name)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+                  .truncationMode(.tail)
               }
+              .padding(.leading, 36)
+              .containerRelativeFrame(.horizontal) { size, _ in
+                size * 0.3
+              }
+
               VStack(alignment: .center, spacing: 4) {
                 Text(context.attributes.train.name).font(.body).bold()
                 Text("KA\(context.attributes.train.code)").font(.caption).foregroundStyle(
                   .secondary)
               }
-              .containerRelativeFrame(.horizontal) { size, axis in
+              .containerRelativeFrame(.horizontal) { size, _ in
                 size * 0.4
               }
+
               VStack(alignment: .trailing, spacing: 4) {
                 Text(context.state.stations.next.code).font(.body).bold()
-                Text(context.state.stations.next.name).font(.caption).foregroundStyle(.secondary)
+                Text(context.state.stations.next.name)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+                  .truncationMode(.tail)
               }
-              Spacer()
+              .padding(.trailing, 36)
+              .containerRelativeFrame(.horizontal) { size, _ in
+                size * 0.3
+              }
             }
           }
         }
@@ -191,11 +213,11 @@ extension TrainActivityAttributes {
       from: TrainStation(
         name: "Malang", code: "ML",
         estimatedArrival: nil,
-        estimatedDeparture: getDate(from: "2025/10/16 13:45"),
+        estimatedDeparture: getDate(from: "2025/10/17 13:45"),
       ),
       destination: TrainStation(
         name: "Pasar Senen", code: "PSE",
-        estimatedArrival: getDate(from: "2025/10/17 01:58"),
+        estimatedArrival: getDate(from: "2025/10/18 01:58"),
         estimatedDeparture: nil
       )
     )
@@ -207,12 +229,12 @@ extension TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
       previousStation: TrainStation(
         name: "Surabayagubeng", code: "SGU",
-        estimatedArrival: getDate(from: "2025/10/16 15:39"),
-        estimatedDeparture: getDate(from: "2025/10/16 15:43")),
+        estimatedArrival: getDate(from: "2025/10/17 15:39"),
+        estimatedDeparture: getDate(from: "2025/10/17 15:43")),
       nextStation: TrainStation(
         name: "Surabaya Pasarturi", code: "SBI",
-        estimatedArrival: getDate(from: "2025/10/16 15:55"),
-        estimatedDeparture: getDate(from: "2025/10/16 16:07")),
+        estimatedArrival: getDate(from: "2025/10/17 15:55"),
+        estimatedDeparture: getDate(from: "2025/10/17 16:07")),
     )
   }
 }

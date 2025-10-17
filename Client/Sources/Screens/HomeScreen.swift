@@ -20,17 +20,17 @@ struct HomeScreen: View {
             from: TrainStation(
               name: "Malang", code: "ML",
               estimatedArrival: nil,
-              estimatedDeparture: getDate(from: "2025/10/16 13:45"),
+              estimatedDeparture: getDate(from: "2025/10/17 13:45"),
             ),
             destination: TrainStation(
               name: "Pasar Senen", code: "PSE",
-              estimatedArrival: getDate(from: "2025/10/17 01:58"),
+              estimatedArrival: getDate(from: "2025/10/18 01:58"),
               estimatedDeparture: nil
             ),
             nextStation: TrainStation(
               name: "Surabaya Pasarturi", code: "SBI",
-              estimatedArrival: getDate(from: "2025/10/16 15:55"),
-              estimatedDeparture: getDate(from: "2025/10/16 16:07")
+              estimatedArrival: getDate(from: "2025/10/17 15:55"),
+              estimatedDeparture: getDate(from: "2025/10/18 16:07")
             ),
           )
         } catch {
