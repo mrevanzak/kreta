@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8DDE5FB02C8A7D9300A0DBE0"
-               BuildableName = "tututut.app"
-               BlueprintName = "tututut"
-               ReferencedContainer = "container:tututut.xcodeproj">
+               BuildableName = "kreta.app"
+               BlueprintName = "kreta"
+               ReferencedContainer = "container:kreta.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DDE5FB02C8A7D9300A0DBE0"
-            BuildableName = "tututut.app"
-            BlueprintName = "tututut"
-            ReferencedContainer = "container:tututut.xcodeproj">
+            BuildableName = "kreta.app"
+            BlueprintName = "kreta"
+            ReferencedContainer = "container:kreta.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -69,9 +69,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DDE5FB02C8A7D9300A0DBE0"
-            BuildableName = "tututut.app"
-            BlueprintName = "tututut"
-            ReferencedContainer = "container:tututut.xcodeproj">
+            BuildableName = "kreta.app"
+            BlueprintName = "kreta"
+            ReferencedContainer = "container:kreta.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

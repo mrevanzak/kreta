@@ -21,7 +21,7 @@ final class Router {
   // /// Current presented full screen
   // var presentingFullScreen: FullScreenDestination?
 
-  let logger = Logger(subsystem: "tututut", category: "Navigation")
+  let logger = Logger(subsystem: "kreta", category: "Navigation")
 
   /// Reference to the parent router to form a hierarchy
   /// Router levels increase for the children

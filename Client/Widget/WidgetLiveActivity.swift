@@ -217,7 +217,7 @@ struct WidgetLiveActivity: Widget {
       } minimal: {
         ActivityProgressView(context: context)
       }
-      .widgetURL(URL(string: "tututut://train"))
+      .widgetURL(URL(string: "kreta://train"))
       .keylineTint(Color.red)
     }
     .supplementalActivityFamilies([.small, .medium])
