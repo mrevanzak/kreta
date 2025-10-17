@@ -63,3 +63,5 @@ playground.xcworkspace
 # Environment Files
 .env
 .env.*
+
+!info.plist
