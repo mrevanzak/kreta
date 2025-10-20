@@ -5,6 +5,8 @@ import Foundation
 final class TrainLiveActivityService {
   static let shared = TrainLiveActivityService()
 
+  private let httpClient = HTTPClient()
+
   private init() {}
 
   @discardableResult
@@ -31,6 +33,9 @@ final class TrainLiveActivityService {
       attributes: attributes,
       content: content
     )
+    Task {
+      await monitorPushTokens(for: activity)
+    }
     return activity
   }
 
@@ -62,4 +67,47 @@ final class TrainLiveActivityService {
       await activity.end(dismissalPolicy: .immediate)
     }
   }
+
+  private func monitorPushTokens(for activity: Activity<TrainActivityAttributes>) async {
+    for await tokenData in activity.pushTokenUpdates {
+      let token = tokenData.hexEncodedString()
+      await registerLiveActivityToken(activityId: activity.id, token: token)
+    }
+  }
+
+  private func registerLiveActivityToken(activityId: String, token: String) async {
+    let payload = RegisterLiveActivityTokenPayload(activityId: activityId, token: token)
+
+    guard let data = try? JSONEncoder().encode(payload) else {
+      return
+    }
+
+    let resource = Resource(
+      url: Constants.Urls.registerLiveActivityToken,
+      method: .post(data),
+      modelType: RegisterLiveActivityTokenResponse.self
+    )
+
+    var attempt = 0
+    let maxAttempts = 3
+
+    while attempt < maxAttempts {
+      do {
+        _ = try await httpClient.load(resource)
+        return
+      } catch {
+        attempt += 1
+        if attempt >= maxAttempts {
+          return
+        }
+        let delay = UInt64(pow(2.0, Double(attempt)) * 0.5 * 1_000_000_000)
+        try? await Task.sleep(nanoseconds: delay)
+      }
+    }
+  }
+}
+
+private struct RegisterLiveActivityTokenPayload: Codable {
+  let activityId: String
+  let token: String
 }

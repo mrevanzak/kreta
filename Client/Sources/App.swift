@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct HelloMarketClientApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   @State private var convexClient = ConvexClient(deploymentUrl: Constants.Convex.deploymentUrl)
 
   @AppStorage("isAuthenticated") private var isAuthenticated = false
