@@ -9,12 +9,20 @@ final class TrainLiveActivityService {
 
   @discardableResult
   func start(
-    train: Train,
+    trainName: String,
     from: TrainStation,
     destination: TrainStation,
     nextStation: TrainStation,
+    seatClass: SeatClass,
+    seatNumber: String,
   ) async throws -> Activity<TrainActivityAttributes> {
-    let attributes = TrainActivityAttributes(with: train, from: from, destination: destination)
+    let attributes = TrainActivityAttributes(
+      trainName: trainName,
+      from: from,
+      destination: destination,
+      seatClass: seatClass,
+      seatNumber: seatNumber,
+    )
     let contentState = TrainActivityAttributes.ContentState(
       previousStation: from, nextStation: nextStation
     )

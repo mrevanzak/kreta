@@ -16,7 +16,7 @@ struct HomeScreen: View {
       Task { @MainActor in
         do {
           _ = try await trainLiveActivityService.start(
-            train: Train(name: "Jayabaya", code: "91"),
+            trainName: "Jayabaya",
             from: TrainStation(
               name: "Malang", code: "ML",
               estimatedArrival: nil,
@@ -32,6 +32,8 @@ struct HomeScreen: View {
               estimatedArrival: getDate(from: "2025/10/17 15:55"),
               estimatedDeparture: getDate(from: "2025/10/18 16:07")
             ),
+            seatClass: SeatClass.economy(number: 9),
+            seatNumber: "20C",
           )
         } catch {
           print("Failed to start train live activity: \(error)")
