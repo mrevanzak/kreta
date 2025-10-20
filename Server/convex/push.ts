@@ -24,10 +24,10 @@ export const registerDevice = mutation({
     } as const;
 
     if (existing) {
-      await ctx.db.patch(existing._id, doc as any);
+      await ctx.db.patch(existing._id, doc);
       return { success: true, updated: true } as const;
     }
-    await ctx.db.insert("devices", doc as any);
+    await ctx.db.insert("devices", doc);
     return { success: true, created: true } as const;
   },
 });
@@ -51,10 +51,37 @@ export const registerLiveActivityToken = mutation({
     } as const;
 
     if (existing) {
-      await ctx.db.patch(existing._id, doc as any);
+      await ctx.db.patch(existing._id, doc);
       return { success: true, updated: true } as const;
     }
-    await ctx.db.insert("liveActivities", doc as any);
+    await ctx.db.insert("liveActivities", doc);
+    return { success: true, created: true } as const;
+  },
+});
+
+// Store/update a Live Activity push-to-start token per user (iOS 17.2+)
+export const registerLiveActivityStartToken = mutation({
+  args: {
+    token: v.string(),
+    userId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("liveActivityStartTokens")
+      .filter((q) => q.eq(q.field("token"), args.token))
+      .first();
+
+    const doc = {
+      token: args.token,
+      userId: args.userId ?? null,
+      updatedAt: Date.now(),
+    } as const;
+
+    if (existing) {
+      await ctx.db.patch(existing._id, doc);
+      return { success: true, updated: true } as const;
+    }
+    await ctx.db.insert("liveActivityStartTokens", doc);
     return { success: true, created: true } as const;
   },
 });
@@ -107,10 +134,10 @@ export const triggerPush = action({
         apnsId: result.apnsId,
         status: result.status,
       } as const;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: String(error?.message ?? error),
+        error: String(error instanceof Error ? error.message : error),
       } as const;
     }
   },
@@ -154,10 +181,15 @@ async function sendApns(
   return await new Promise((resolve, reject) => {
     client.on("error", (err: Error) => reject(err));
 
+    const apnsTopic =
+      args.pushType === "liveactivity"
+        ? `${args.bundleId}.push-type.liveactivity`
+        : args.bundleId;
+
     const headers: Record<string, string> = {
       ":method": "POST",
       ":path": path,
-      "apns-topic": args.bundleId,
+      "apns-topic": apnsTopic,
       "apns-push-type": args.pushType,
       authorization: `bearer ${jwt}`,
     };
