@@ -5,7 +5,7 @@ import { v } from "convex/values";
 export const registerDevice = mutation({
   args: {
     token: v.string(),
-    userId: v.optional(v.string()),
+    userId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -15,16 +15,16 @@ export const registerDevice = mutation({
 
     const doc = {
       token: args.token,
-      userId: args.userId ?? null,
+      userId: args.userId,
       updatedAt: Date.now(),
     } as const;
 
     if (existing) {
       await ctx.db.patch(existing._id, doc);
-      return { success: true, updated: true } as const;
+      return "ok" as const;
     }
     await ctx.db.insert("devices", doc);
-    return { success: true, created: true } as const;
+    return "ok" as const;
   },
 });
 
@@ -50,10 +50,10 @@ export const registerLiveActivityToken = mutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, doc);
-      return { success: true, updated: true } as const;
+      return "ok" as const;
     }
     await ctx.db.insert("liveActivityUpdates", doc);
-    return { success: true, created: true } as const;
+    return "ok" as const;
   },
 });
 
@@ -62,7 +62,7 @@ export const registerLiveActivityStartToken = mutation({
   args: {
     deviceToken: v.string(),
     token: v.string(),
-    userId: v.optional(v.string()),
+    userId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -73,15 +73,15 @@ export const registerLiveActivityStartToken = mutation({
     const doc = {
       deviceToken: args.deviceToken,
       token: args.token,
-      userId: args.userId ?? null,
+      userId: args.userId,
       updatedAt: Date.now(),
     } as const;
 
     if (existing) {
       await ctx.db.patch(existing._id, doc);
-      return { success: true, updated: true } as const;
+      return "ok" as const;
     }
     await ctx.db.insert("liveActivityStartTokens", doc);
-    return { success: true, created: true } as const;
+    return "ok" as const;
   },
 });
