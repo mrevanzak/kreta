@@ -6,6 +6,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
   static let shared = TrainLiveActivityService()
 
   private let convexClient: ConvexClient
+  private var hasStartedGlobalMonitoring = false
 
   private init(
     convexClient: ConvexClient = Dependencies.shared.convexClient
@@ -84,6 +85,36 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     Task {
       await monitorPushToStartTokens()
+    }
+  }
+
+  @MainActor
+  func startGlobalMonitoring() async {
+    guard !hasStartedGlobalMonitoring else { return }
+    hasStartedGlobalMonitoring = true
+
+    Task {
+      await monitorExistingActivities()
+    }
+
+    Task {
+      await monitorActivityUpdates()
+    }
+
+    Task {
+      await monitorPushToStartTokens()
+    }
+  }
+
+  private func monitorExistingActivities() async {
+    for activity in Activity<TrainActivityAttributes>.activities {
+      await monitorPushTokens(for: activity)
+    }
+  }
+
+  private func monitorActivityUpdates() async {
+    for await activity in Activity<TrainActivityAttributes>.activityUpdates {
+      await monitorPushTokens(for: activity)
     }
   }
 

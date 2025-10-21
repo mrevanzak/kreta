@@ -4,6 +4,7 @@ import UIKit
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
   private let notificationCenter = UNUserNotificationCenter.current()
   private let pushRegistrationService = PushRegistrationService.shared
+  private let liveActivityService = TrainLiveActivityService.shared
 
   func application(
     _ application: UIApplication,
@@ -12,6 +13,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     notificationCenter.delegate = self
 
     Task {
+      // Begin monitoring ActivityKit tokens as early as possible
+      await liveActivityService.startGlobalMonitoring()
       await requestNotificationAuthorization()
     }
 
