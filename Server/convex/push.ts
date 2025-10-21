@@ -3,7 +3,6 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import * as apn from "@parse/node-apn";
-import { randomUUID } from "node:crypto";
 
 // Construct a singleton APNs provider using token-based auth
 const apnsKey = (process.env.APNS_KEY ?? "").replace(/\\n/g, "\n");
@@ -21,6 +20,7 @@ export const triggerPush = action({
   args: {
     deviceToken: v.string(),
     title: v.string(),
+    subtitle: v.optional(v.string()),
     body: v.string(),
   },
   handler: async (_ctx, args) => {
@@ -34,12 +34,12 @@ export const triggerPush = action({
 
     const note = new apn.Notification();
     note.topic = bundleId;
-    note.id = randomUUID();
     note.pushType = "alert";
-    note.aps = {
-      alert: { title: args.title, body: args.body },
-      sound: "default",
-    } as any;
+    note.alert = {
+      title: args.title,
+      subtitle: args.subtitle,
+      body: args.body,
+    };
 
     try {
       const response = await apnProvider.send(note, args.deviceToken);
