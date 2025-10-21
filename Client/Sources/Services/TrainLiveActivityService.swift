@@ -93,11 +93,14 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     while attempt < maxAttempts {
       do {
+        // deviceToken required by server registrations.registerLiveActivityToken
+        guard let deviceToken = PushRegistrationService.shared.currentToken() else { return }
         try await convexClient.mutation(
-          "push:registerLiveActivityToken",
+          "registrations:registerLiveActivityToken",
           with: [
             "activityId": activityId,
             "token": token,
+            "deviceToken": deviceToken,
           ])
         return
       } catch {
@@ -124,9 +127,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     while attempt < maxAttempts {
       do {
+        // deviceToken required by server registrations.registerLiveActivityStartToken
+        guard let deviceToken = PushRegistrationService.shared.currentToken() else { return }
         try await convexClient.mutation(
-          "push:registerLiveActivityStartToken",
+          "registrations:registerLiveActivityStartToken",
           with: [
+            "deviceToken": deviceToken,
             "token": token,
             "userId": nil,
           ])

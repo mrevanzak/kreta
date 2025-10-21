@@ -13,6 +13,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@parse/node-apn": "^6.5.0",
     "convex": "^1.28.0"
   }
 }

@@ -32,9 +32,6 @@ struct Constants {
     static let saveOrder = URL(string: "http://localhost:8080/api/orders")!
     static let loadOrders = URL(string: "http://localhost:8080/api/orders")!
     static let myProducts = URL(string: "http://localhost:8080/api/products/user")!
-    static let registerDevice = URL(string: "http://localhost:8080/api/devices")!
-    static let registerLiveActivityToken = URL(
-      string: "http://localhost:8080/api/live-activities/tokens")!
 
     static func deleteCartItem(_ cartItemId: Int) -> URL {
       URL(string: "http://localhost:8080/api/cart/item/\(cartItemId)")!

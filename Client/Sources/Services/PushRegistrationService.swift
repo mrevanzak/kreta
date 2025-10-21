@@ -42,10 +42,9 @@ final class PushRegistrationService: @unchecked Sendable {
     while attempt < maxAttempts {
       do {
         _ = try await convexClient.mutation(
-          "push:registerDevice",
+          "registrations:registerDevice",
           with: [
             "token": token,
-            "platform": "ios",
             "userId": userId,
           ])
 
