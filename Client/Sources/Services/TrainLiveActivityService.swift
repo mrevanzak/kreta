@@ -1,15 +1,20 @@
 import ActivityKit
+import ConvexMobile
 import Foundation
 
-@MainActor
-final class TrainLiveActivityService {
+final class TrainLiveActivityService: @unchecked Sendable {
   static let shared = TrainLiveActivityService()
 
-  private let httpClient = HTTPClient()
+  private let convexClient: ConvexClient
 
-  private init() {}
+  private init(
+    convexClient: ConvexClient = Dependencies.shared.convexClient
+  ) {
+    self.convexClient = convexClient
+  }
 
   @discardableResult
+  @MainActor
   func start(
     trainName: String,
     from: TrainStation,
@@ -39,6 +44,7 @@ final class TrainLiveActivityService {
     return activity
   }
 
+  @MainActor
   func update(
     activityId: String,
     previousStation: TrainStation,
@@ -53,18 +59,20 @@ final class TrainLiveActivityService {
     }
   }
 
+  @MainActor
   func end(
     activityId: String,
     dismissalPolicy: ActivityUIDismissalPolicy = .immediate
   ) async {
     for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-      await activity.end(dismissalPolicy: dismissalPolicy)
+      await activity.end(nil, dismissalPolicy: dismissalPolicy)
     }
   }
 
+  @MainActor
   func endAllImmediately() async {
     for activity in Activity<TrainActivityAttributes>.activities {
-      await activity.end(dismissalPolicy: .immediate)
+      await activity.end(nil, dismissalPolicy: .immediate)
     }
   }
 
@@ -73,27 +81,24 @@ final class TrainLiveActivityService {
       let token = tokenData.hexEncodedString()
       await registerLiveActivityToken(activityId: activity.id, token: token)
     }
+
+    Task {
+      await monitorPushToStartTokens()
+    }
   }
 
   private func registerLiveActivityToken(activityId: String, token: String) async {
-    let payload = RegisterLiveActivityTokenPayload(activityId: activityId, token: token)
-
-    guard let data = try? JSONEncoder().encode(payload) else {
-      return
-    }
-
-    let resource = Resource(
-      url: Constants.Urls.registerLiveActivityToken,
-      method: .post(data),
-      modelType: RegisterLiveActivityTokenResponse.self
-    )
-
     var attempt = 0
     let maxAttempts = 3
 
     while attempt < maxAttempts {
       do {
-        _ = try await httpClient.load(resource)
+        try await convexClient.mutation(
+          "push:registerLiveActivityToken",
+          with: [
+            "activityId": activityId,
+            "token": token,
+          ])
         return
       } catch {
         attempt += 1
@@ -105,9 +110,35 @@ final class TrainLiveActivityService {
       }
     }
   }
-}
 
-private struct RegisterLiveActivityTokenPayload: Codable {
-  let activityId: String
-  let token: String
+  private func monitorPushToStartTokens() async {
+    for await tokenData in Activity<TrainActivityAttributes>.pushToStartTokenUpdates {
+      let token = tokenData.hexEncodedString()
+      await registerLiveActivityStartToken(token: token)
+    }
+  }
+
+  private func registerLiveActivityStartToken(token: String) async {
+    var attempt = 0
+    let maxAttempts = 3
+
+    while attempt < maxAttempts {
+      do {
+        try await convexClient.mutation(
+          "push:registerLiveActivityStartToken",
+          with: [
+            "token": token,
+            "userId": nil,
+          ])
+        return
+      } catch {
+        attempt += 1
+        if attempt >= maxAttempts {
+          return
+        }
+        let delay = UInt64(pow(2.0, Double(attempt)) * 0.5 * 1_000_000_000)
+        try? await Task.sleep(nanoseconds: delay)
+      }
+    }
+  }
 }
