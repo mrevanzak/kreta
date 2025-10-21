@@ -6,6 +6,58 @@ public struct TrainStation: Codable, Hashable, Sendable {
   public var code: String
   public var estimatedArrival: Date?
   public var estimatedDeparture: Date?
+
+  enum CodingKeys: String, CodingKey {
+    case name
+    case code
+    case estimatedArrival
+    case estimatedDeparture
+  }
+
+  public init(name: String, code: String, estimatedArrival: Date?, estimatedDeparture: Date?) {
+    self.name = name
+    self.code = code
+    self.estimatedArrival = estimatedArrival
+    self.estimatedDeparture = estimatedDeparture
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    name = try container.decode(String.self, forKey: .name)
+    code = try container.decode(String.self, forKey: .code)
+
+    // Decode Unix timestamps (seconds since 1970) as Dates
+    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedArrival) {
+      estimatedArrival = Date(timeIntervalSince1970: timestamp)
+    } else {
+      estimatedArrival = nil
+    }
+
+    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedDeparture) {
+      estimatedDeparture = Date(timeIntervalSince1970: timestamp)
+    } else {
+      estimatedDeparture = nil
+    }
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(name, forKey: .name)
+    try container.encode(code, forKey: .code)
+
+    // Encode Dates as Unix timestamps (seconds since 1970)
+    if let arrival = estimatedArrival {
+      try container.encode(arrival.timeIntervalSince1970, forKey: .estimatedArrival)
+    } else {
+      try container.encodeNil(forKey: .estimatedArrival)
+    }
+
+    if let departure = estimatedDeparture {
+      try container.encode(departure.timeIntervalSince1970, forKey: .estimatedDeparture)
+    } else {
+      try container.encodeNil(forKey: .estimatedDeparture)
+    }
+  }
 }
 
 public struct AdjacentStations: Codable, Hashable, Sendable {
