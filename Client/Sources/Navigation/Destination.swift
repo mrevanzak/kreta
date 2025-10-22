@@ -41,7 +41,7 @@ extension TabScreen {
     switch self {
     case .home:
       NavigationStack {
-        HomeScreen()
+        MainMapView()
       }
     }
   }
