@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as gapeka from "../gapeka.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
 
@@ -26,6 +27,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  gapeka: typeof gapeka;
   push: typeof push;
   registrations: typeof registrations;
 }>;

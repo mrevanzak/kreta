@@ -28,4 +28,8 @@ export default defineSchema({
     .index("by_deviceToken", ["deviceToken"])
     .index("by_token", ["token"])
     .index("by_userId", ["userId"]),
+
+  gapeka: defineTable({
+    lastUpdatedAt: v.number(),
+  }).index("by_lastUpdatedAt", ["lastUpdatedAt"]),
 });
