@@ -25,6 +25,7 @@
 		C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */; };
 		C501C1892E9616E100CC2B4E /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
+		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,7 @@
 			files = (
 				8D8021892CFCF28E006C709C /* StripePayments in Frameworks */,
 				8D8021872CFCF28E006C709C /* StripePaymentSheet in Frameworks */,
+				C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */,
 				C57893C42E93769300375616 /* ConvexMobile in Frameworks */,
 				8D5B74462CAF70C200AA4BAC /* JWTDecode in Frameworks */,
 				8D8021832CFCF28E006C709C /* StripeFinancialConnections in Frameworks */,
@@ -170,6 +172,7 @@
 				8D8021882CFCF28E006C709C /* StripePayments */,
 				8D80218A2CFCF28F006C709C /* StripePaymentsUI */,
 				C57893C32E93769300375616 /* ConvexMobile */,
+				C5892C972EA8CB370043E6B9 /* DebugSwift */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -229,6 +232,7 @@
 				8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */,
 				8D80217B2CFCF28E006C709C /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
 				C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */,
+				C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -623,6 +627,14 @@
 				minimumVersion = 0.5.6;
 			};
 		};
+		C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/DebugSwift/DebugSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.20;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -680,6 +692,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */;
 			productName = ConvexMobile;
+		};
+		C5892C972EA8CB370043E6B9 /* DebugSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */;
+			productName = DebugSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
