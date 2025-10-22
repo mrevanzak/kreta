@@ -8,314 +8,428 @@
 import Foundation
 
 struct RegisterResponse: Codable {
-    let message: String?
-    let success: Bool
+  let message: String?
+  let success: Bool
 }
 
 struct LoginResponse: Codable {
-    let message: String?
-    let token: String?
-    let success: Bool
-    let username: String?
+  let message: String?
+  let token: String?
+  let success: Bool
+  let username: String?
 }
 
 struct RegisterDeviceResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }
 
 struct RegisterLiveActivityTokenResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }
 
 struct ErrorResponse: Codable {
-    let message: String?
+  let message: String?
 }
 
 struct UploadDataResponse: Codable {
-    let message: String?
-    let success: Bool
-    let downloadURL: URL?
+  let message: String?
+  let success: Bool
+  let downloadURL: URL?
 }
 
 struct ProductRequest: Codable {
-    
-    var id: Int?
-    let name: String
-    let description: String
-    let price: Double
-    let photoUrl: URL?
-    
-    private enum CodingKeys: String, CodingKey {
-        case id, name, description, price
-        case photoUrl = "photo_url"
-    }
+
+  var id: Int?
+  let name: String
+  let description: String
+  let price: Double
+  let photoUrl: URL?
+
+  private enum CodingKeys: String, CodingKey {
+    case id, name, description, price
+    case photoUrl = "photo_url"
+  }
 }
 
 struct CreateProduct: Codable {
-    
-    let name: String
-    let description: String
-    let price: Double
-    let photoUrl: URL?
-    
-    private enum CodingKeys: String, CodingKey {
-        case name, description, price
-        case photoUrl = "photo_url"
-    }
+
+  let name: String
+  let description: String
+  let price: Double
+  let photoUrl: URL?
+
+  private enum CodingKeys: String, CodingKey {
+    case name, description, price
+    case photoUrl = "photo_url"
+  }
 }
 
 struct Product: Codable, Identifiable, Hashable {
-    
-    var id: Int?
-    let name: String
-    let description: String
-    let price: Double
-    let photoUrl: URL?
-    
-    private enum CodingKeys: String, CodingKey {
-        case id, name, description, price
-        case photoUrl = "photo_url"
-    }
+
+  var id: Int?
+  let name: String
+  let description: String
+  let price: Double
+  let photoUrl: URL?
+
+  private enum CodingKeys: String, CodingKey {
+    case id, name, description, price
+    case photoUrl = "photo_url"
+  }
 }
 
 extension Product {
-    
-    static var preview: Product {
-        Product(id: 1, name: "Mirra Chair", description: "The Mirra chair by Herman Miller is an ergonomic office chair designed for comfort and support. It features an adjustable backrest, seat, and armrests, along with a flexible back that adapts to body movements. The chair's breathable mesh promotes airflow, while its responsive design encourages proper posture, making it ideal for long periods of sitting.", price: 850, photoUrl: URL(string: "http://localhost:8080/images/chair.jpg")!)
-    }
-    
-    func encode() -> Data? {
-        try? JSONEncoder().encode(self)
-    }
-    
+
+  static var preview: Product {
+    Product(
+      id: 1, name: "Mirra Chair",
+      description:
+        "The Mirra chair by Herman Miller is an ergonomic office chair designed for comfort and support. It features an adjustable backrest, seat, and armrests, along with a flexible back that adapts to body movements. The chair's breathable mesh promotes airflow, while its responsive design encourages proper posture, making it ideal for long periods of sitting.",
+      price: 850, photoUrl: URL(string: "http://localhost:8080/images/chair.jpg")!)
+  }
+
+  func encode() -> Data? {
+    try? JSONEncoder().encode(self)
+  }
+
 }
 
 struct CreateProductResponse: Codable {
-    let success: Bool
-    let product: Product?
-    let message: String?
+  let success: Bool
+  let product: Product?
+  let message: String?
 }
 
 struct DeleteProductResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }
 
 struct UpdateProductResponse: Codable {
-    let success: Bool
-    let message: String?
-    let product: Product?
+  let success: Bool
+  let message: String?
+  let product: Product?
 }
 
 // Cart
 struct Cart: Codable, Identifiable {
-    var id: Int?
-    var cartItems: [CartItem] = []
-    
-    private enum CodingKeys: String, CodingKey {
-        case id, cartItems
-    }
+  var id: Int?
+  var cartItems: [CartItem] = []
+
+  private enum CodingKeys: String, CodingKey {
+    case id, cartItems
+  }
 }
 
 extension Cart {
-    
-    var total: Double {
-        cartItems.reduce(0.0, { total, cartItem in
-            total + (cartItem.product.price * Double(cartItem.quantity))
-        })
+
+  var total: Double {
+    cartItems.reduce(
+      0.0,
+      { total, cartItem in
+        total + (cartItem.product.price * Double(cartItem.quantity))
+      })
+  }
+
+  var itemsCount: Int {
+    cartItems.reduce(0) { total, item in
+      total + item.quantity
     }
-    
-    var itemsCount: Int {
-        cartItems.reduce(0) { total, item in
-            total + item.quantity
-        } 
-    }
+  }
 }
 
 extension Cart {
-    static var preview: Cart {
-        return Cart(
-            id: 1,
-            cartItems: [
-                CartItem(
-                    id: 1,
-                    product: Product(
-                        id: 201,
-                        name: "Coffee",
-                        description: "A rich, aromatic blend of premium coffee beans.",
-                        price: 5.99,
-                        photoUrl: URL(string: "https://picsum.photos/200/300")
-                    ),
-                    quantity: 2
-                ),
-                CartItem(
-                    id: 2,
-                    product: Product(
-                        id: 202,
-                        name: "Tea",
-                        description: "Refreshing green tea with hints of mint.",
-                        price: 3.49,
-                        photoUrl: URL(string: "https://picsum.photos/200/300")
-                    ),
-                    quantity: 1
-                ),
-                CartItem(
-                    id: 3,
-                    product: Product(
-                        id: 203,
-                        name: "Hot Chocolate",
-                        description: "Smooth and creamy hot chocolate.",
-                        price: 4.99,
-                        photoUrl: URL(string: "https://picsum.photos/200/300")
-                    ),
-                    quantity: 3
-                )
-            ]
-        )
-    }
+  static var preview: Cart {
+    return Cart(
+      id: 1,
+      cartItems: [
+        CartItem(
+          id: 1,
+          product: Product(
+            id: 201,
+            name: "Coffee",
+            description: "A rich, aromatic blend of premium coffee beans.",
+            price: 5.99,
+            photoUrl: URL(string: "https://picsum.photos/200/300")
+          ),
+          quantity: 2
+        ),
+        CartItem(
+          id: 2,
+          product: Product(
+            id: 202,
+            name: "Tea",
+            description: "Refreshing green tea with hints of mint.",
+            price: 3.49,
+            photoUrl: URL(string: "https://picsum.photos/200/300")
+          ),
+          quantity: 1
+        ),
+        CartItem(
+          id: 3,
+          product: Product(
+            id: 203,
+            name: "Hot Chocolate",
+            description: "Smooth and creamy hot chocolate.",
+            price: 4.99,
+            photoUrl: URL(string: "https://picsum.photos/200/300")
+          ),
+          quantity: 3
+        ),
+      ]
+    )
+  }
 }
-
 
 struct CartItem: Codable, Identifiable, Hashable {
-    let id: Int?
-    let product: Product
-    var quantity: Int = 1
+  let id: Int?
+  let product: Product
+  var quantity: Int = 1
 }
 
 extension CartItem {
-    
-    static var preview: CartItem {
-        CartItem(id: 1, product: Product.preview, quantity: 2)
-    }
+
+  static var preview: CartItem {
+    CartItem(id: 1, product: Product.preview, quantity: 2)
+  }
 }
 
 struct CartItemResponse: Codable {
-    let success: Bool
-    let message: String?
-    let cartItem: CartItem?
+  let success: Bool
+  let message: String?
+  let cartItem: CartItem?
 }
 
 struct CartResponse: Codable {
-    let success: Bool
-    let message: String?
-    let cart: Cart?
+  let success: Bool
+  let message: String?
+  let cart: Cart?
 }
 
 struct DeleteCartItemResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }
 
 struct UserInfo: Codable, Equatable {
-    let firstName: String?
-    let lastName: String?
-    let street: String?
-    let city: String?
-    let state: String?
-    let zipCode: String?
-    let country: String?
-    
-    private enum CodingKeys: String, CodingKey {
-        case firstName = "first_name"
-        case lastName = "last_name"
-        case zipCode = "zip_code"
-        case street, city, state, country
-    }
-    
-    var address: String {
-        [
-            street,
-            [city, state].compactMap { $0 }.joined(separator: " "),
-            zipCode,
-            country
-        ]
-            .compactMap { $0 }
-            .joined(separator: ", ")
-    }
-    
-    var fullName: String {
-        [firstName, lastName]
-            .compactMap { $0 }
-            .joined(separator: " ")
-    }
+  let firstName: String?
+  let lastName: String?
+  let street: String?
+  let city: String?
+  let state: String?
+  let zipCode: String?
+  let country: String?
+
+  private enum CodingKeys: String, CodingKey {
+    case firstName = "first_name"
+    case lastName = "last_name"
+    case zipCode = "zip_code"
+    case street, city, state, country
+  }
+
+  var address: String {
+    [
+      street,
+      [city, state].compactMap { $0 }.joined(separator: " "),
+      zipCode,
+      country,
+    ]
+    .compactMap { $0 }
+    .joined(separator: ", ")
+  }
+
+  var fullName: String {
+    [firstName, lastName]
+      .compactMap { $0 }
+      .joined(separator: " ")
+  }
 }
 
 struct UserInfoResponse: Codable {
-    let success: Bool
-    let message: String?
-    let userInfo: UserInfo?
+  let success: Bool
+  let message: String?
+  let userInfo: UserInfo?
 }
 
 struct CreatePaymentIntentResponse: Codable {
-    let paymentIntentClientSecret: String?
-    let customerId: String?
-    let customerEphemeralKeySecret: String?
-    let publishableKey: String?
-    
-    private enum CodingKeys: String, CodingKey {
-        case publishableKey
-        case paymentIntentClientSecret = "paymentIntent"
-        case customerId = "customer"
-        case customerEphemeralKeySecret = "ephemeralKey"
-        
-    }
+  let paymentIntentClientSecret: String?
+  let customerId: String?
+  let customerEphemeralKeySecret: String?
+  let publishableKey: String?
+
+  private enum CodingKeys: String, CodingKey {
+    case publishableKey
+    case paymentIntentClientSecret = "paymentIntent"
+    case customerId = "customer"
+    case customerEphemeralKeySecret = "ephemeralKey"
+
+  }
 }
 
 struct OrderItem: Codable, Hashable, Identifiable {
-    var id: Int?
-    let product: Product
-    var quantity: Int = 1
-    
-    init(from cartItem: CartItem) {
-        self.id = nil
-        self.product = cartItem.product
-        self.quantity = cartItem.quantity
-    }
+  var id: Int?
+  let product: Product
+  var quantity: Int = 1
+
+  init(from cartItem: CartItem) {
+    self.id = nil
+    self.product = cartItem.product
+    self.quantity = cartItem.quantity
+  }
 }
 
 struct Order: Codable, Hashable, Identifiable {
-    var id: Int?
-    var total: Double
-    var items: [OrderItem]
-    
-    init(from cart: Cart) {
-        self.id = nil
-        self.total = cart.total
-        self.items = cart.cartItems.map(OrderItem.init)
-    }
-    
-    private enum CodingKeys: String, CodingKey {
-        case id, total, items
-    }
-    
-    func toRequestBody() -> [String: Any] {
-        return [
-            "total": total,
-            "order_items": items.map { item in
-                [
-                    "product_id": item.product.id,
-                    "quantity": item.quantity
-                ]
-            }
+  var id: Int?
+  var total: Double
+  var items: [OrderItem]
+
+  init(from cart: Cart) {
+    self.id = nil
+    self.total = cart.total
+    self.items = cart.cartItems.map(OrderItem.init)
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case id, total, items
+  }
+
+  func toRequestBody() -> [String: Any] {
+    return [
+      "total": total,
+      "order_items": items.map { item in
+        [
+          "product_id": item.product.id,
+          "quantity": item.quantity,
         ]
-    }
+      },
+    ]
+  }
 }
 
 extension Order {
-    static var preview: Order {
-        Order(from: Cart.preview)
-    }
+  static var preview: Order {
+    Order(from: Cart.preview)
+  }
 }
-
-
 
 struct SaveOrderResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }
 
+struct RawStation: Codable {
+  let cd: String?
+  let nm: String?
+  let coordinates: Coordinates?
+  let code: String?
+  let name: String?
+  let lat: Double?
+  let lng: Double?
+  let latitude: Double?
+  let longitude: Double?
 
+  struct Coordinates: Codable {
+    let latitude: Double?
+    let longitude: Double?
+  }
 
+  var asStation: Station? {
+    let codeVal = cd ?? code
+    let nameVal = nm ?? name
 
+    let latVal = latitude ?? lat ?? coordinates?.latitude
+    let lngVal = longitude ?? lng ?? coordinates?.longitude
+
+    guard let c = codeVal, let n = nameVal, let la = latVal, let lo = lngVal else { return nil }
+    return Station(code: c, name: n, latitude: la, longitude: lo)
+  }
+}
+
+// MARK: - Routes decoding models
+struct RawLatLng: Codable {
+  let latitude: Double
+  let longitude: Double
+}
+
+struct RawRoutePath: Codable {
+  let pos: [RawLatLng]
+  let pos_cm: [Double]?
+}
+
+struct RawRouteNode: Codable {
+  let len_cm: Double?
+  let paths: [RawRoutePath]?
+  let coordinates: [RawLatLng]?
+
+  func asTrainLine(id: String) -> TrainLine? {
+    // Prefer `coordinates` if present; otherwise, flatten all `paths.pos`
+    let coords: [RawLatLng]
+    if let coordinates, !coordinates.isEmpty {
+      coords = coordinates
+    } else if let paths, !paths.isEmpty {
+      coords = paths.flatMap { $0.pos }
+    } else {
+      return nil
+    }
+
+    let path: [[Double]] = coords.map { [$0.latitude, $0.longitude] }
+    return TrainLine(id: id, name: id, path: path)
+  }
+}
+
+// MARK: - Gapeka (train positions) decoding models
+struct RawGapekaPath: Codable {
+  let stId: Int
+  let stCd: String
+  let orgStId: Int
+  let orgStCd: String
+  let startMs: Int
+  let arrivMs: Int
+  let departMs: Int
+  let routeId: Int?
+  let invRoute: Bool
+  let usrArriv: String?
+  let usrDepart: String
+  let usrNote: String
+
+  private enum CodingKeys: String, CodingKey {
+    case stId = "st_id"
+    case stCd = "st_cd"
+    case orgStId = "org_st_id"
+    case orgStCd = "org_st_cd"
+    case startMs = "start_ms"
+    case arrivMs = "arriv_ms"
+    case departMs = "depart_ms"
+    case routeId = "route_id"
+    case invRoute = "inv_route"
+    case usrArriv = "usr_arriv"
+    case usrDepart = "usr_depart"
+    case usrNote = "usr_note"
+  }
+}
+
+struct RawGapekaTrain: Codable {
+  let trId: Int
+  let trCd: String
+  let trName: String
+  let startStCd: String
+  let endStCd: String
+  let departMs: Int
+  let arrivMs: Int
+  let modDayMs: Int
+  let paths: [RawGapekaPath]
+
+  private enum CodingKeys: String, CodingKey {
+    case trId = "tr_id"
+    case trCd = "tr_cd"
+    case trName = "tr_name"
+    case startStCd = "start_st_cd"
+    case endStCd = "end_st_cd"
+    case departMs = "depart_ms"
+    case arrivMs = "arriv_ms"
+    case modDayMs = "mod_day_ms"
+    case paths
+  }
+}

@@ -46,4 +46,12 @@ struct Constants {
     }
   }
 
+  struct TrainMap {
+    // Base for persepuran server; override via env if needed later
+    private static let base: String = "https://persepuran-server.mrevanzak.workers.dev/api/train"
+    static let stations: URL = URL(string: "\(base)/stations")!
+    static let routes: URL = URL(string: "\(base)/routes")!
+    static let positions: URL = URL(string: "\(base)/gapeka")!
+  }
+
 }
