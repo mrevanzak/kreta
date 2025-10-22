@@ -40,7 +40,7 @@ struct ActivitySmallView: View {
               format: .biggestUnitRelative(units: 2)
             )
             .font(.body)
-            .foregroundColor(.primary)
+            .foregroundColor(.kretaPrimary)
             Spacer()
           }
 
@@ -101,7 +101,7 @@ struct ActivityProgressView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 12, height: 12)
-            .foregroundColor(.primary)
+            .foregroundColor(.kretaPrimary)
         }
       )
       .progressViewStyle(.circular)
@@ -184,7 +184,7 @@ struct TrainExpandedBottomView: View {
             )
             .font(.callout)
             .bold()
-            .foregroundColor(.primary)
+            .foregroundColor(.kretaPrimary)
           }
         }
       }
@@ -260,7 +260,7 @@ struct WidgetLiveActivity: Widget {
           Text(context.attributes.destination.code)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.primary)
+            .background(Color.kretaPrimary)
             .clipShape(Capsule())
             .foregroundColor(Color(.systemBackground))
         }
@@ -273,7 +273,7 @@ struct WidgetLiveActivity: Widget {
             destinationEstimatedArrival,
             format: .biggestUnitRelative(units: 2)
           )
-          .foregroundColor(.primary)
+          .foregroundColor(.kretaPrimary)
         }
       } minimal: {
         ActivityProgressView(context: context)
@@ -285,12 +285,6 @@ struct WidgetLiveActivity: Widget {
   }
 }
 
-func getDate(from time: String) -> Date? {
-  let formatter = DateFormatter()
-  formatter.dateFormat = "yyyy/MM/dd HH:mm"
-  return formatter.date(from: time) ?? nil
-}
-
 extension TrainActivityAttributes {
   fileprivate static var preview: TrainActivityAttributes {
     TrainActivityAttributes(
@@ -299,12 +293,16 @@ extension TrainActivityAttributes {
         name: "Malang",
         code: "ML",
         estimatedArrival: nil,
-        estimatedDeparture: getDate(from: "2025/10/20 13:45"),
+        // set today at 13:45
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 13, minute: 45, second: 0, of: Date())
       ),
       destination: TrainStation(
         name: "Pasar Senen",
         code: "PSE",
-        estimatedArrival: getDate(from: "2025/10/21 01:58"),
+        // set tomorrow at 01:58
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 1, minute: 58, second: 0, of: Date().addingTimeInterval(60 * 60 * 24)),
         estimatedDeparture: nil
       ),
       seatClass: SeatClass.economy(number: 9),
@@ -319,14 +317,22 @@ extension TrainActivityAttributes.ContentState {
       previousStation: TrainStation(
         name: "Surabayagubeng",
         code: "SGU",
-        estimatedArrival: getDate(from: "2025/10/20 15:39"),
-        estimatedDeparture: getDate(from: "2025/10/20 15:43")
+        // set today at 15:39
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 15, minute: 39, second: 0, of: Date()),
+        // set today at 15:43
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 15, minute: 43, second: 0, of: Date())
       ),
       nextStation: TrainStation(
         name: "Surabaya Pasarturi",
         code: "SBI",
-        estimatedArrival: getDate(from: "2025/10/20 15:55"),
-        estimatedDeparture: getDate(from: "2025/10/20 16:07")
+        // set today at 15:55
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 15, minute: 55, second: 0, of: Date()),
+        // set today at 16:07
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 16, minute: 07, second: 0, of: Date())
       ),
     )
   }

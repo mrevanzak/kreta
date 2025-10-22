@@ -1,5 +1,5 @@
 import SwiftUI
 
 extension Color {
-  static let primary = Color("PrimaryColor")
+  static let kretaPrimary = Color("PrimaryColor")
 }
