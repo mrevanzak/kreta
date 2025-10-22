@@ -10,36 +10,26 @@ final class TrainMapStore {
   var routes: [TrainLine] = []
   var trains: [TrainPosition] = []
   var isLoading: Bool = false
-  var errorMessage: String?
 
   init(service: TrainMapService) {
     self.service = service
   }
 
-  func loadInitial() async {
+  func loadInitial() async throws {
     isLoading = true
-    errorMessage = nil
-    do {
-      async let s = service.fetchStations()
-      async let r = service.fetchRoutes()
-      async let rawTrains = service.fetchTrainPositions()
-      let (stations, routes, trainsRaw) = try await (s, r, rawTrains)
-      self.stations = stations
-      self.routes = routes
-      self.trains = Self.mapGapekaToPositions(trainsRaw, stations: stations)
-    } catch {
-      errorMessage = error.localizedDescription
-    }
-    isLoading = false
+    defer { isLoading = false }
+    async let s = service.fetchStations()
+    async let r = service.fetchRoutes()
+    async let rawTrains = service.fetchTrainPositions()
+    let (stations, routes, trainsRaw) = try await (s, r, rawTrains)
+    self.stations = stations
+    self.routes = routes
+    self.trains = Self.mapGapekaToPositions(trainsRaw, stations: stations)
   }
 
-  func refreshTrains() async {
-    do {
-      let raw = try await service.fetchTrainPositions()
-      self.trains = Self.mapGapekaToPositions(raw, stations: stations)
-    } catch {
-      errorMessage = error.localizedDescription
-    }
+  func refreshTrains() async throws {
+    let raw = try await service.fetchTrainPositions()
+    self.trains = Self.mapGapekaToPositions(raw, stations: stations)
   }
 }
 

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
+  @Environment(\.showMessage) private var showMessage
 
   var body: some View {
     Group {
@@ -40,13 +41,13 @@ struct TrainMapView: View {
       .ignoresSafeArea()
     }
     .task {
-      await mapStore.loadInitial()
-    }
-    .onChange(of: mapStore.trains) { _, _ in
-      print("trains changed: \(mapStore.trains)")
+      do {
+        try await mapStore.loadInitial()
+      } catch {
+        showMessage(error.localizedDescription)
+      }
     }
   }
-
 }
 
 #Preview {
