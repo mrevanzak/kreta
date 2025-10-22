@@ -10,7 +10,13 @@ struct MainTabNavigator: View {
           .tag(screen as TabScreen?)
           .tabItem { screen.label }
       }
-    }.navigationBarBackButtonHidden(true)
+    }
+    .navigationBarBackButtonHidden(true)
+    .onOpenURL { url in
+      if let destination = DeepLink.destination(from: url) {
+        router.navigate(to: destination)
+      }
+    }
   }
 }
 

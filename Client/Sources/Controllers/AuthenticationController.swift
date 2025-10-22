@@ -38,6 +38,7 @@ struct AuthenticationController {
         if let token = response.token, response.success {
             // save the token in the Keychain
             Keychain.set(token, forKey: "jwttoken")
+            await PushRegistrationService.shared.registerIfNeeded(userId: response.username)
         } else {
             throw LoginError.loginFailed(response.message ?? "Unable to login.")
         }

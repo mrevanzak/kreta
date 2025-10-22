@@ -32,5 +32,5 @@ extension EnvironmentValues {
 }
 
 extension EnvironmentValues {
-  @Entry var convexClient = ConvexClient(deploymentUrl: Constants.Convex.deploymentUrl)
+  @Entry var convexClient = Dependencies.shared.convexClient
 }

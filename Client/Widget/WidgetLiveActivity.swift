@@ -7,42 +7,76 @@
 
 import ActivityKit
 import SwiftUI
-import UIKit
 import WidgetKit
 
 struct ActivityView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack(spacing: 8) {
-        Text("🚆")
-        Text("\(context.attributes.from.name) → \(context.attributes.destination.name)")
-          .font(.headline)
+    VStack {
+      HStack {
+        TrainExpandedLeadingView(context: context)
+        Spacer()
+        TrainExpandedTrailingView(context: context)
       }
-      Text("Next: \(context.state.stations.next.name)")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-      HStack(spacing: 6) {
-        Image(systemName: "clock")
-        // Relative time remaining until the destination ETA
-        // Text(context.state.estimatedArrival, style: .relative)
-        //   .font(.title3).monospacedDigit()
-      }
+      TrainExpandedBottomView(context: context)
     }
-    .padding(.vertical, 8)
-    .activityBackgroundTint(Color(uiColor: .systemBackground))
-    .activitySystemActionForegroundColor(Color.accentColor)
+    .padding()
+    // .activityBackgroundTint(Color(uiColor: .systemBackground))
+    // .activitySystemActionForegroundColor(Color.accentColor)
+  }
+}
+
+struct ActivitySmallView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+      HStack {
+        VStack {
+          HStack {
+            Text(
+              destinationEstimatedArrival,
+              format: .biggestUnitRelative(units: 2)
+            )
+            .font(.body)
+            .foregroundColor(.kretaPrimary)
+            Spacer()
+          }
+
+          ProgressView(
+            timerInterval: Date()...destinationEstimatedArrival,
+            countsDown: false,
+            label: { EmptyView() },
+            currentValueLabel: {
+            }
+          ).progressViewStyle(.linear)
+
+          HStack {
+            Text(
+              "Tujuan \(context.attributes.destination.name) (\(context.attributes.destination.code))"
+            )
+            .font(.caption2)
+            .foregroundStyle(.foreground)
+
+            Spacer()
+          }
+        }
+      }
+      .padding(.all)
+    }
   }
 }
 
 struct ActivityFamilyView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
+
   @Environment(\.activityFamily) var activityFamily
 
   var body: some View {
     switch activityFamily {
     case .small:
-      EmptyView()
+      ActivitySmallView(context: context)
     case .medium:
       ActivityView(context: context)
     @unknown default:
@@ -53,8 +87,11 @@ struct ActivityFamilyView: View {
 
 struct ActivityProgressView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
+
   var body: some View {
-    if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+    if let destinationEstimatedArrival = context.attributes.destination
+      .estimatedArrival
+    {
       ProgressView(
         timerInterval: Date()...destinationEstimatedArrival,
         countsDown: false,
@@ -64,12 +101,133 @@ struct ActivityProgressView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 12, height: 12)
-            .foregroundColor(.yellow)
+            .foregroundColor(.kretaPrimary)
         }
       )
       .progressViewStyle(.circular)
       .frame(width: 24, height: 24)
     }
+  }
+}
+
+struct TrainExpandedBottomView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+  var withPadding: Bool = false
+
+  var body: some View {
+    VStack {
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+        Spacer()
+
+        VStack(spacing: 0) {
+          HStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+              Text(context.state.stations.previous.code).font(.body).bold()
+              Text(context.state.stations.previous.name)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            }
+            .containerRelativeFrame(.horizontal) { size, _ in
+              size * 0.25
+            }
+
+            VStack {
+              Text(context.attributes.trainName)
+                .font(.caption)
+                .bold()
+                .foregroundColor(.gray)
+
+              Image("kereta")
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: 15)
+                .padding(.bottom, -2)  // visually sit on the progress line
+            }
+
+            VStack(alignment: .trailing, spacing: 4) {
+              Text(context.state.stations.next.code).font(.body).bold()
+              Text(context.state.stations.next.name)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            }
+            .containerRelativeFrame(.horizontal) { size, _ in
+              size * 0.25
+            }
+          }
+
+          ProgressView(
+            timerInterval: Date()...destinationEstimatedArrival,
+            countsDown: false,
+            label: { EmptyView() },
+            currentValueLabel: { EmptyView() }
+          )
+          .progressViewStyle(.linear)
+        }
+
+        ZStack {
+          HStack {
+            Text("Estimasi Tiba")
+              .font(.caption)
+              .if(withPadding) { view in
+                view.padding(.leading)
+              }
+            Spacer()
+          }
+
+          HStack(alignment: .center) {
+            Text(
+              destinationEstimatedArrival,
+              format: .biggestUnitRelative(units: 2)
+            )
+            .font(.callout)
+            .bold()
+            .foregroundColor(.kretaPrimary)
+          }
+        }
+      }
+    }
+  }
+}
+
+struct TrainExpandedLeadingView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    Text("KRETA").font(.footnote).foregroundColor(.gray)
+  }
+}
+
+struct TrainExpandedTrailingView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    VStack(alignment: .trailing) {
+      HStack(spacing: 4) {
+        Text("\(context.attributes.seatClass.number) \(context.attributes.seatClass.name)")
+        Image(systemName: "chair.lounge.fill")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 12, height: 12)
+      }
+      .lineLimit(1)
+      .minimumScaleFactor(0.8)
+
+      HStack(spacing: 4) {
+        Text(context.attributes.seatNumber)
+        Image(systemName: "train.side.middle.car")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 12, height: 12)
+      }
+      .lineLimit(1)
+      .minimumScaleFactor(0.8)
+    }
+    .font(.caption2)
+    .monospacedDigit()
+    .foregroundStyle(.gray)
   }
 }
 
@@ -81,74 +239,20 @@ struct WidgetLiveActivity: Widget {
       DynamicIsland {
         // Expanded regions
         DynamicIslandExpandedRegion(.leading) {
-          VStack(alignment: .leading, spacing: 4) {
-            Text(context.attributes.destination.code).font(.title3).bold()
-            Text(context.attributes.destination.name).font(.caption).foregroundStyle(.secondary)
-          }
-          .padding(.leading)
+          TrainExpandedLeadingView(context: context)
+            .padding(.leading)
         }
 
         DynamicIslandExpandedRegion(.trailing) {
-          VStack(alignment: .trailing, spacing: 4) {
-            if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
-              Text(
-                destinationEstimatedArrival,
-                format: .biggestUnitRelative(units: 2)
-              )
-              .font(.title3)
-              .bold()
-              .minimumScaleFactor(0.1)
-              .lineLimit(1)
-            }
-
-            //TODO: add logic later
-            Text("Terlambat")
-              .font(.caption).bold()
-              .padding(.horizontal, 8)
-              .padding(.vertical, 4)
-              .background(Color(.systemRed).opacity(0.2))
-              .clipShape(Capsule())
-              .foregroundColor(Color(.systemRed))
-          }
-          .padding(.trailing)
+          TrainExpandedTrailingView(context: context)
+            .padding(.trailing)
         }
+
         DynamicIslandExpandedRegion(.center) {
-          //TODO: add logic later
-          Text("4 menit menuju GDB")
-            .font(.caption).bold()
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(.systemGray2).opacity(0.2))
-            .clipShape(Capsule())
         }
 
         DynamicIslandExpandedRegion(.bottom) {
-          VStack {
-            Image("kereta")
-              .resizable()
-              .scaledToFit()
-            HStack {
-              Spacer()
-              VStack(alignment: .leading, spacing: 4) {
-                Text(context.state.stations.previous.code).font(.body).bold()
-                Text(context.state.stations.previous.name).font(.caption).foregroundStyle(
-                  .secondary)
-              }
-              VStack(alignment: .center, spacing: 4) {
-                Text(context.attributes.train.name).font(.body).bold()
-                Text("KA\(context.attributes.train.code)").font(.caption).foregroundStyle(
-                  .secondary)
-              }
-              .containerRelativeFrame(.horizontal) { size, axis in
-                size * 0.4
-              }
-              VStack(alignment: .trailing, spacing: 4) {
-                Text(context.state.stations.next.code).font(.body).bold()
-                Text(context.state.stations.next.name).font(.caption).foregroundStyle(.secondary)
-              }
-              Spacer()
-            }
-          }
+          TrainExpandedBottomView(context: context, withPadding: true)
         }
       } compactLeading: {
         HStack(alignment: .center, spacing: 8) {
@@ -156,48 +260,53 @@ struct WidgetLiveActivity: Widget {
           Text(context.attributes.destination.code)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(.yellow)
+            .background(Color.kretaPrimary)
             .clipShape(Capsule())
             .foregroundColor(Color(.systemBackground))
         }
 
       } compactTrailing: {
-        if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+        if let destinationEstimatedArrival = context.attributes.destination
+          .estimatedArrival
+        {
           Text(
-            destinationEstimatedArrival, format: .biggestUnitRelative(units: 2)
+            destinationEstimatedArrival,
+            format: .biggestUnitRelative(units: 2)
           )
-          .foregroundColor(.yellow)
+          .foregroundColor(.kretaPrimary)
         }
       } minimal: {
         ActivityProgressView(context: context)
       }
-      .widgetURL(URL(string: "tututut://train"))
+      .widgetURL(URL(string: "kreta://train"))
       .keylineTint(Color.red)
     }
     .supplementalActivityFamilies([.small, .medium])
   }
 }
 
-func getDate(from time: String) -> Date? {
-  let formatter = DateFormatter()
-  formatter.dateFormat = "yyyy/MM/dd HH:mm"
-  return formatter.date(from: time) ?? nil
-}
-
 extension TrainActivityAttributes {
   fileprivate static var preview: TrainActivityAttributes {
     TrainActivityAttributes(
-      with: Train(name: "Jayabaya", code: "91"),
+      trainName: "Jayabaya",
       from: TrainStation(
-        name: "Malang", code: "ML",
+        name: "Malang",
+        code: "ML",
         estimatedArrival: nil,
-        estimatedDeparture: getDate(from: "2025/10/16 13:45"),
+        // set today at 13:45
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 13, minute: 45, second: 0, of: Date())
       ),
       destination: TrainStation(
-        name: "Pasar Senen", code: "PSE",
-        estimatedArrival: getDate(from: "2025/10/17 01:58"),
+        name: "Pasar Senen",
+        code: "PSE",
+        // set tomorrow at 01:58
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 1, minute: 58, second: 0, of: Date().addingTimeInterval(60 * 60 * 24)),
         estimatedDeparture: nil
-      )
+      ),
+      seatClass: SeatClass.economy(number: 9),
+      seatNumber: "20C"
     )
   }
 }
@@ -206,13 +315,25 @@ extension TrainActivityAttributes.ContentState {
   fileprivate static var sample1: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
       previousStation: TrainStation(
-        name: "Surabayagubeng", code: "SGU",
-        estimatedArrival: getDate(from: "2025/10/16 15:39"),
-        estimatedDeparture: getDate(from: "2025/10/16 15:43")),
+        name: "Surabayagubeng",
+        code: "SGU",
+        // set today at 15:39
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 15, minute: 39, second: 0, of: Date()),
+        // set today at 15:43
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 15, minute: 43, second: 0, of: Date())
+      ),
       nextStation: TrainStation(
-        name: "Surabaya Pasarturi", code: "SBI",
-        estimatedArrival: getDate(from: "2025/10/16 15:55"),
-        estimatedDeparture: getDate(from: "2025/10/16 16:07")),
+        name: "Surabaya Pasarturi",
+        code: "SBI",
+        // set today at 15:55
+        estimatedArrival: Calendar.current.date(
+          bySettingHour: 15, minute: 55, second: 0, of: Date()),
+        // set today at 16:07
+        estimatedDeparture: Calendar.current.date(
+          bySettingHour: 16, minute: 07, second: 0, of: Date())
+      ),
     )
   }
 }

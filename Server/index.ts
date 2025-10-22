@@ -1,8 +1,5 @@
-import { query } from "./convex/_generated/server";
+// This file's previous Bun HTTP server implementation has been removed.
+// Push registration and notifications are now handled via Convex functions
+// defined under `convex/` (see `convex/push.ts`).
 
-export const get = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("test").collect();
-  },
-});
+export {}; // keep as a module
