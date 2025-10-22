@@ -1,3 +1,4 @@
+import DebugSwift
 import UIKit
 @preconcurrency import UserNotifications
 
@@ -5,6 +6,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
   private let notificationCenter = UNUserNotificationCenter.current()
   private let pushRegistrationService = PushRegistrationService.shared
   private let liveActivityService = TrainLiveActivityService.shared
+  private let debugSwift = DebugSwift()
 
   func application(
     _ application: UIApplication,
@@ -18,6 +20,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
       await requestNotificationAuthorization()
     }
 
+    #if DEBUG
+      debugSwift.setup()
+      debugSwift.show()
+    #endif
+
     return true
   }
 
@@ -28,6 +35,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     let token = deviceToken.hexEncodedString()
     #if DEBUG
       print("APNS device token: \(token)")
+      DebugSwift.APNSToken.didRegister(deviceToken: deviceToken)
     #endif
     pushRegistrationService.storeToken(token)
 
@@ -40,6 +48,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
+    #if DEBUG
+      DebugSwift.APNSToken.didFailToRegister(error: error)
+    #endif
     print("Failed to register for remote notifications: \(error.localizedDescription)")
   }
 
@@ -69,12 +80,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
   }
 
   private func requestNotificationAuthorization() async {
+    // Inform DebugSwift that we're about to request permissions
+    DebugSwift.APNSToken.willRequestPermissions()
+
     do {
       let granted = try await notificationCenter.requestAuthorization(options: [
         .alert, .badge, .sound,
       ])
 
-      guard granted else { return }
+      guard granted else {
+        // Inform DebugSwift that permissions were denied
+        DebugSwift.APNSToken.didDenyPermissions()
+        return
+      }
 
       await MainActor.run {
         UIApplication.shared.registerForRemoteNotifications()
