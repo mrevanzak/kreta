@@ -1,20 +1,40 @@
 import CoreLocation
 import Foundation
 
+struct Position: Codable, Hashable {
+  let latitude: Double
+  let longitude: Double
+}
+
 struct Station: Codable, Identifiable, Hashable {
   // Use station code (e.g., "GMR") as stable identifier
   var id: String { code }
   let code: String
   let name: String
-  let latitude: Double
-  let longitude: Double
+  let position: Position
+  let city: String?
 
   var coordinate: CLLocationCoordinate2D {
-    CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
   }
 }
 
-struct TrainPosition: Codable, Identifiable, Hashable {
+struct Train: Codable, Identifiable, Hashable {
+  let id: String
+  let name: String
+}
+
+struct Route: Codable, Identifiable, Hashable {
+  let id: String
+  let name: String
+  let path: [Position]
+
+  var coordinates: [CLLocationCoordinate2D] {
+    path.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+  }
+}
+
+struct LiveTrain: Codable, Identifiable, Hashable {
   let id: String
   let latitude: Double
   let longitude: Double
@@ -23,19 +43,5 @@ struct TrainPosition: Codable, Identifiable, Hashable {
 
   var coordinate: CLLocationCoordinate2D {
     CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-  }
-}
-
-struct TrainLine: Codable, Identifiable, Hashable {
-  let id: String
-  let name: String
-  // A polyline path expressed as [latitude, longitude] pairs
-  let path: [[Double]]
-
-  var coordinates: [CLLocationCoordinate2D] {
-    path.compactMap { pair in
-      guard pair.count == 2 else { return nil }
-      return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
-    }
   }
 }

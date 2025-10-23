@@ -282,7 +282,7 @@ struct DateOptionRow: View {
 // MARK: - Train Service Row
 
 struct TrainServiceRow: View {
-  let train: TrainLine
+  let train: Route
   
   var body: some View {
     HStack(alignment: .top, spacing: 16) {

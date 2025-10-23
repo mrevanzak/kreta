@@ -20,24 +20,24 @@ enum SelectionStep {
 final class AddTrainViewModel {
   let store: TrainMapStore
   let allStations: [Station]
-  
+
   var currentStep: SelectionStep = .departure
   var searchText: String = ""
-  
+
   var selectedDepartureStation: Station?
   var selectedArrivalStation: Station?
   var selectedDate: Date?
-  
-  var availableTrains: [TrainLine] = []
-  
+
+  var availableTrains: [Route] = []
+
   init(store: TrainMapStore) {
     self.store = store
     self.allStations = store.stations
   }
-  
+
   var filteredStations: [Station] {
     let stations: [Station]
-    
+
     switch currentStep {
     case .departure:
       stations = allStations
@@ -46,17 +46,17 @@ final class AddTrainViewModel {
     case .date, .results:
       return []
     }
-    
+
     if searchText.isEmpty {
       return stations
     }
-    
+
     return stations.filter {
-      $0.name.localizedCaseInsensitiveContains(searchText) ||
-      $0.code.localizedCaseInsensitiveContains(searchText)
+      $0.name.localizedCaseInsensitiveContains(searchText)
+        || $0.code.localizedCaseInsensitiveContains(searchText)
     }
   }
-  
+
   var stepTitle: String {
     switch currentStep {
     case .departure:
@@ -69,7 +69,7 @@ final class AddTrainViewModel {
       return "Keberangkatan Tujuan"
     }
   }
-  
+
   func selectStation(_ station: Station) {
     switch currentStep {
     case .departure:
@@ -84,25 +84,25 @@ final class AddTrainViewModel {
       break
     }
   }
-  
+
   func selectDate(_ date: Date) {
     selectedDate = date
     loadTrains()
     currentStep = .results
   }
-  
+
   func loadTrains() {
-//    guard let from = selectedDepartureStation,
-//          let to = selectedArrivalStation,
-//          let date = selectedDate else {
-//      return
-//    }
-//    
-//    availableTrains = sampleTrains(from: from, to: to, on: date)
-    
+    //    guard let from = selectedDepartureStation,
+    //          let to = selectedArrivalStation,
+    //          let date = selectedDate else {
+    //      return
+    //    }
+    //
+    //    availableTrains = sampleTrains(from: from, to: to, on: date)
+
     availableTrains = store.routes
   }
-  
+
   func reset() {
     currentStep = .departure
     selectedDepartureStation = nil

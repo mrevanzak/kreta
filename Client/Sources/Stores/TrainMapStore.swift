@@ -7,8 +7,8 @@ final class TrainMapStore {
   private let service: TrainMapService
 
   var stations: [Station] = []
-  var routes: [TrainLine] = []
-  var trains: [TrainPosition] = []
+  var routes: [Route] = []
+  var trains: [LiveTrain] = []
   var isLoading: Bool = false
 
   init(service: TrainMapService) {
@@ -24,7 +24,7 @@ final class TrainMapStore {
     let (stations, routes, trains) = try await (s, r, t)
     self.stations = stations
     self.routes = routes
-    self.trains = Self.mapGapekaToPositions(trains, stations: stations)
+    self.trains = Self.mapGapekaToLiveTrains(trains, stations: stations)
   }
 
   // func refreshTrains() async throws {
@@ -35,17 +35,17 @@ final class TrainMapStore {
 
 // MARK: - Mapping helpers
 extension TrainMapStore {
-  fileprivate static func mapGapekaToPositions(_ raw: [RawGapekaTrain], stations: [Station])
-    -> [TrainPosition]
+  fileprivate static func mapGapekaToLiveTrains(_ raw: [RawGapekaTrain], stations: [Station])
+    -> [LiveTrain]
   {
     let stationByCode: [String: Station] = Dictionary(
       uniqueKeysWithValues: stations.map { ($0.code, $0) })
 
     func haversine(_ a: Station, _ b: Station) -> Double {
-      let lat1 = a.latitude * .pi / 180
-      let lon1 = a.longitude * .pi / 180
-      let lat2 = b.latitude * .pi / 180
-      let lon2 = b.longitude * .pi / 180
+      let lat1 = a.position.latitude * .pi / 180
+      let lon1 = a.position.longitude * .pi / 180
+      let lat2 = b.position.latitude * .pi / 180
+      let lon2 = b.position.longitude * .pi / 180
       let dLat = lat2 - lat1
       let dLon = lon2 - lon1
       let h = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
@@ -55,17 +55,17 @@ extension TrainMapStore {
     }
 
     func bearing(from a: Station, to b: Station) -> Double {
-      let lat1 = a.latitude * .pi / 180
-      let lon1 = a.longitude * .pi / 180
-      let lat2 = b.latitude * .pi / 180
-      let lon2 = b.longitude * .pi / 180
+      let lat1 = a.position.latitude * .pi / 180
+      let lon1 = a.position.longitude * .pi / 180
+      let lat2 = b.position.latitude * .pi / 180
+      let lon2 = b.position.longitude * .pi / 180
       let y = sin(lon2 - lon1) * cos(lat2)
       let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon2 - lon1)
       let brng = atan2(y, x) * 180 / .pi
       return fmod((brng + 360), 360)
     }
 
-    var results: [TrainPosition] = []
+    var results: [LiveTrain] = []
     for train in raw {
       // Use the current segment between nearest depart<=now<next.arriv (based on ms timestamps)
       let nowMs = Date().timeIntervalSince1970 * 1000
@@ -92,8 +92,10 @@ extension TrainMapStore {
         progress = 0
       }
 
-      let lat = from.latitude + (to.latitude - from.latitude) * progress
-      let lon = from.longitude + (to.longitude - from.longitude) * progress
+      let lat = from.position.latitude + (to.position.latitude - from.position.latitude) * progress
+      let lon =
+        from.position.longitude
+        + (to.position.longitude - from.position.longitude) * progress
       let brg = bearing(from: from, to: to)
 
       var speed: Double? = nil
@@ -103,7 +105,7 @@ extension TrainMapStore {
 
       let id = "\(train.trCd)-\(idx)"
       results.append(
-        TrainPosition(id: id, latitude: lat, longitude: lon, bearing: brg, speedKph: speed))
+        LiveTrain(id: id, latitude: lat, longitude: lon, bearing: brg, speedKph: speed))
     }
     return results
   }
@@ -113,23 +115,33 @@ extension TrainMapStore {
   static var preview: TrainMapStore {
     let store = TrainMapStore(service: TrainMapService(httpClient: .development))
     store.stations = [
-      Station(code: "GMR", name: "Gambir", latitude: -6.1774, longitude: 106.8306),
-      Station(code: "JNG", name: "Jatinegara", latitude: -6.2149, longitude: 106.8707),
+      Station(
+        code: "GMR",
+        name: "Gambir",
+        position: Position(latitude: -6.1774, longitude: 106.8306),
+        city: nil
+      ),
+      Station(
+        code: "JNG",
+        name: "Jatinegara",
+        position: Position(latitude: -6.2149, longitude: 106.8707),
+        city: nil
+      ),
     ]
     store.routes = [
-      TrainLine(
+      Route(
         id: "L1",
         name: "Central Line",
         path: [
-          [-6.1774, 106.8306],
-          [-6.1900, 106.8450],
-          [-6.2050, 106.8600],
-          [-6.2149, 106.8707],
+          Position(latitude: -6.1774, longitude: 106.8306),
+          Position(latitude: -6.1900, longitude: 106.8450),
+          Position(latitude: -6.2050, longitude: 106.8600),
+          Position(latitude: -6.2149, longitude: 106.8707),
         ]
       )
     ]
     store.trains = [
-      TrainPosition(id: "T1", latitude: -6.1950, longitude: 106.8500, bearing: 45, speedKph: 60)
+      LiveTrain(id: "T1", latitude: -6.1950, longitude: 106.8500, bearing: 45, speedKph: 60)
     ]
     return store
   }

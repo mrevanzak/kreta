@@ -331,7 +331,10 @@ struct RawStation: Codable {
 
   var asStation: Station {
     return Station(
-      code: cd, name: nm, latitude: coordinates.latitude, longitude: coordinates.longitude)
+      code: cd,
+      name: nm,
+      position: Position(latitude: coordinates.latitude, longitude: coordinates.longitude),
+      city: nil)
   }
 }
 
@@ -346,7 +349,7 @@ struct RawRouteNode: Codable {
   let paths: [RawRoutePath]
   let coordinates: [Coordinates]
 
-  func asTrainLine(id: String) -> TrainLine? {
+  func asRoute(id: String) -> Route? {
     // Prefer `coordinates` if present; otherwise, flatten all `paths.pos`
     let coords: [Coordinates]
     if !coordinates.isEmpty {
@@ -357,8 +360,8 @@ struct RawRouteNode: Codable {
       return nil
     }
 
-    let path: [[Double]] = coords.map { [$0.latitude, $0.longitude] }
-    return TrainLine(id: id, name: id, path: path)
+    let path: [Position] = coords.map { Position(latitude: $0.latitude, longitude: $0.longitude) }
+    return Route(id: id, name: id, path: path)
   }
 }
 
