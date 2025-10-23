@@ -328,6 +328,12 @@ struct TrainServiceRow: View {
 }
 
 #Preview {
+  // Build a mock store
+  let mockStore = TrainMapStore(service: TrainMapService(httpClient: .development))
   
+  // Build the VM
+  let vm = AddTrainViewModel(store: mockStore)
+  
+  AddTrainView(store: mockStore)
+    .environment(mockStore)    // only if your view reads the store from env elsewhere
 }
-
