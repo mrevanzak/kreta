@@ -319,56 +319,39 @@ struct SaveOrderResponse: Codable {
   let message: String?
 }
 
-struct RawStation: Codable {
-  let cd: String?
-  let nm: String?
-  let coordinates: Coordinates?
-  let code: String?
-  let name: String?
-  let lat: Double?
-  let lng: Double?
-  let latitude: Double?
-  let longitude: Double?
-
-  struct Coordinates: Codable {
-    let latitude: Double?
-    let longitude: Double?
-  }
-
-  var asStation: Station? {
-    let codeVal = cd ?? code
-    let nameVal = nm ?? name
-
-    let latVal = latitude ?? lat ?? coordinates?.latitude
-    let lngVal = longitude ?? lng ?? coordinates?.longitude
-
-    guard let c = codeVal, let n = nameVal, let la = latVal, let lo = lngVal else { return nil }
-    return Station(code: c, name: n, latitude: la, longitude: lo)
-  }
-}
-
-// MARK: - Routes decoding models
-struct RawLatLng: Codable {
+struct Coordinates: Codable {
   let latitude: Double
   let longitude: Double
 }
 
+struct RawStation: Codable {
+  let cd: String
+  let nm: String
+  let coordinates: Coordinates
+
+  var asStation: Station {
+    return Station(
+      code: cd, name: nm, latitude: coordinates.latitude, longitude: coordinates.longitude)
+  }
+}
+
+// MARK: - Routes decoding models
 struct RawRoutePath: Codable {
-  let pos: [RawLatLng]
+  let pos: [Coordinates]
   let pos_cm: [Double]?
 }
 
 struct RawRouteNode: Codable {
-  let len_cm: Double?
-  let paths: [RawRoutePath]?
-  let coordinates: [RawLatLng]?
+  let len_cm: Double
+  let paths: [RawRoutePath]
+  let coordinates: [Coordinates]
 
   func asTrainLine(id: String) -> TrainLine? {
     // Prefer `coordinates` if present; otherwise, flatten all `paths.pos`
-    let coords: [RawLatLng]
-    if let coordinates, !coordinates.isEmpty {
+    let coords: [Coordinates]
+    if !coordinates.isEmpty {
       coords = coordinates
-    } else if let paths, !paths.isEmpty {
+    } else if !paths.isEmpty {
       coords = paths.flatMap { $0.pos }
     } else {
       return nil
@@ -385,14 +368,14 @@ struct RawGapekaPath: Codable {
   let stCd: String
   let orgStId: Int
   let orgStCd: String
-  let startMs: Int
-  let arrivMs: Int
-  let departMs: Int
+  let startMs: Double
+  let arrivMs: Double
+  let departMs: Double
   let routeId: Int?
   let invRoute: Bool
   let usrArriv: String?
-  let usrDepart: String
-  let usrNote: String
+  let usrDepart: String?
+  let usrNote: String?
 
   private enum CodingKeys: String, CodingKey {
     case stId = "st_id"
@@ -416,9 +399,9 @@ struct RawGapekaTrain: Codable {
   let trName: String
   let startStCd: String
   let endStCd: String
-  let departMs: Int
-  let arrivMs: Int
-  let modDayMs: Int
+  let departMs: Double
+  let arrivMs: Double
+  let modDayMs: Double
   let paths: [RawGapekaPath]
 
   private enum CodingKeys: String, CodingKey {

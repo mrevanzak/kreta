@@ -20,17 +20,17 @@ final class TrainMapStore {
     defer { isLoading = false }
     async let s = service.fetchStations()
     async let r = service.fetchRoutes()
-    async let rawTrains = service.fetchTrainPositions()
-    let (stations, routes, trainsRaw) = try await (s, r, rawTrains)
+    async let t = service.fetchTrainPositions()
+    let (stations, routes, trains) = try await (s, r, t)
     self.stations = stations
     self.routes = routes
-    self.trains = Self.mapGapekaToPositions(trainsRaw, stations: stations)
+    self.trains = Self.mapGapekaToPositions(trains, stations: stations)
   }
 
-  func refreshTrains() async throws {
-    let raw = try await service.fetchTrainPositions()
-    self.trains = Self.mapGapekaToPositions(raw, stations: stations)
-  }
+  // func refreshTrains() async throws {
+  //   let raw = try await service.fetchTrainPositions()
+  //   self.trains = Self.mapGapekaToPositions(raw, stations: stations)
+  // }
 }
 
 // MARK: - Mapping helpers
@@ -68,7 +68,7 @@ extension TrainMapStore {
     var results: [TrainPosition] = []
     for train in raw {
       // Use the current segment between nearest depart<=now<next.arriv (based on ms timestamps)
-      let nowMs = Int(Date().timeIntervalSince1970 * 1000)
+      let nowMs = Date().timeIntervalSince1970 * 1000
       let sorted = train.paths.sorted { $0.departMs < $1.departMs }
       guard
         let idx = sorted.firstIndex(where: { $0.departMs <= nowMs && nowMs < $0.arrivMs })
@@ -87,7 +87,7 @@ extension TrainMapStore {
       let end = segment.arrivMs
       let progress: Double
       if end > start {
-        progress = min(1, max(0, Double(nowMs - start) / Double(end - start)))
+        progress = min(1, max(0, (nowMs - start) / (end - start)))
       } else {
         progress = 0
       }
@@ -98,7 +98,7 @@ extension TrainMapStore {
 
       var speed: Double? = nil
       let distanceKm = haversine(from, to)
-      let hours = Double(end - start) / 3_600_000.0
+      let hours = (end - start) / 3_600_000.0
       if hours > 0 { speed = distanceKm / hours }
 
       let id = "\(train.trCd)-\(idx)"
