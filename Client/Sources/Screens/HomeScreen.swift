@@ -56,7 +56,7 @@ struct HomeScreen: View {
         .interactiveDismissDisabled(true)
         .padding(.horizontal, 21)
         .sheet(isPresented: $showAddSheet) {
-          // TrainPickerView()
+          AddTrainView(store: trainMapStore)
         }
       }
   }
