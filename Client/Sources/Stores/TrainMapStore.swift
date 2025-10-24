@@ -15,8 +15,7 @@ final class TrainMapStore {
   var trains: [LiveTrain] = []
   private var rawTrains: [RawGapekaTrain] = []
 
-  private nonisolated var liveTask: Task<Void, Never>? = nil
-  private nonisolated var stationsCancellable: AnyCancellable?
+  private var stationsCancellable: AnyCancellable?
 
   init(service: TrainMapService) {
     self.service = service
@@ -52,11 +51,6 @@ final class TrainMapStore {
       //   self.trains = Self.mapGapekaToLiveTrains(self.rawTrains, stations: newStations)
       // }
     }
-  }
-
-  deinit {
-    // Cancel subscriptions and tasks
-    stationsCancellable?.cancel()
   }
 
   // func refreshTrains() async throws {
