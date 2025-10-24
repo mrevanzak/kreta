@@ -19,7 +19,7 @@ enum SelectionStep {
 @Observable
 final class AddTrainViewModel {
   let store: TrainMapStore
-  let allStations: [Station]
+  var allStations: [Station]
 
   var currentStep: SelectionStep = .departure
   var searchText: String = ""

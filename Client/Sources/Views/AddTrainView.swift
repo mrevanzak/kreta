@@ -7,6 +7,106 @@
 
 import SwiftUI
 
+// MARK: - Animated Search Bar Component
+struct AnimatedSearchBar: View {
+    let step: SelectionStep
+    let departureStation: Station?
+    let arrivalStation: Station?
+    let selectedDate: Date?
+    @Binding var searchText: String
+    
+    @Namespace private var animation
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            // Departure station badge (always visible after selection)
+            if let departure = departureStation {
+                stationChip(departure, id: "departure")
+                    .transition(.scale.combined(with: .opacity))
+            }
+            
+            // Arrow (visible when departure is selected)
+            if departureStation != nil {
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .transition(.scale.combined(with: .opacity))
+            }
+            
+            // Arrival station badge (visible after selection)
+            if let arrival = arrivalStation {
+                stationChip(arrival, id: "arrival")
+                    .transition(.scale.combined(with: .opacity))
+            }
+            
+            // Search field (visible until both stations selected)
+            if step == .departure || step == .arrival {
+                searchField
+                    .matchedGeometryEffect(id: "searchField", in: animation)
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.95).combined(with: .opacity),
+                        removal: .scale(scale: 0.95).combined(with: .opacity)
+                    ))
+            }
+            
+            // Date display (visible in results step)
+            if step == .results, let date = selectedDate {
+                Spacer()
+                dateChip(date)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: step)
+        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: departureStation?.id)
+        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: arrivalStation?.id)
+    }
+    
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.subheadline)
+                .foregroundStyle(.tertiary)
+            
+            TextField(placeholder, text: $searchText)
+                .textFieldStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .frame(maxWidth: .infinity)
+    }
+    
+    private func stationChip(_ station: Station, id: String) -> some View {
+        Text(station.code)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .matchedGeometryEffect(id: id, in: animation)
+    }
+    
+    private func dateChip(_ date: Date) -> some View {
+        Text(date, format: .dateTime.day().month(.abbreviated))
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+    
+    private var placeholder: String {
+        switch step {
+        case .departure:
+            return "Stasiun / Kota"
+        case .arrival:
+            return "Stasiun Tujuan"
+        case .date, .results:
+            return ""
+        }
+    }
+}
+
 // MARK: - Main View
 @MainActor
 struct AddTrainView: View {
@@ -28,102 +128,44 @@ struct AddTrainView: View {
       }
       .navigationBarHidden(true)
     }
+    .padding(.horizontal)
   }
   
   private var headerView: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 16) {
+      // Title bar
       HStack {
         Text("Tambah Perjalanan Kereta")
-          .font(.title2)
-          .fontWeight(.bold)
+          .font(.title2.weight(.bold))
         
         Spacer()
         
         Button {
           dismiss()
         } label: {
-          Image(systemName: "xmark")
-            .font(.title3)
-            .foregroundColor(.primary)
+          Image(systemName: "xmark.circle.fill")
+            .font(.title2)
+            .foregroundStyle(.tertiary)
+            .symbolRenderingMode(.hierarchical)
         }
       }
       
+      // Subtitle
       Text(viewModel.stepTitle)
         .font(.subheadline)
-        .foregroundColor(.secondary)
-      
-      // Station selector or Date display
-      if viewModel.currentStep == .date || viewModel.currentStep == .results {
-        HStack(spacing: 12) {
-          stationBadge(viewModel.selectedDepartureStation)
-          
-          Image(systemName: "arrow.right")
-            .foregroundStyle(.secondary)
-          
-          stationBadge(viewModel.selectedArrivalStation)
-          
-          Spacer()
-          
-          if viewModel.currentStep == .results {
-            dateDisplay
-          }
-        }
-      } else if viewModel.currentStep == .arrival {
-        HStack(spacing: 12) {
-          stationBadge(viewModel.selectedDepartureStation)
-          
-          Image(systemName: "arrow.right")
-            .foregroundStyle(.secondary)
-          
-          searchBar
-        }
-      } else {
-        searchBar
-      }
-    }
-    .padding()
-    .background(Color(.systemBackground))
-  }
-  
-  private func stationBadge(_ station: Station?) -> some View {
-    Group {
-      if let station {
-        Text(station.code)
-          .font(.headline)
-          .foregroundStyle(.primary)
-          .frame(width: 60, height: 44)
-          .background(.gray.opacity(0.1))
-          .clipShape(RoundedRectangle(cornerRadius: 8))
-      }
-    }
-  }
-  
-  private var searchBar: some View {
-    HStack {
-      Image(systemName: "magnifyingglass")
         .foregroundStyle(.secondary)
       
-      TextField(viewModel.currentStep == .departure ? "Hari, Tanggal" : "Hari, Tanggal",
-                text: $viewModel.searchText)
+      // Animated search bar
+      AnimatedSearchBar(
+        step: viewModel.currentStep,
+        departureStation: viewModel.selectedDepartureStation,
+        arrivalStation: viewModel.selectedArrivalStation,
+        selectedDate: viewModel.selectedDate,
+        searchText: $viewModel.searchText
+      )
     }
-    .padding(12)
-    .background(.gray.opacity(0.1))
-    .clipShape(RoundedRectangle(cornerRadius: 8))
-    .frame(maxWidth: .infinity)
-  }
-  
-  private var dateDisplay: some View {
-    Group {
-      if let date = viewModel.selectedDate {
-        Text(date, format: .dateTime.weekday(.wide).day().month(.wide))
-          .font(.subheadline)
-          .foregroundStyle(.primary)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 8)
-          .background(.gray.opacity(0.1))
-          .clipShape(RoundedRectangle(cornerRadius: 8))
-      }
-    }
+    .padding()
+    .background(.regularMaterial)
   }
   
   @ViewBuilder
@@ -329,7 +371,7 @@ struct TrainServiceRow: View {
 
 #Preview {
   // Build a mock store
-  let mockStore = TrainMapStore(service: TrainMapService(httpClient: .development))
+  let mockStore = TrainMapStore.preview
   
   // Build the VM
   let vm = AddTrainViewModel(store: mockStore)
