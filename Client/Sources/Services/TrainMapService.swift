@@ -7,14 +7,6 @@ struct TrainMapService {
     self.httpClient = httpClient
   }
 
-  func fetchStations() async throws -> [Station] {
-    // API returns a dictionary keyed by numeric strings, e.g., { "3": { cd, nm, coordinates } }
-    let resource = Resource(
-      url: Constants.TrainMap.stations, method: .post(nil), modelType: [String: RawStation].self)
-    let raw = try await httpClient.load(resource)
-    return raw.values.compactMap { $0.asStation }
-  }
-
   func fetchRoutes() async throws -> [Route] {
     // API returns a dictionary keyed by route id → Node
     let resource = Resource(

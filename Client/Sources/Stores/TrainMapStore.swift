@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import Observation
 
@@ -5,11 +6,17 @@ import Observation
 @Observable
 final class TrainMapStore {
   private let service: TrainMapService
+  private let convexClient = Dependencies.shared.convexClient
+
+  var isLoading: Bool = false
 
   var stations: [Station] = []
   var routes: [Route] = []
   var trains: [LiveTrain] = []
-  var isLoading: Bool = false
+  private var rawTrains: [RawGapekaTrain] = []
+
+  private nonisolated var liveTask: Task<Void, Never>? = nil
+  private nonisolated var stationsCancellable: AnyCancellable?
 
   init(service: TrainMapService) {
     self.service = service
@@ -18,13 +25,38 @@ final class TrainMapStore {
   func loadInitial() async throws {
     isLoading = true
     defer { isLoading = false }
-    async let s = service.fetchStations()
+
+    // Start subscription to stations
+    startStationsSubscription()
+
+    // Fetch routes and train positions
     async let r = service.fetchRoutes()
     async let t = service.fetchTrainPositions()
-    let (stations, routes, trains) = try await (s, r, t)
-    self.stations = stations
+    let (routes, raw) = try await (r, t)
+
     self.routes = routes
-    self.trains = Self.mapGapekaToLiveTrains(trains, stations: stations)
+    self.rawTrains = raw
+  }
+
+  private func startStationsSubscription() {
+    stationsCancellable = convexClient.subscribe(
+      to: "stations:get",
+      yielding: [Station].self
+    )
+    .replaceError(with: [])
+    .sink { [weak self] newStations in
+      guard let self = self else { return }
+      self.stations = newStations
+      // Update trains when stations change
+      // if !self.rawTrains.isEmpty {
+      //   self.trains = Self.mapGapekaToLiveTrains(self.rawTrains, stations: newStations)
+      // }
+    }
+  }
+
+  deinit {
+    // Cancel subscriptions and tasks
+    stationsCancellable?.cancel()
   }
 
   // func refreshTrains() async throws {
@@ -34,83 +66,6 @@ final class TrainMapStore {
 }
 
 // MARK: - Mapping helpers
-extension TrainMapStore {
-  fileprivate static func mapGapekaToLiveTrains(_ raw: [RawGapekaTrain], stations: [Station])
-    -> [LiveTrain]
-  {
-    let stationByCode: [String: Station] = Dictionary(
-      uniqueKeysWithValues: stations.map { ($0.code, $0) })
-
-    func haversine(_ a: Station, _ b: Station) -> Double {
-      let lat1 = a.position.latitude * .pi / 180
-      let lon1 = a.position.longitude * .pi / 180
-      let lat2 = b.position.latitude * .pi / 180
-      let lon2 = b.position.longitude * .pi / 180
-      let dLat = lat2 - lat1
-      let dLon = lon2 - lon1
-      let h = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
-      let c = 2 * atan2(sqrt(h), sqrt(1 - h))
-      let earthRadiusKm = 6371.0
-      return earthRadiusKm * c
-    }
-
-    func bearing(from a: Station, to b: Station) -> Double {
-      let lat1 = a.position.latitude * .pi / 180
-      let lon1 = a.position.longitude * .pi / 180
-      let lat2 = b.position.latitude * .pi / 180
-      let lon2 = b.position.longitude * .pi / 180
-      let y = sin(lon2 - lon1) * cos(lat2)
-      let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon2 - lon1)
-      let brng = atan2(y, x) * 180 / .pi
-      return fmod((brng + 360), 360)
-    }
-
-    var results: [LiveTrain] = []
-    for train in raw {
-      // Use the current segment between nearest depart<=now<next.arriv (based on ms timestamps)
-      let nowMs = Date().timeIntervalSince1970 * 1000
-      let sorted = train.paths.sorted { $0.departMs < $1.departMs }
-      guard
-        let idx = sorted.firstIndex(where: { $0.departMs <= nowMs && nowMs < $0.arrivMs })
-          ?? sorted.firstIndex(where: { nowMs < $0.arrivMs }) ?? sorted.indices.last
-      else {
-        continue
-      }
-      let segment = sorted[idx]
-      guard let from = stationByCode[segment.orgStCd] ?? stationByCode[segment.stCd],
-        let to = stationByCode[segment.stCd] ?? stationByCode[segment.orgStCd]
-      else {
-        continue
-      }
-
-      let start = segment.departMs
-      let end = segment.arrivMs
-      let progress: Double
-      if end > start {
-        progress = min(1, max(0, (nowMs - start) / (end - start)))
-      } else {
-        progress = 0
-      }
-
-      let lat = from.position.latitude + (to.position.latitude - from.position.latitude) * progress
-      let lon =
-        from.position.longitude
-        + (to.position.longitude - from.position.longitude) * progress
-      let brg = bearing(from: from, to: to)
-
-      var speed: Double? = nil
-      let distanceKm = haversine(from, to)
-      let hours = (end - start) / 3_600_000.0
-      if hours > 0 { speed = distanceKm / hours }
-
-      let id = "\(train.trCd)-\(idx)"
-      results.append(
-        LiveTrain(id: id, latitude: lat, longitude: lon, bearing: brg, speedKph: speed))
-    }
-    return results
-  }
-}
-
 extension TrainMapStore {
   static var preview: TrainMapStore {
     let store = TrainMapStore(service: TrainMapService(httpClient: .development))
@@ -141,7 +96,21 @@ extension TrainMapStore {
       )
     ]
     store.trains = [
-      LiveTrain(id: "T1", latitude: -6.1950, longitude: 106.8500, bearing: 45, speedKph: 60)
+      LiveTrain(
+        id: "T1-0",
+        code: "T1",
+        name: "Sample Express",
+        position: Position(latitude: -6.1950, longitude: 106.8500),
+        bearing: 45,
+        speedKph: 60,
+        fromStation: store.stations[0],
+        toStation: store.stations[1],
+        segmentDeparture: Date().addingTimeInterval(-15 * 60),
+        segmentArrival: Date().addingTimeInterval(15 * 60),
+        progress: 0.5,
+        journeyDeparture: Date().addingTimeInterval(-60 * 60),
+        journeyArrival: Date().addingTimeInterval(2 * 60 * 60)
+      )
     ]
     return store
   }
