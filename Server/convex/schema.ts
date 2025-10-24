@@ -32,4 +32,15 @@ export default defineSchema({
   gapeka: defineTable({
     lastUpdatedAt: v.number(),
   }).index("by_lastUpdatedAt", ["lastUpdatedAt"]),
+
+  stations: defineTable({
+    id: v.string(),
+    code: v.string(),
+    name: v.string(),
+    position: v.object({
+      latitude: v.number(),
+      longitude: v.number(),
+    }),
+    city: v.string(),
+  }).index("by_code", ["code"]),
 });
