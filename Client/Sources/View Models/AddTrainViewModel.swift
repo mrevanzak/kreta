@@ -103,6 +103,21 @@ final class AddTrainViewModel {
     availableTrains = store.routes
   }
 
+  func goBackToDeparture() {
+    selectedArrivalStation = nil
+    selectedDate = nil
+    availableTrains = []
+    currentStep = .departure
+    searchText = ""
+  }
+  
+  func goBackToArrival() {
+    selectedDate = nil
+    availableTrains = []
+    currentStep = .arrival
+    searchText = ""
+  }
+  
   func reset() {
     currentStep = .departure
     selectedDepartureStation = nil

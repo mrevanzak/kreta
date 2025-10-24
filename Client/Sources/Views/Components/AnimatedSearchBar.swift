@@ -7,35 +7,65 @@
 
 import SwiftUI
 
+/// An animated search bar that transitions smoothly between station selection states.
+/// Station chips are tappable to allow users to navigate back and edit their selections.
 struct AnimatedSearchBar: View {
     let step: SelectionStep
     let departureStation: Station?
     let arrivalStation: Station?
     let selectedDate: Date?
     @Binding var searchText: String
+    let onDepartureChipTap: () -> Void
+    let onArrivalChipTap: () -> Void
     
     @Namespace private var animation
+    @State private var clearingDeparture = false
+    @State private var clearingArrival = false
     
     var body: some View {
         HStack(spacing: 8) {
-            // Departure station badge (always visible after selection)
-            if let departure = departureStation {
-                stationChip(departure, id: "departure")
-                    .transition(.scale.combined(with: .opacity))
+            // Departure station badge (visible from arrival step onwards, unless clearing)
+            if let departure = departureStation, step != .departure || clearingDeparture {
+                Button {
+                    clearingDeparture = true
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(250))
+                        onDepartureChipTap()
+                        try? await Task.sleep(for: .milliseconds(50))
+                        clearingDeparture = false
+                    }
+                } label: {
+                    stationChip(departure, id: "departure", isClearing: clearingDeparture)
+                }
+                .buttonStyle(ChipButtonStyle())
+                .transition(.scale.combined(with: .opacity))
+                .sensoryFeedback(.selection, trigger: clearingDeparture)
             }
             
-            // Arrow (visible when departure is selected)
-            if departureStation != nil {
+            // Arrow (visible when departure is selected and not in departure step)
+            if departureStation != nil && step != .departure {
                 Image(systemName: "arrow.right")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .transition(.scale.combined(with: .opacity))
             }
             
-            // Arrival station badge (visible after selection)
-            if let arrival = arrivalStation {
-                stationChip(arrival, id: "arrival")
-                    .transition(.scale.combined(with: .opacity))
+            // Arrival station badge (visible from date step onwards, unless clearing)
+            if let arrival = arrivalStation, (step == .date || step == .results) && !clearingArrival {
+                Button {
+                    clearingArrival = true
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(250))
+                        onArrivalChipTap()
+                        try? await Task.sleep(for: .milliseconds(50))
+                        clearingArrival = false
+                    }
+                } label: {
+                    stationChip(arrival, id: "arrival", isClearing: clearingArrival)
+                }
+                .buttonStyle(ChipButtonStyle())
+                .transition(.scale.combined(with: .opacity))
+                .sensoryFeedback(.selection, trigger: clearingArrival)
             }
             
             // Search field (visible until both stations selected)
@@ -75,14 +105,29 @@ struct AnimatedSearchBar: View {
         .frame(maxWidth: .infinity)
     }
     
-    private func stationChip(_ station: Station, id: String) -> some View {
-        Text(station.code)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .matchedGeometryEffect(id: id, in: animation)
+    private func stationChip(_ station: Station, id: String, isClearing: Bool) -> some View {
+        HStack(spacing: 6) {
+            Text(station.code)
+                .font(.subheadline.weight(.semibold))
+                .opacity(isClearing ? 0 : 1)
+                .scaleEffect(isClearing ? 0.5 : 1)
+            
+            Image(systemName: "xmark.circle.fill")
+                .font(.caption)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .opacity(isClearing ? 0 : 1)
+                .scaleEffect(isClearing ? 0.5 : 1)
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(minWidth: 60)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .matchedGeometryEffect(id: id, in: animation)
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .hoverEffect(.highlight)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isClearing)
     }
     
     private func dateChip(_ date: Date) -> some View {
@@ -103,5 +148,17 @@ struct AnimatedSearchBar: View {
         case .date, .results:
             return ""
         }
+    }
+}
+
+// MARK: - Button Style
+
+/// Custom button style for station chips with press animation and feedback.
+struct ChipButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }

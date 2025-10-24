@@ -60,7 +60,13 @@ struct AddTrainView: View {
                 departureStation: viewModel.selectedDepartureStation,
                 arrivalStation: viewModel.selectedArrivalStation,
                 selectedDate: viewModel.selectedDate,
-                searchText: $viewModel.searchText
+                searchText: $viewModel.searchText,
+                onDepartureChipTap: {
+                    viewModel.goBackToDeparture()
+                },
+                onArrivalChipTap: {
+                    viewModel.goBackToArrival()
+                }
             )
         }
         .padding()
