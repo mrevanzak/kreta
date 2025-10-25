@@ -27,36 +27,68 @@ final class TrainMapStore {
     isLoading = true
     defer { isLoading = false }
 
-    // Subscribe to stations from Convex
-    print("🚂 TrainMapStore: Subscribing to stations from Convex...")
-    print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
+    do {
+      // Subscribe to stations from Convex
+      print("🚂 TrainMapStore: Subscribing to stations from Convex...")
+      print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
 
-    stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
-      .receive(on: DispatchQueue.main)
-      .sink(
-        receiveCompletion: { completion in
-          switch completion {
-          case .finished:
-            print("🚂 TrainMapStore: Stations subscription completed")
-          case .failure(let error):
-            print("🚂 TrainMapStore: Stations subscription error: \(error)")
+      stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+        .receive(on: DispatchQueue.main)
+        .sink(
+          receiveCompletion: { completion in
+            switch completion {
+            case .finished:
+              print("🚂 TrainMapStore: Stations subscription completed")
+            case .failure(let error):
+              print("🚂 TrainMapStore: Stations subscription error: \(error)")
+            }
+          },
+          receiveValue: { stations in
+            print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
+            self.stations = stations
+          })
+
+      // Fetch routes and train positions concurrently
+      print("🚂 TrainMapStore: Fetching routes and train positions...")
+
+      async let routesTask: Void = {
+        do {
+          let routes = try await service.fetchRoutes()
+          print("🚂 TrainMapStore: Fetched \(routes.count) routes")
+          await MainActor.run {
+            self.routes = routes
           }
-        },
-        receiveValue: { stations in
-          print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
-          self.stations = stations
-        })
+        } catch {
+          print("🚂 TrainMapStore: Routes fetch error: \(error)")
+          throw TrainMapError.routesFetchFailed(error.localizedDescription)
+        }
+      }()
 
-    // Fetch routes and train positions
-    print("🚂 TrainMapStore: Fetching routes and train positions...")
-    async let r = service.fetchRoutes()
-    async let t = service.fetchTrainPositions()
-    let (routes, raw) = try await (r, t)
-    print("🚂 TrainMapStore: Fetched \(routes.count) routes and \(raw.count) trains")
+      async let trainsTask: Void = {
+        do {
+          let raw = try await service.fetchTrainPositions()
+          print("🚂 TrainMapStore: Fetched \(raw.count) trains")
+          await MainActor.run {
+            self.rawTrains = raw
+          }
+        } catch {
+          print("🚂 TrainMapStore: Train positions fetch error: \(error)")
+          throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
+        }
+      }()
 
-    self.routes = routes
-    self.rawTrains = raw
-    print("🚂 TrainMapStore: loadInitial() completed")
+      // Wait for both tasks to complete
+      try await routesTask
+      try await trainsTask
+
+    } catch let error as TrainMapError {
+      // Re-throw TrainMapError as-is
+      throw error
+    } catch {
+      // Wrap other errors
+      print("🚂 TrainMapStore: Unexpected error: \(error)")
+      throw TrainMapError.dataMappingFailed(error.localizedDescription)
+    }
   }
 }
 

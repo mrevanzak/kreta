@@ -7,12 +7,22 @@
 
 import SwiftUI
 
+/// Legacy message view - DEPRECATED
+/// Use ToastService.shared or @Environment(\.toastService) instead
+@available(
+  *, deprecated, message: "Use ToastService.shared or @Environment(\\.toastService) instead"
+)
 enum MessageType: String {
   case error
   case info
   case success
 }
 
+/// Legacy message wrapper - DEPRECATED
+/// Use ToastService.shared or @Environment(\.toastService) instead
+@available(
+  *, deprecated, message: "Use ToastService.shared or @Environment(\\.toastService) instead"
+)
 struct MessageWrapper: Identifiable {
   let id: UUID = UUID()
   var message: String
@@ -20,6 +30,11 @@ struct MessageWrapper: Identifiable {
   var messageType: MessageType = .error
 }
 
+/// Legacy message view - DEPRECATED
+/// Use ToastService.shared or @Environment(\.toastService) instead
+@available(
+  *, deprecated, message: "Use ToastService.shared or @Environment(\\.toastService) instead"
+)
 struct MessageView: View {
   @Binding var messageWrapper: MessageWrapper?
 

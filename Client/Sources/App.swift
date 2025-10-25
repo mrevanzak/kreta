@@ -12,7 +12,7 @@ struct KretaApp: App {
     WindowGroup {
       MainTabNavigator()
         .environment(\.convexClient, convexClient)
-        .withMessageView()
+        .withToast()
     }
   }
 }

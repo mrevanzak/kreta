@@ -1,4 +1,5 @@
 import DebugSwift
+import MijickPopups
 import UIKit
 @preconcurrency import UserNotifications
 
@@ -7,6 +8,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
   private let pushRegistrationService = PushRegistrationService.shared
   private let liveActivityService = TrainLiveActivityService.shared
   private let debugSwift = DebugSwift()
+
+  func application(
+    _ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    let sceneConfig = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+    sceneConfig.delegateClass = PopupSceneDelegate.self
+    return sceneConfig
+  }
 
   func application(
     _ application: UIApplication,

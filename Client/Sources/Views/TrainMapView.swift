@@ -3,7 +3,7 @@ import SwiftUI
 
 struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
-  @Environment(\.showMessage) private var showMessage
+  @Environment(\.showToast) private var showToast
 
   var body: some View {
     Group {
@@ -57,13 +57,21 @@ struct TrainMapView: View {
         .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
       )
       .ignoresSafeArea()
-      .animation(.linear(duration: 1.0), value: mapStore.trains)
+    }
+    .onAppear {
+      showToast("Loading train map...", type: .error)
     }
     .task {
       do {
         try await mapStore.loadInitial()
+      } catch let error as TrainMapError {
+        let errorMessage = "\(error.errorName): \(error.localizedDescription)"
+        print("🚂 TrainMapView: \(errorMessage)")
+        showToast(errorMessage)
       } catch {
-        showMessage(error.localizedDescription)
+        let errorMessage = "UnknownError: \(error.localizedDescription)"
+        print("🚂 TrainMapView: \(errorMessage)")
+        showToast(errorMessage)
       }
     }
   }
