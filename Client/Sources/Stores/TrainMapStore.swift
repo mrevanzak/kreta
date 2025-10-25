@@ -22,35 +22,41 @@ final class TrainMapStore {
   }
 
   func loadInitial() async throws {
+    print("🚂 TrainMapStore: Starting loadInitial()")
+
     isLoading = true
     defer { isLoading = false }
 
-    // Fetch routes and train positions
-    async let r = service.fetchRoutes()
-    async let t = service.fetchTrainPositions()
-    let (routes, raw) = try await (r, t)
+    // Subscribe to stations from Convex
+    print("🚂 TrainMapStore: Subscribing to stations from Convex...")
+    print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
 
-    // Subscribe to Convex stations data
     stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
       .receive(on: DispatchQueue.main)
       .sink(
-        receiveCompletion: { [weak self] completion in
+        receiveCompletion: { completion in
           switch completion {
           case .finished:
-            print("Stations subscription completed")
+            print("🚂 TrainMapStore: Stations subscription completed")
           case .failure(let error):
-            print("Stations subscription error: \(error)")
-            // Reset stations to empty array on error to avoid stale data
-            self?.stations = []
+            print("🚂 TrainMapStore: Stations subscription error: \(error)")
           }
         },
-        receiveValue: { [weak self] stations in
-          self?.stations = stations
-        }
-      )
+        receiveValue: { stations in
+          print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
+          self.stations = stations
+        })
+
+    // Fetch routes and train positions
+    print("🚂 TrainMapStore: Fetching routes and train positions...")
+    async let r = service.fetchRoutes()
+    async let t = service.fetchTrainPositions()
+    let (routes, raw) = try await (r, t)
+    print("🚂 TrainMapStore: Fetched \(routes.count) routes and \(raw.count) trains")
 
     self.routes = routes
     self.rawTrains = raw
+    print("🚂 TrainMapStore: loadInitial() completed")
   }
 }
 

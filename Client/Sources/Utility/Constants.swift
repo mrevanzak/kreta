@@ -8,18 +8,10 @@
 import Foundation
 
 struct Constants {
-
   struct Convex {
-    static let isProduction = true
-
     // Point this to your Convex deployment; consider swapping via build configs
     static let deploymentUrl: String =
-      switch isProduction {
-      case true:
-        ProcessInfo.processInfo.environment["CONVEX_PROD_URL"] ?? ""
-      default:
-        ProcessInfo.processInfo.environment["CONVEX_DEV_URL"] ?? ""
-      }
+      ProcessInfo.processInfo.environment["CONVEX_URL"]!
   }
 
   struct Urls {

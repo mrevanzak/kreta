@@ -22,6 +22,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
     #if DEBUG
       debugSwift.setup()
+
+      DebugSwift.App.shared.customInfo = {
+        [
+          .init(
+            title: "Custom Development Info",
+            infos: [.init(title: "Convex URL", subtitle: Constants.Convex.deploymentUrl)])
+        ]
+      }
+
       debugSwift.show()
     #endif
 
