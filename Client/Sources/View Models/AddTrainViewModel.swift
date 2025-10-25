@@ -34,6 +34,58 @@ final class AddTrainViewModel {
     self.store = store
     self.allStations = store.stations
   }
+  
+  func parseAndSelectDate(from text: String) {
+    if let date = parseDateFromText(text) {
+      selectDate(date)
+    }
+  }
+  
+  private func parseDateFromText(_ text: String) -> Date? {
+    let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    
+    // Handle common Indonesian date patterns
+    // e.g., "24 oktober", "24/10", "24-10", "24 okt"
+    let calendar = Calendar.current
+    let currentYear = calendar.component(.year, from: Date())
+    
+    // Pattern: "DD Month" or "DD MMM"
+    let monthNames = [
+      "januari": 1, "februari": 2, "maret": 3, "april": 4,
+      "mei": 5, "juni": 6, "juli": 7, "agustus": 8,
+      "september": 9, "oktober": 10, "november": 11, "desember": 12,
+      "jan": 1, "feb": 2, "mar": 3, "apr": 4,
+      "jun": 6, "jul": 7, "agu": 8, "ags": 8,
+      "sep": 9, "okt": 10, "nov": 11, "des": 12
+    ]
+    
+    // Try to parse "DD Month" format
+    let components = cleanText.components(separatedBy: .whitespaces)
+    if components.count >= 2,
+       let day = Int(components[0]),
+       let month = monthNames[components[1]] {
+      var dateComponents = DateComponents()
+      dateComponents.year = currentYear
+      dateComponents.month = month
+      dateComponents.day = day
+      return calendar.date(from: dateComponents)
+    }
+    
+    // Try DD/MM or DD-MM format
+    let separators = CharacterSet(charactersIn: "/-")
+    let parts = cleanText.components(separatedBy: separators)
+    if parts.count >= 2,
+       let day = Int(parts[0]),
+       let month = Int(parts[1]) {
+      var dateComponents = DateComponents()
+      dateComponents.year = currentYear
+      dateComponents.month = month
+      dateComponents.day = day
+      return calendar.date(from: dateComponents)
+    }
+    
+    return nil
+  }
 
   var filteredStations: [Station] {
     let stations: [Station]
