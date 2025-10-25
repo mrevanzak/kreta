@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TrainCard: View {
   let train: LiveTrain
+  let onDelete: () -> Void
   
   var body: some View {
     VStack(spacing: 0) {
@@ -28,7 +29,7 @@ struct TrainCard: View {
           Spacer()
           
           Button(action: {
-            // Handle delete action
+            onDelete()
           }) {
             Image(systemName: "trash")
               .foregroundStyle(.red)
@@ -145,7 +146,7 @@ struct TrainCard: View {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
     
-    TrainCard(train: train)
+    TrainCard(train: train, onDelete: {})
       .padding()
   }
 }

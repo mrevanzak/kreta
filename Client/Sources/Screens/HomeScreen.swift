@@ -9,13 +9,13 @@ struct HomeScreen: View {
   
   @State private var showAddSheet = false
   @State private var showBottomSheet = true
+  @State private var selectedTrains: [LiveTrain] = []
   
   var body: some View {
     TrainMapView()
       .environment(trainMapStore)
       .sheet(isPresented: $showBottomSheet) {
         // Bottom card
-        
         VStack(alignment: .leading, spacing: 16) {
           HStack {
             Text("Perjalanan Kereta")
@@ -30,35 +30,57 @@ struct HomeScreen: View {
             }
           }
           
-          Button {
-            showAddSheet = true
-          } label: {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .fill(Color.gray.opacity(0.15))
-              .frame(maxWidth: .infinity)
-              .overlay(
-                VStack(spacing: 10) {
-                  Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
-                  Text("Tambah Perjalanan Kereta")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                }
-              )
+          // Show trains if available, otherwise show add button
+          if selectedTrains.isEmpty {
+            Button {
+              showAddSheet = true
+            } label: {
+              RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.gray.opacity(0.15))
+                .frame(maxWidth: .infinity)
+                .overlay(
+                  VStack(spacing: 10) {
+                    Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
+                    Text("Tambah Perjalanan Kereta")
+                      .font(.headline)
+                      .foregroundStyle(.secondary)
+                  }
+                )
+            }
+            .buttonStyle(.plain)
+          } else {
+            VStack(spacing: 12) {
+              ForEach(selectedTrains) { train in
+                TrainCard(train: train, onDelete: {
+                  deleteTrain(train)
+                })
+              }
+            }
           }
-          .buttonStyle(.plain)
-          
         }
         .presentationBackgroundInteraction(.enabled)
-        .presentationDetents([.fraction(0.35)])
+        .presentationDetents([.fraction(0.35), .medium])
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
         .padding(.horizontal, 21)
         .padding(.top, 23)
         .sheet(isPresented: $showAddSheet) {
-          AddTrainView(store: trainMapStore)
-            .presentationDragIndicator(.visible)
+          AddTrainView(
+            store: trainMapStore,
+            onTrainSelected: { train in
+              selectedTrains.append(train)
+              showAddSheet = false
+            }
+          )
+          .presentationDragIndicator(.visible)
         }
       }
+  }
+  
+  private func deleteTrain(_ train: LiveTrain) {
+    withAnimation(.spring(response: 0.3)) {
+      selectedTrains.removeAll { $0.id == train.id }
+    }
   }
 }
 

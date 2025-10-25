@@ -11,9 +11,11 @@ import SwiftUI
 struct AddTrainView: View {
   @State private var viewModel: AddTrainViewModel
   @Environment(\.dismiss) private var dismiss
+  let onTrainSelected: (LiveTrain) -> Void
   
-  init(store: TrainMapStore) {
+  init(store: TrainMapStore, onTrainSelected: @escaping (LiveTrain) -> Void) {
     _viewModel = State(initialValue: AddTrainViewModel(store: store))
+    self.onTrainSelected = onTrainSelected
   }
   
   var body: some View {
@@ -150,6 +152,10 @@ struct AddTrainView: View {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.availableTrains) { train in
           TrainServiceRow(train: train)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              onTrainSelected(train)
+            }
           
           Divider()
             .padding(.leading, 16)
@@ -162,6 +168,6 @@ struct AddTrainView: View {
 #Preview {
   let mockStore = TrainMapStore.preview
   
-  AddTrainView(store: mockStore)
+  AddTrainView(store: mockStore, onTrainSelected: { _ in })
     .environment(mockStore)
 }
