@@ -28,7 +28,7 @@ final class AddTrainViewModel {
   var selectedArrivalStation: Station?
   var selectedDate: Date?
 
-  var availableTrains: [Route] = []
+  var availableTrains: [LiveTrain] = []
 
   init(store: TrainMapStore) {
     self.store = store
@@ -152,7 +152,7 @@ final class AddTrainViewModel {
     //
     //    availableTrains = sampleTrains(from: from, to: to, on: date)
 
-    availableTrains = store.routes
+    availableTrains = store.trains
   }
 
   func goBackToDeparture() {

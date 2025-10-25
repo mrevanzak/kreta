@@ -8,39 +8,47 @@
 import SwiftUI
 
 struct StationRow: View {
-    let station: Station
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Station code badge
-            ZStack {
-                Circle()
-                    .fill(.green.opacity(0.2))
-                    .frame(width: 56, height: 56)
-                
-                Text(station.code)
-                    .font(.headline)
-                    .fontWeight(.bold)
-            }
-            
-            // Station name
-            VStack(alignment: .leading, spacing: 4) {
-                Text(station.name)
-                    .font(.headline)
-                
-                Text(station.name)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            // Chevron indicator
-            Image(systemName: "chevron.right")
-                .foregroundStyle(.secondary)
-                .font(.footnote)
-        }
-        .padding()
-        .contentShape(Rectangle())
+  @ScaledMetric(relativeTo: .title3) private var badgeSize: CGFloat = 56
+  let station: Station
+  
+  var body: some View {
+    HStack(spacing: 12) {
+      // Station code badge
+      ZStack {
+        Circle()
+          .glassEffect()
+          .frame(width: 44)
+        
+        Text(station.code)
+          .font(.callout)
+          .foregroundStyle(.secondary)
+          
+      }
+      
+      // Station name
+      VStack(alignment: .leading, spacing: 4) {
+        Text(station.name)
+          .font(.title3)
+        
+        Text(station.city ?? "Unknown City")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
+      
+      Spacer()
+      
     }
+    .padding()
+    .contentShape(Rectangle())
+  }
+}
+
+#Preview {
+  let station = Station(
+    code: "JNG",
+    name: "Jatinegara",
+    position: Position(latitude: -6.2149, longitude: 106.8707),
+    city: "Jakarta"
+  )
+  StationRow(station: station)
 }

@@ -27,7 +27,7 @@ struct AddTrainView: View {
       }
       .navigationBarHidden(true)
     }
-    .padding(.horizontal)
+    .padding(.top)
   }
   
   private var headerView: some View {

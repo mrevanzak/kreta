@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-/// An animated search bar that transitions smoothly between station selection states.
-/// Station chips are tappable to allow users to navigate back and edit their selections.
 struct AnimatedSearchBar: View {
   let step: SelectionStep
   let departureStation: Station?
@@ -197,7 +195,7 @@ struct AnimatedSearchBar: View {
   }
   
   private func dateChip(_ date: Date) -> some View {
-    Text(date, format: .dateTime.day().month(.abbreviated))
+    Text(date, format: .dateTime.day().month())
       .font(.subheadline.weight(.medium))
       .foregroundStyle(.secondary)
       .padding(.horizontal, 12)

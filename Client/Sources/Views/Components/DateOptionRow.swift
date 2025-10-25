@@ -8,37 +8,43 @@
 import SwiftUI
 
 struct DateOptionRow: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Icon badge
-            ZStack {
-                Circle()
-                    .fill(.green.opacity(0.2))
-                    .frame(width: 56, height: 56)
-                
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(.green)
-            }
-            
-            // Title and subtitle
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            
-            Spacer()
+  let icon: String
+  let title: String
+  let subtitle: String
+  
+  var body: some View {
+    HStack(spacing: 12) {
+      // Icon badge
+      ZStack {
+        Circle()
+          .glassEffect()
+          .frame(width: 44)
+        
+        Image(systemName: icon)
+          .font(.title3)
+          .foregroundStyle(.secondary)
+      }
+      
+      // Title and subtitle
+      VStack(alignment: .leading, spacing: 4) {
+        Text(title)
+          .font(.headline)
+        
+        if !subtitle.isEmpty {
+          Text(subtitle)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
-        .contentShape(Rectangle())
+      }
+      
+      Spacer()
     }
+    .contentShape(Rectangle())
+  }
+}
+
+#Preview {
+  DateOptionRow(icon: "calendar",
+                title: "Hari Ini",
+                subtitle: "Pilih berdasarkan hari keberangkatan")
 }
