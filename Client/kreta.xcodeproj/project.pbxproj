@@ -24,6 +24,7 @@
 		C501C17A2E9616DF00CC2B4E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C501C1792E9616DF00CC2B4E /* WidgetKit.framework */; };
 		C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */; };
 		C501C1892E9616E100CC2B4E /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */ = {isa = PBXBuildFile; productRef = C51929E22EAB3AC30036AE74 /* MijickPopups */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
 /* End PBXBuildFile section */
@@ -57,7 +58,7 @@
 		C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C501C1792E9616DF00CC2B4E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		C5F65E5C2EA7427100F57118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; sourceTree = "<group>"; };
+		C5F65E5C2EA7427100F57118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +89,7 @@
 				8D5B74462CAF70C200AA4BAC /* JWTDecode in Frameworks */,
 				8D8021832CFCF28E006C709C /* StripeFinancialConnections in Frameworks */,
 				8D80217F2CFCF28E006C709C /* StripeApplePay in Frameworks */,
+				C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */,
 				8D8021852CFCF28E006C709C /* StripeIdentity in Frameworks */,
 				8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
@@ -173,6 +175,7 @@
 				8D80218A2CFCF28F006C709C /* StripePaymentsUI */,
 				C57893C32E93769300375616 /* ConvexMobile */,
 				C5892C972EA8CB370043E6B9 /* DebugSwift */,
+				C51929E22EAB3AC30036AE74 /* MijickPopups */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -209,7 +212,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					8DDE5FB02C8A7D9300A0DBE0 = {
 						CreatedOnToolsVersion = 15.2;
@@ -233,6 +236,7 @@
 				8D80217B2CFCF28E006C709C /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
 				C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */,
 				C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */,
+				C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -326,6 +330,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -349,6 +354,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -389,6 +395,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -405,6 +412,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -421,10 +429,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -465,10 +472,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -505,7 +511,6 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -541,7 +546,6 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -619,6 +623,14 @@
 				minimumVersion = 24.1.0;
 			};
 		};
+		C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Mijick/Popups";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.5;
+			};
+		};
 		C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/get-convex/convex-swift";
@@ -687,6 +699,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D80217B2CFCF28E006C709C /* XCRemoteSwiftPackageReference "stripe-ios-spm" */;
 			productName = StripePaymentsUI;
+		};
+		C51929E22EAB3AC30036AE74 /* MijickPopups */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */;
+			productName = MijickPopups;
 		};
 		C57893C32E93769300375616 /* ConvexMobile */ = {
 			isa = XCSwiftPackageProductDependency;

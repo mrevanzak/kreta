@@ -8,12 +8,10 @@
 import Foundation
 
 struct Constants {
-
   struct Convex {
     // Point this to your Convex deployment; consider swapping via build configs
     static let deploymentUrl: String =
-      ProcessInfo.processInfo.environment["CONVEX_URL"]
-      ?? "https://YOUR-DEPLOYMENT.convex.cloud"
+      ProcessInfo.processInfo.environment["CONVEX_URL"]!
   }
 
   struct Urls {
@@ -44,6 +42,14 @@ struct Constants {
     static func updateProduct(_ productId: Int) -> URL {
       URL(string: "http://localhost:8080/api/products/\(productId)")!
     }
+  }
+
+  struct TrainMap {
+    // Base for persepuran server; override via env if needed later
+    private static let base: String = "https://persepuran-server.mrevanzak.workers.dev/api/train"
+    static let stations: URL = URL(string: "\(base)/stations")!
+    static let routes: URL = URL(string: "\(base)/routes")!
+    static let positions: URL = URL(string: "\(base)/gapeka")!
   }
 
 }

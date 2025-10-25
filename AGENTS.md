@@ -71,12 +71,12 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 ## 6. Development & Testing Workflow
 
 - **Local Development Environment:**
+
   1. Open `Client/kreta.xcodeproj` in Xcode 15 or newer (iOS 17 SDK recommended for `Observation`).
   2. Provide required environment variables (e.g., `STRIPE_PUBLISHABLE_KEY`, `CONVEX_URL`, API base URLs) via the run scheme or shell before launching.
   3. Ensure backend endpoints at `http://localhost:8080` are available (either by running the Bun/Convex server or a separate API service).
-
-4. For command-line builds use `xcodebuild -project Client/kreta.xcodeproj -scheme kreta -destination 'platform=iOS Simulator,name=iPhone 15' build` and swap `build` with `test` when tests exist.
-5. For the server, run `bun install` then `bun run index.ts` or `npm run dev` with `npx convex dev` to start Convex.
+  4. For command-line builds use `xcodebuild -project Client/kreta.xcodeproj -scheme kreta -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build` and swap `build` with `test` when tests exist.
+  5. For the server, run `bun install` then `bun run index.ts` or `npm run dev` with `npx convex dev` to start Convex.
 
 - **Quality Expectations:** Cover common user flows with XCTest, drive UI regressions with XCUITest as they are added, exercise performance scenarios, simulate error states, and keep accessibility audits in the workflow.
 - **Task Configuration:** Swift uses standard Xcode schemes; no `.nims` or Nimble tasks. Server relies on Bun scripts defined in `package.json`.
@@ -92,3 +92,27 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 - **Feature Expectations:** Plan for deep linking, push notifications, background processing, localization, resilient error handling, and analytics/logging hooks as part of major feature introductions.
 - **Process & Tooling:** Rely on SwiftUI previews for rapid feedback, follow the team's Git branching and code review practices, keep inline documentation up to date, and pursue continuous integration coverage once pipelines are introduced.
 - **App Store Readiness:** Ensure privacy strings and capability entitlements are declared, audit in-app purchase flows, comply with App Store Review Guidelines, support app thinning where practical, and maintain correct signing assets.
+
+### Store Error Handling Pattern
+
+To keep stores UI-agnostic and consistent across the app, follow this pattern:
+
+- Stores should expose async throwing methods and avoid keeping UI-facing error state.
+- Do NOT add `errorMessage` to stores. Keep ephemeral flags like `isLoading` when useful for UI; reset them using `defer`.
+- Call sites (screens/views) should `do/try/await` and handle failures with the `showMessage` environment action.
+
+Example usage at the call site:
+
+```swift
+do {
+    try await store.loadInitial()
+} catch {
+    showMessage(error.localizedDescription)
+}
+```
+
+Benefits:
+
+- Errors are surfaced where user feedback is decided, keeping stores free of presentation concerns.
+- Consistent user messaging via `Environment(\.showMessage)`.
+- Easier testing of stores (deterministic, no UI coupling).

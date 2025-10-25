@@ -9,6 +9,7 @@ struct MainTabNavigator: View {
         screen.destination
           .tag(screen as TabScreen?)
           .tabItem { screen.label }
+          .toolbar(.hidden, for: .tabBar)
       }
     }
     .navigationBarBackButtonHidden(true)

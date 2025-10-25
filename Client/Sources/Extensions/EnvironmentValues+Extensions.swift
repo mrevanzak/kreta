@@ -1,5 +1,6 @@
 import ConvexMobile
 import Foundation
+import OSLog
 import SwiftUI
 
 extension EnvironmentValues {
@@ -19,6 +20,15 @@ struct ShowMessageAction {
   let action: Action
 
   func callAsFunction(_ message: String, _ messageType: MessageType = .error, delay: Double = 2.0) {
+    let logger = Logger(subsystem: "kreta", category: "Toast Message")
+    switch messageType {
+    case .error:
+      logger.error("Showing error toast message: \(message)")
+    case .info:
+      logger.info("Showing info toast message: \(message)")
+    case .success:
+      logger.debug("Showing success toast message: \(message)")
+    }
     action(message, messageType, delay)
   }
 }

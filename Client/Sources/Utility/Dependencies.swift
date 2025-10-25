@@ -7,6 +7,7 @@ final class Dependencies: @unchecked Sendable {
   let convexClient: ConvexClient
 
   init(convexClient: ConvexClient = ConvexClient(deploymentUrl: Constants.Convex.deploymentUrl)) {
+    print("🔧 Dependencies: Initializing ConvexClient with URL: \(Constants.Convex.deploymentUrl)")
     self.convexClient = convexClient
   }
 }
