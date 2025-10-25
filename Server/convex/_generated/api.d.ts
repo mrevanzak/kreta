@@ -11,6 +11,7 @@
 import type * as gapeka from "../gapeka.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
+import type * as stations from "../stations.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   gapeka: typeof gapeka;
   push: typeof push;
   registrations: typeof registrations;
+  stations: typeof stations;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

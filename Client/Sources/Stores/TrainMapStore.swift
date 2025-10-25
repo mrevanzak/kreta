@@ -25,38 +25,33 @@ final class TrainMapStore {
     isLoading = true
     defer { isLoading = false }
 
-    // Start subscription to stations
-    startStationsSubscription()
-
     // Fetch routes and train positions
     async let r = service.fetchRoutes()
     async let t = service.fetchTrainPositions()
     let (routes, raw) = try await (r, t)
 
+    // Subscribe to Convex stations data
+    stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+      .receive(on: DispatchQueue.main)
+      .sink(
+        receiveCompletion: { [weak self] completion in
+          switch completion {
+          case .finished:
+            print("Stations subscription completed")
+          case .failure(let error):
+            print("Stations subscription error: \(error)")
+            // Reset stations to empty array on error to avoid stale data
+            self?.stations = []
+          }
+        },
+        receiveValue: { [weak self] stations in
+          self?.stations = stations
+        }
+      )
+
     self.routes = routes
     self.rawTrains = raw
   }
-
-  private func startStationsSubscription() {
-    stationsCancellable = convexClient.subscribe(
-      to: "stations:get",
-      yielding: [Station].self
-    )
-    .replaceError(with: [])
-    .sink { [weak self] newStations in
-      guard let self = self else { return }
-      self.stations = newStations
-      // Update trains when stations change
-      // if !self.rawTrains.isEmpty {
-      //   self.trains = Self.mapGapekaToLiveTrains(self.rawTrains, stations: newStations)
-      // }
-    }
-  }
-
-  // func refreshTrains() async throws {
-  //   let raw = try await service.fetchTrainPositions()
-  //   self.trains = Self.mapGapekaToPositions(raw, stations: stations)
-  // }
 }
 
 // MARK: - Mapping helpers

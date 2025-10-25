@@ -1,12 +1,15 @@
+import ConvexMobile
 import CoreLocation
 import Foundation
 
-struct Position: Codable, Hashable {
-  let latitude: Double
-  let longitude: Double
+struct Position: Decodable {
+  @ConvexFloat
+  var latitude: Double
+  @ConvexFloat
+  var longitude: Double
 }
 
-struct Station: Codable, Identifiable, Hashable {
+struct Station: Decodable, Identifiable {
   // Use station code (e.g., "GMR") as stable identifier
   var id: String { code }
   let code: String
@@ -24,7 +27,7 @@ struct Train: Codable, Identifiable, Hashable {
   let name: String
 }
 
-struct Route: Codable, Identifiable, Hashable {
+struct Route: Decodable, Identifiable {
   let id: String
   let name: String
   let path: [Position]
@@ -34,7 +37,7 @@ struct Route: Codable, Identifiable, Hashable {
   }
 }
 
-struct LiveTrain: Codable, Identifiable, Hashable {
+struct LiveTrain: Decodable, Identifiable {
   let id: String
   let code: String
   let name: String

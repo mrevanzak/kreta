@@ -52,8 +52,13 @@
       </BuildableProductRunnable>
       <EnvironmentVariables>
          <EnvironmentVariable
-            key = "CONVEX_URL"
+            key = "CONVEX_DEV_URL"
             value = "https://reliable-narwhal-600.convex.cloud"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "CONVEX_PROD_URL"
+            value = "https://flippant-mastiff-784.convex.cloud"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
