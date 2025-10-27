@@ -1,0 +1,89 @@
+{
+  "fill" : "system-light",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "solid" : "display-p3:0.55331,0.60043,0.18473,1.00000"
+          },
+          "image-name" : "Asset 8KretaLogo.png",
+          "name" : "Asset 8KretaLogo",
+          "position" : {
+            "scale" : 0.28,
+            "translation-in-points" : [
+              -157.14537287026565,
+              -336.6361857704401
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "solid" : "display-p3:0.36471,0.40392,0.02745,1.00000"
+          },
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Asset 5KretaLogo.png",
+          "name" : "Asset 5KretaLogo",
+          "position" : {
+            "scale" : 0.75,
+            "translation-in-points" : [
+              0.125,
+              10.465453328464719
+            ]
+          }
+        },
+        {
+          "image-name" : "Atas kacaKretaLogo.png",
+          "name" : "Atas kacaKretaLogo",
+          "position" : {
+            "scale" : 0.77,
+            "translation-in-points" : [
+              9.343419738354669,
+              11.915453328464764
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "Asset 6KretaLogo.png",
+          "name" : "Asset 6KretaLogo",
+          "position" : {
+            "scale" : 0.75,
+            "translation-in-points" : [
+              2.343419738354669,
+              8
+            ]
+          }
+        },
+        {
+          "hidden" : true,
+          "image-name" : "LogomarkKretaLogo.png",
+          "name" : "LogomarkKretaLogo",
+          "position" : {
+            "scale" : 0.45,
+            "translation-in-points" : [
+              0,
+              -16.445079488898386
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
