@@ -7,13 +7,11 @@
 
 import SwiftUI
 
-@MainActor
+  @MainActor
 struct AddTrainView: View {
   @State private var viewModel: AddTrainViewModel
   @Environment(\.dismiss) private var dismiss
   let onTrainSelected: (LiveTrain) -> Void
-  
-  @State private var showCalendar = false
   
   init(store: TrainMapStore, onTrainSelected: @escaping (LiveTrain) -> Void) {
     _viewModel = State(initialValue: AddTrainViewModel(store: store))
@@ -38,10 +36,10 @@ struct AddTrainView: View {
     VStack(alignment: .leading, spacing: 8) {
       // Title bar
       HStack {
-        // Back button when calendar is shown
-        if showCalendar {
+        // Back button when calendar is shown (only in date step)
+        if viewModel.showCalendar && viewModel.currentStep == .date {
           Button {
-            showCalendar = false
+            viewModel.hideCalendar()
           } label: {
             Image(systemName: "chevron.left")
               .font(.title3)
@@ -54,7 +52,7 @@ struct AddTrainView: View {
             .font(.title2.weight(.bold))
           
           // Subtitle
-          Text(showCalendar ? "Pilih Tanggal" : viewModel.stepTitle)
+          Text(viewModel.showCalendar ? "Pilih Tanggal" : viewModel.stepTitle)
             .font(.callout)
             .foregroundStyle(.secondary)
           
@@ -86,6 +84,9 @@ struct AddTrainView: View {
         onArrivalChipTap: {
           viewModel.goBackToArrival()
         },
+        onDateChipTap: {
+          viewModel.goBackToDate()
+        },
         onDateTextSubmit: {
           viewModel.parseAndSelectDate(from: viewModel.searchText)
         }
@@ -100,7 +101,7 @@ struct AddTrainView: View {
     case .departure, .arrival:
       stationListView
     case .date:
-      if showCalendar {
+      if viewModel.showCalendar {
         calendarView
       } else {
         datePickerView
@@ -165,7 +166,7 @@ struct AddTrainView: View {
         subtitle: ""
       )
       .onTapGesture {
-        showCalendar = true
+        viewModel.showCalendarView()
       }
       
       Spacer()
@@ -176,12 +177,11 @@ struct AddTrainView: View {
   private var calendarView: some View {
     CalendarView(
       selectedDate: Binding(
-        get: { viewModel.selectedDate },
-        set: { _ in }
+        get: { viewModel.selectedDate ?? Date() },
+        set: { viewModel.selectedDate = $0 }
       ),
       onDateSelected: { date in
         viewModel.selectDate(date)
-        showCalendar = false
       }
     )
   }

@@ -14,6 +14,11 @@ struct CalendarView: View {
   
   @State private var selectedRange: MDateRange? = .init()
   
+  init(selectedDate: Binding<Date?>, onDateSelected: @escaping (Date) -> Void) {
+    self._selectedDate = selectedDate
+    self.onDateSelected = onDateSelected
+  }
+  
   var body: some View {
     MCalendarView(selectedDate: $selectedDate, selectedRange: $selectedRange)
       .onChange(of: selectedDate) { _, newValue in

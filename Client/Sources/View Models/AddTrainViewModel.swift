@@ -23,6 +23,7 @@ final class AddTrainViewModel {
 
   var currentStep: SelectionStep = .departure
   var searchText: String = ""
+  var showCalendar: Bool = false
 
   var selectedDepartureStation: Station?
   var selectedArrivalStation: Station?
@@ -139,8 +140,18 @@ final class AddTrainViewModel {
 
   func selectDate(_ date: Date) {
     selectedDate = date
+    showCalendar = false
     loadTrains()
     currentStep = .results
+  }
+  
+  func showCalendarView() {
+    showCalendar = true
+  }
+  
+  func hideCalendar() {
+    selectedDate = nil
+    showCalendar = false
   }
 
   func loadTrains() {
@@ -159,6 +170,7 @@ final class AddTrainViewModel {
     selectedArrivalStation = nil
     selectedDate = nil
     availableTrains = []
+    showCalendar = false
     currentStep = .departure
     searchText = ""
   }
@@ -166,7 +178,16 @@ final class AddTrainViewModel {
   func goBackToArrival() {
     selectedDate = nil
     availableTrains = []
+    showCalendar = false
     currentStep = .arrival
+    searchText = ""
+  }
+  
+  func goBackToDate() {
+    selectedDate = nil
+    availableTrains = []
+    showCalendar = false
+    currentStep = .date
     searchText = ""
   }
   
@@ -177,5 +198,6 @@ final class AddTrainViewModel {
     selectedDate = nil
     searchText = ""
     availableTrains = []
+    showCalendar = false
   }
 }

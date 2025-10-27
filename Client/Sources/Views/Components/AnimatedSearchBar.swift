@@ -15,6 +15,7 @@ struct AnimatedSearchBar: View {
   @Binding var searchText: String
   let onDepartureChipTap: () -> Void
   let onArrivalChipTap: () -> Void
+  let onDateChipTap: (() -> Void)?
   let onDateTextSubmit: (() -> Void)?
   
   @Namespace private var animation
@@ -82,8 +83,8 @@ struct AnimatedSearchBar: View {
           ))
       }
       
-      // Date text field
-      if step == .date {
+      // Date text field (only visible in date step when no date is selected yet)
+      if step == .date && selectedDate == nil {
         dateTextField
           .transition(.asymmetric(
             insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -91,16 +92,25 @@ struct AnimatedSearchBar: View {
           ))
       }
       
-      // Date display (visible in results step)
-      if step == .results, let date = selectedDate {
+      // Date chip (visible in date and results steps when date is selected)
+      if (step == .date || step == .results), let date = selectedDate {
         Spacer()
-        dateChip(date)
-          .transition(.scale.combined(with: .opacity))
+        Button {
+          onDateChipTap?()
+        } label: {
+          dateChip(date)
+        }
+        .buttonStyle(ChipButtonStyle())
+        .transition(.asymmetric(
+          insertion: .move(edge: .leading).combined(with: .opacity),
+          removal: .scale.combined(with: .opacity)
+        ))
       }
     }
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: step)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: departureStation?.id)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: arrivalStation?.id)
+    .animation(.spring(response: 0.4, dampingFraction: 0.75), value: selectedDate)
   }
   
   private var searchTextField: some View {
@@ -166,7 +176,7 @@ struct AnimatedSearchBar: View {
   }
   
   private func dateChip(_ date: Date) -> some View {
-    Text(date, format: .dateTime.day().month())
+    Text(date.formatted(.dateTime.day().month(.wide).year()))
       .font(.subheadline.weight(.medium))
       .foregroundStyle(.secondary)
       .padding(.horizontal, 12)
