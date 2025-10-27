@@ -29,7 +29,7 @@ final class AddTrainViewModel {
   var selectedArrivalStation: Station?
   var selectedDate: Date?
 
-  var availableTrains: [LiveTrain] = []
+  var availableTrains: [ProjectedTrain] = []
 
   init(store: TrainMapStore) {
     self.store = store

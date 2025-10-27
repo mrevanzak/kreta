@@ -361,7 +361,7 @@ struct RawRouteNode: Codable {
     }
 
     let path: [Position] = coords.map { Position(latitude: $0.latitude, longitude: $0.longitude) }
-    return Route(id: id, name: id, path: path)
+    return Route(id: id, name: id, path: path, numericIdentifier: Int(id))
   }
 }
 

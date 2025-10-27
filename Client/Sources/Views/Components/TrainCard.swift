@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TrainCard: View {
-  let train: LiveTrain
+  let train: ProjectedTrain
   let onDelete: () -> Void
   
   var body: some View {
@@ -44,14 +44,14 @@ struct TrainCard: View {
       HStack(spacing: 0) {
         // Departure station
         VStack(spacing: 4) {
-          Text(train.fromStation.code)
+          Text(train.fromStation?.code ?? "--")
             .font(.title2)
             .bold()
-          
-          Text(train.fromStation.city ?? "Unknown")
+
+          Text(train.fromStation?.city ?? "Unknown")
             .font(.caption)
-          
-          Text(train.journeyDeparture.formatted(.dateTime.hour().minute()))
+
+          Text(formatTime(train.journeyDeparture))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -73,14 +73,14 @@ struct TrainCard: View {
         
         // Arrival station
         VStack(spacing: 4) {
-          Text(train.toStation.code)
+          Text(train.toStation?.code ?? "--")
             .font(.title2)
             .bold()
-          
-          Text(train.toStation.city ?? "Unknown")
+
+          Text(train.toStation?.city ?? "Unknown")
             .font(.caption)
-          
-          Text(train.journeyArrival.formatted(.dateTime.hour().minute()))
+
+          Text(formatTime(train.journeyArrival))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -97,7 +97,11 @@ struct TrainCard: View {
   
   // Helper function to format duration
   private func formattedDuration() -> String {
-    let interval = train.journeyArrival.timeIntervalSince(train.journeyDeparture)
+    guard let departure = train.journeyDeparture, let arrival = train.journeyArrival else {
+      return "Waktu tidak tersedia"
+    }
+
+    let interval = arrival.timeIntervalSince(departure)
     let hours = Int(interval) / 3600
     let minutes = (Int(interval) % 3600) / 60
     
@@ -108,6 +112,11 @@ struct TrainCard: View {
     } else {
       return "Tiba Dalam \(minutes)Menit"
     }
+  }
+
+  private func formatTime(_ date: Date?) -> String {
+    guard let date else { return "--:--" }
+    return date.formatted(.dateTime.hour().minute())
   }
 }
 
@@ -128,11 +137,12 @@ struct TrainCard: View {
     ),
   ]
   
-  let train: LiveTrain = LiveTrain(
+  let train = ProjectedTrain(
     id: "T1-0",
     code: "T1",
     name: "Sample Express",
     position: Position(latitude: -6.1950, longitude: 106.8500),
+    moving: true,
     bearing: 45,
     speedKph: 60,
     fromStation: stations[0],

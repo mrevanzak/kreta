@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TrainServiceRow: View {
-  let train: LiveTrain
+  let train: ProjectedTrain
   
   var body: some View {
     HStack(alignment: .center, spacing: 16) {
@@ -21,11 +21,11 @@ struct TrainServiceRow: View {
         HStack(spacing: 8) {
           // Departure station
           HStack(spacing: 4) {
-            Text(train.fromStation.code)
+            Text(train.fromStation?.code ?? "--")
               .font(.subheadline)
               .foregroundStyle(.secondary)
-            
-            Text(train.journeyArrival.formatted(.dateTime.hour().minute()))
+
+            Text(formatTime(train.segmentDeparture ?? train.journeyDeparture))
               .font(.subheadline).bold()
           }
           
@@ -36,11 +36,11 @@ struct TrainServiceRow: View {
           
           // Arrival station
           HStack(spacing: 4) {
-            Text(train.toStation.code)
+            Text(train.toStation?.code ?? "--")
               .font(.subheadline)
               .foregroundStyle(.secondary)
-            
-            Text(train.journeyDeparture.formatted(.dateTime.hour().minute()))
+
+            Text(formatTime(train.segmentArrival ?? train.journeyArrival))
               .font(.subheadline).bold()
           }
         }
@@ -57,6 +57,11 @@ struct TrainServiceRow: View {
       }
     }
     .padding()
+  }
+
+  private func formatTime(_ date: Date?) -> String {
+    guard let date else { return "--:--" }
+    return date.formatted(.dateTime.hour().minute())
   }
 }
 
@@ -76,11 +81,12 @@ struct TrainServiceRow: View {
     ),
   ]
   
-  let train: LiveTrain = LiveTrain(
+  let train = ProjectedTrain(
     id: "T1-0",
     code: "T1",
     name: "Sample Express",
     position: Position(latitude: -6.1950, longitude: 106.8500),
+    moving: true,
     bearing: 45,
     speedKph: 60,
     fromStation: stations[0],

@@ -10,12 +10,19 @@ final class TrainMapStore {
 
   var isLoading: Bool = false
 
-  var stations: [Station] = []
-  var routes: [Route] = []
-  var trains: [LiveTrain] = []
-  private var rawTrains: [RawGapekaTrain] = []
+  var stations: [Station] = [] {
+    didSet { projectTrains() }
+  }
+  var routes: [Route] = [] {
+    didSet { projectTrains() }
+  }
+  var trains: [ProjectedTrain] = []
+  private var rawTrains: [RawGapekaTrain] = [] {
+    didSet { projectTrains() }
+  }
 
-  private var stationsCancellable: AnyCancellable?
+  @ObservationIgnored private var stationsCancellable: AnyCancellable?
+  @ObservationIgnored private var projectionTimer: Timer?
 
   init(service: TrainMapService) {
     self.service = service
@@ -26,6 +33,8 @@ final class TrainMapStore {
 
     isLoading = true
     defer { isLoading = false }
+
+    stopProjectionUpdates()
 
     do {
       // Subscribe to stations from Convex
@@ -81,6 +90,9 @@ final class TrainMapStore {
       try await routesTask
       try await trainsTask
 
+      projectTrains()
+      startProjectionUpdates()
+
     } catch let error as TrainMapError {
       // Re-throw TrainMapError as-is
       throw error
@@ -89,6 +101,51 @@ final class TrainMapStore {
       print("🚂 TrainMapStore: Unexpected error: \(error)")
       throw TrainMapError.dataMappingFailed(error.localizedDescription)
     }
+  }
+}
+
+// MARK: - Projection management
+extension TrainMapStore {
+  func projectTrains(now: Date = Date()) {
+    guard !rawTrains.isEmpty else {
+      trains = []
+      return
+    }
+
+    let stationLookup = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
+    let routeLookupByIdentifier = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
+    let routeLookupByNumeric = Dictionary(
+      uniqueKeysWithValues: routes.compactMap { route -> (Int, Route)? in
+        guard let identifier = route.numericIdentifier else { return nil }
+        return (identifier, route)
+      })
+
+    let projected = rawTrains.compactMap { train in
+      TrainProjector.projectTrain(
+        now: now,
+        train: train,
+        stationsByCode: stationLookup,
+        routesByIdentifier: routeLookupByIdentifier,
+        routesByNumericIdentifier: routeLookupByNumeric
+      )
+    }
+
+    trains = projected
+  }
+
+  func startProjectionUpdates(interval: TimeInterval = 1.0) {
+    stopProjectionUpdates()
+    let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
+      guard let self else { return }
+      self.projectTrains()
+    }
+    projectionTimer = timer
+    RunLoop.main.add(timer, forMode: .common)
+  }
+
+  func stopProjectionUpdates() {
+    projectionTimer?.invalidate()
+    projectionTimer = nil
   }
 }
 
@@ -119,19 +176,21 @@ extension TrainMapStore {
           Position(latitude: -6.1900, longitude: 106.8450),
           Position(latitude: -6.2050, longitude: 106.8600),
           Position(latitude: -6.2149, longitude: 106.8707),
-        ]
+        ],
+        numericIdentifier: 1
       )
     ]
     store.trains = [
-      LiveTrain(
+      ProjectedTrain(
         id: "T1-0",
         code: "T1",
         name: "Sample Express",
         position: Position(latitude: -6.1950, longitude: 106.8500),
+        moving: true,
         bearing: 45,
         speedKph: 60,
-        fromStation: store.stations[0],
-        toStation: store.stations[1],
+        fromStation: store.stations.first,
+        toStation: store.stations.last,
         segmentDeparture: Date().addingTimeInterval(-15 * 60),
         segmentArrival: Date().addingTimeInterval(15 * 60),
         progress: 0.5,

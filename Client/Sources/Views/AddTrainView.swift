@@ -11,9 +11,9 @@ import SwiftUI
 struct AddTrainView: View {
   @State private var viewModel: AddTrainViewModel
   @Environment(\.dismiss) private var dismiss
-  let onTrainSelected: (LiveTrain) -> Void
-  
-  init(store: TrainMapStore, onTrainSelected: @escaping (LiveTrain) -> Void) {
+  let onTrainSelected: (ProjectedTrain) -> Void
+
+  init(store: TrainMapStore, onTrainSelected: @escaping (ProjectedTrain) -> Void) {
     _viewModel = State(initialValue: AddTrainViewModel(store: store))
     self.onTrainSelected = onTrainSelected
   }

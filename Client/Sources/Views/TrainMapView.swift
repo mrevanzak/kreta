@@ -27,39 +27,17 @@ struct TrainMapView: View {
         }
         // Train positions (symbols)
         ForEach(mapStore.trains) { train in
-          let isMoving = Date() >= train.segmentDeparture && Date() < train.segmentArrival
-          Annotation(train.id, coordinate: train.coordinate) {
-            VStack(spacing: 4) {
-              Image(systemName: "tram.fill")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(isMoving ? .green : .blue)
-                .rotationEffect(.degrees(train.bearing ?? 0))
-              // Name + movement/ETA label
-              HStack(spacing: 4) {
-                Text(train.name)
-                if isMoving {
-                  Text("• moving")
-                } else {
-                  Text("• at station")
-                }
-              }
-              .font(.caption2)
-              .monospacedDigit()
-              .padding(.horizontal, 6)
-              .padding(.vertical, 2)
-              .background(.thinMaterial)
-              .clipShape(Capsule())
-            }
-          }
+          let isMoving = train.moving
+          Marker(
+            "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
+          )
+          .tint(isMoving ? .green : .blue)
         }
       }
       .mapStyle(
         .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
       )
       .ignoresSafeArea()
-    }
-    .onAppear {
-      showToast("Loading train map...", type: .error)
     }
     .task {
       do {

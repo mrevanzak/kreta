@@ -9,7 +9,7 @@ struct HomeScreen: View {
   
   @State private var showAddSheet = false
   @State private var showBottomSheet = true
-  @State private var selectedTrains: [LiveTrain] = []
+  @State private var selectedTrains: [ProjectedTrain] = []
   
   var body: some View {
     TrainMapView()
@@ -77,7 +77,7 @@ struct HomeScreen: View {
       }
   }
   
-  private func deleteTrain(_ train: LiveTrain) {
+  private func deleteTrain(_ train: ProjectedTrain) {
     withAnimation(.spring(response: 0.3)) {
       selectedTrains.removeAll { $0.id == train.id }
     }
