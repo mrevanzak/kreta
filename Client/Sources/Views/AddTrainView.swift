@@ -13,6 +13,8 @@ struct AddTrainView: View {
   @Environment(\.dismiss) private var dismiss
   let onTrainSelected: (LiveTrain) -> Void
   
+  @State private var showCalendar = false
+  
   init(store: TrainMapStore, onTrainSelected: @escaping (LiveTrain) -> Void) {
     _viewModel = State(initialValue: AddTrainViewModel(store: store))
     self.onTrainSelected = onTrainSelected
@@ -36,12 +38,23 @@ struct AddTrainView: View {
     VStack(alignment: .leading, spacing: 8) {
       // Title bar
       HStack {
+        // Back button when calendar is shown
+        if showCalendar {
+          Button {
+            showCalendar = false
+          } label: {
+            Image(systemName: "chevron.left")
+              .font(.title3)
+              .foregroundStyle(.primary)
+          }
+        }
+        
         VStack(alignment: .leading) {
           Text("Tambah Perjalanan Kereta")
             .font(.title2.weight(.bold))
           
           // Subtitle
-          Text(viewModel.stepTitle)
+          Text(showCalendar ? "Pilih Tanggal" : viewModel.stepTitle)
             .font(.callout)
             .foregroundStyle(.secondary)
           
@@ -87,7 +100,11 @@ struct AddTrainView: View {
     case .departure, .arrival:
       stationListView
     case .date:
-      datePickerView
+      if showCalendar {
+        calendarView
+      } else {
+        datePickerView
+      }
     case .results:
       trainResultsView
     }
@@ -106,6 +123,12 @@ struct AddTrainView: View {
             .padding(.leading, 72)
         }
       }
+    }
+    .overlay {
+      if viewModel.filteredStations.isEmpty {
+        ContentUnavailableView.search(text: viewModel.searchText)
+      }
+      
     }
   }
   
@@ -141,10 +164,26 @@ struct AddTrainView: View {
         title: "Pilih berdasarkan hari",
         subtitle: ""
       )
+      .onTapGesture {
+        showCalendar = true
+      }
       
       Spacer()
     }
     .padding()
+  }
+  
+  private var calendarView: some View {
+    CalendarView(
+      selectedDate: Binding(
+        get: { viewModel.selectedDate },
+        set: { _ in }
+      ),
+      onDateSelected: { date in
+        viewModel.selectDate(date)
+        showCalendar = false
+      }
+    )
   }
   
   private var trainResultsView: some View {

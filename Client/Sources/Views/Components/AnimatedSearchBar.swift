@@ -23,8 +23,8 @@ struct AnimatedSearchBar: View {
   
   var body: some View {
     HStack(spacing: 8) {
-      // Departure station badge (visible from arrival step onwards, unless clearing)
-      if let departure = departureStation, step != .departure || clearingDeparture {
+      // Departure station chip (visible from arrival step onwards, unless clearing)
+      if let departure = departureStation, step != .departure && !clearingDeparture {
         Button {
           clearingDeparture = true
           Task {
@@ -37,7 +37,10 @@ struct AnimatedSearchBar: View {
           stationChip(departure, id: "departure", isClearing: clearingDeparture)
         }
         .buttonStyle(ChipButtonStyle())
-        .transition(.scale.combined(with: .opacity))
+        .transition(.asymmetric(
+          insertion: .move(edge: .leading).combined(with: .opacity),
+          removal: .scale.combined(with: .opacity)
+        ))
         .sensoryFeedback(.selection, trigger: clearingDeparture)
       }
       
@@ -49,7 +52,7 @@ struct AnimatedSearchBar: View {
           .transition(.scale.combined(with: .opacity))
       }
       
-      // Arrival station badge (visible from date step onwards, unless clearing)
+      // Arrival station chip (visible from date step onwards, unless clearing)
       if let arrival = arrivalStation, (step == .date || step == .results) && !clearingArrival {
         Button {
           clearingArrival = true
@@ -63,26 +66,28 @@ struct AnimatedSearchBar: View {
           stationChip(arrival, id: "arrival", isClearing: clearingArrival)
         }
         .buttonStyle(ChipButtonStyle())
-        .transition(.scale.combined(with: .opacity))
+        .transition(.asymmetric(
+          insertion: .move(edge: .leading).combined(with: .opacity),
+          removal: .scale.combined(with: .opacity)
+        ))
         .sensoryFeedback(.selection, trigger: clearingArrival)
       }
       
-      // Unified search/date text field (visible in departure, arrival, and date steps)
+      // Text field for station selection (departure or arrival)
       if step == .departure || step == .arrival {
-        unifiedTextField
-          .matchedGeometryEffect(id: "searchField", in: animation)
+        searchTextField
           .transition(.asymmetric(
-            insertion: .scale(scale: 0.95).combined(with: .opacity),
-            removal: .scale(scale: 0.95).combined(with: .opacity)
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
           ))
       }
       
+      // Date text field
       if step == .date {
         dateTextField
-          .matchedGeometryEffect(id: "searchField", in: animation)
           .transition(.asymmetric(
-            insertion: .scale(scale: 0.95).combined(with: .opacity),
-            removal: .scale(scale: 0.95).combined(with: .opacity)
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
           ))
       }
       
@@ -98,13 +103,13 @@ struct AnimatedSearchBar: View {
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: arrivalStation?.id)
   }
   
-  private var searchField: some View {
+  private var searchTextField: some View {
     HStack(spacing: 8) {
       Image(systemName: "magnifyingglass")
         .font(.subheadline)
         .foregroundStyle(.tertiary)
       
-      TextField(placeholder, text: $searchText)
+      TextField("Stasiun / Kota", text: $searchText)
         .textFieldStyle(.plain)
     }
     .padding(.horizontal, 12)
@@ -114,59 +119,25 @@ struct AnimatedSearchBar: View {
   }
   
   private var dateTextField: some View {
-    TextField("Hari, Tanggal", text: $searchText)
-      .textFieldStyle(.plain)
-      .keyboardType(.numbersAndPunctuation)
-      .autocorrectionDisabled()
-      .textInputAutocapitalization(.never)
-      .submitLabel(.done)
-      .onSubmit {
-        onDateTextSubmit?()
-      }
-      .padding(.horizontal, 12)
-      .padding(.vertical, 10)
-      .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-      .frame(maxWidth: .infinity)
-  }
-  
-  private var unifiedTextField: some View {
     HStack(spacing: 8) {
-      ZStack {
-        Image(systemName: "magnifyingglass")
-          .font(.subheadline)
-          .foregroundStyle(.tertiary)
-          .opacity(step == .date ? 0 : 1)
-      }
-      .animation(.easeInOut(duration: 0.2), value: step)
+      Image(systemName: "calendar")
+        .font(.subheadline)
+        .foregroundStyle(.tertiary)
       
-      TextField(textFieldPlaceholder, text: $searchText)
+      TextField("Hari, Tanggal", text: $searchText)
         .textFieldStyle(.plain)
-        .keyboardType(step == .date ? .numbersAndPunctuation : .default)
-        .autocorrectionDisabled(step == .date)
-        .textInputAutocapitalization(step == .date ? .never : .words)
-        .submitLabel(step == .date ? .done : .search)
+        .keyboardType(.numbersAndPunctuation)
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .submitLabel(.done)
         .onSubmit {
-          if step == .date {
-            onDateTextSubmit?()
-          }
+          onDateTextSubmit?()
         }
-        .id(step) // Force recreation to update keyboard/capitalization immediately
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 10)
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
-  }
-  
-  private var textFieldPlaceholder: String {
-    switch step {
-    case .departure, .arrival:
-      return "Stasiun / Kota"
-    case .date:
-      return "Hari, Tanggal"
-    case .results:
-      return ""
-    }
   }
   
   private func stationChip(_ station: Station, id: String, isClearing: Bool) -> some View {
@@ -201,17 +172,6 @@ struct AnimatedSearchBar: View {
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
       .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-  }
-  
-  private var placeholder: String {
-    switch step {
-    case .departure:
-      return "Stasiun / Kota"
-    case .arrival:
-      return "Stasiun / Kota"
-    case .date, .results:
-      return ""
-    }
   }
 }
 

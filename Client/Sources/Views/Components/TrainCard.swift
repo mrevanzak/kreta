@@ -59,7 +59,9 @@ struct TrainCard: View {
         
         // Train icon and duration
         VStack(spacing: 8) {
-          Image("kereta1")
+          Image("keretaDark")
+            .resizable()
+            .scaledToFit()
           
           Text(formattedDuration())
             .font(.caption)
