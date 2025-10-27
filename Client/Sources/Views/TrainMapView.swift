@@ -6,37 +6,36 @@ struct TrainMapView: View {
   @Environment(\.showToast) private var showToast
 
   var body: some View {
-    Group {
-      Map {
-        // Lines (polylines)
-        ForEach(mapStore.routes) { route in
-          let coords = route.coordinates
-          if coords.count > 1 {
-            MapPolyline(coordinates: coords)
-              .stroke(.blue, lineWidth: 3)
-          }
-        }
-        // Stations (annotations)
-        ForEach(mapStore.stations) { station in
-          Annotation(station.name, coordinate: station.coordinate) {
-            ZStack {
-              Circle().fill(.white).frame(width: 10, height: 10)
-              Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
-            }
-          }
-        }
-        // Train positions (symbols)
-        ForEach(mapStore.trains) { train in
-          let isMoving = train.moving
-          Marker(
-            "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
-          )
-          .tint(isMoving ? .green : .blue)
+    Map {
+      // Lines (polylines)
+      ForEach(mapStore.routes) { route in
+        let coords = route.coordinates
+        if coords.count > 1 {
+          MapPolyline(coordinates: coords)
+            .stroke(.blue, lineWidth: 3)
         }
       }
-      .mapStyle(mapStyleForCurrentSelection)
-      .ignoresSafeArea()
+      // Stations (annotations)
+      ForEach(mapStore.stations) { station in
+        Annotation(station.name, coordinate: station.coordinate) {
+          ZStack {
+            Circle().fill(.white).frame(width: 10, height: 10)
+            Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
+          }
+        }
+      }
+      // Train positions (symbols)
+      ForEach(mapStore.trains) { train in
+        let isMoving = train.moving
+        Marker(
+          "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
+        )
+        .tint(isMoving ? .green : .blue)
+      }
     }
+    .mapControlVisibility(.hidden)
+    .mapStyle(mapStyleForCurrentSelection)
+    .ignoresSafeArea()
     .task {
       do {
         try await mapStore.loadInitial()
