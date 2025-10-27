@@ -9,6 +9,7 @@ final class TrainMapStore {
   private let convexClient = Dependencies.shared.convexClient
 
   var isLoading: Bool = false
+  var selectedMapStyle: MapStyleOption = .hybrid
 
   var stations: [Station] = [] {
     didSet { projectTrains() }

@@ -34,9 +34,7 @@ struct TrainMapView: View {
           .tint(isMoving ? .green : .blue)
         }
       }
-      .mapStyle(
-        .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
-      )
+      .mapStyle(mapStyleForCurrentSelection)
       .ignoresSafeArea()
     }
     .task {
@@ -53,9 +51,15 @@ struct TrainMapView: View {
       }
     }
   }
-}
 
-#Preview {
-  TrainMapView()
-    .environment(TrainMapStore.preview)
+  // MARK: - Map Style Computation
+  private var mapStyleForCurrentSelection: MapStyle {
+    switch mapStore.selectedMapStyle {
+    case .standard:
+      return .standard(
+        elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
+    case .hybrid:
+      return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
+    }
+  }
 }
