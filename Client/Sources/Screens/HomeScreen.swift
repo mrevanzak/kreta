@@ -1,44 +1,92 @@
+import MapKit
 import SwiftUI
 
-func getDate(from time: String) -> Date? {
-  let formatter = DateFormatter()
-  formatter.dateFormat = "yyyy/MM/dd HH:mm"
-  return formatter.date(from: time) ?? nil
-}
+// MARK: - Main Map Screen
 
-@MainActor
 struct HomeScreen: View {
-  @available(iOS 16.1, *)
-  var trainLiveActivityService: TrainLiveActivityService = TrainLiveActivityService.shared
+  @State private var trainMapStore = TrainMapStore(
+    service: TrainMapService(httpClient: .development))
+
+  @State private var showAddSheet = false
+  @State private var showBottomSheet = true
+  @State private var selectedTrains: [ProjectedTrain] = []
 
   var body: some View {
-    Button("Train Live Activity") {
-      Task { @MainActor in
-        do {
-          _ = try await trainLiveActivityService.start(
-            trainName: "Jayabaya",
-            from: TrainStation(
-              name: "Malang", code: "ML",
-              estimatedArrival: nil,
-              estimatedDeparture: getDate(from: "2025/10/17 13:45"),
-            ),
-            destination: TrainStation(
-              name: "Pasar Senen", code: "PSE",
-              estimatedArrival: getDate(from: "2025/10/18 01:58"),
-              estimatedDeparture: nil
-            ),
-            nextStation: TrainStation(
-              name: "Surabaya Pasarturi", code: "SBI",
-              estimatedArrival: getDate(from: "2025/10/17 15:55"),
-              estimatedDeparture: getDate(from: "2025/10/18 16:07")
-            ),
-            seatClass: SeatClass.economy(number: 9),
-            seatNumber: "20C",
-          )
-        } catch {
-          print("Failed to start train live activity: \(error)")
+    ZStack(alignment: .topTrailing) {
+      TrainMapView()
+        .environment(trainMapStore)
+
+      MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
+        .padding(.trailing)
+    }
+    .sheet(isPresented: $showBottomSheet) {
+      // Bottom card
+      VStack(alignment: .leading, spacing: 16) {
+        HStack {
+          Text("Perjalanan Kereta")
+            .font(.title2).bold()
+          Spacer()
+          Menu {
+            Button("Pengaturan", systemImage: "gearshape") {}
+          } label: {
+            Circle().fill(.thinMaterial)
+              .frame(width: 38, height: 38)
+              .overlay(Image(systemName: "ellipsis").foregroundStyle(.black))
+          }
+        }
+
+        // Show trains if available, otherwise show add button
+        if selectedTrains.isEmpty {
+          Button {
+            showAddSheet = true
+          } label: {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+              .fill(Color.gray.opacity(0.15))
+              .frame(maxWidth: .infinity)
+              .overlay(
+                VStack(spacing: 10) {
+                  Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
+                  Text("Tambah Perjalanan Kereta")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                }
+              )
+          }
+          .buttonStyle(.plain)
+        } else {
+          VStack(spacing: 12) {
+            ForEach(selectedTrains) { train in
+              TrainCard(
+                train: train,
+                onDelete: {
+                  deleteTrain(train)
+                })
+            }
+          }
         }
       }
+      .presentationBackgroundInteraction(.enabled)
+      .presentationDetents([.fraction(0.35), .medium])
+      .presentationDragIndicator(.hidden)
+      .interactiveDismissDisabled(true)
+      .padding(.horizontal, 21)
+      .padding(.top, 23)
+      .sheet(isPresented: $showAddSheet) {
+        AddTrainView(
+          store: trainMapStore,
+          onTrainSelected: { train in
+            selectedTrains.append(train)
+            showAddSheet = false
+          }
+        )
+        .presentationDragIndicator(.visible)
+      }
+    }
+  }
+
+  private func deleteTrain(_ train: ProjectedTrain) {
+    withAnimation(.spring(response: 0.3)) {
+      selectedTrains.removeAll { $0.id == train.id }
     }
   }
 }
