@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import OSLog
 import Observation
 
 @MainActor
@@ -23,15 +24,39 @@ final class TrainMapStore {
     didSet { projectTrains() }
   }
 
-  @ObservationIgnored private var stationsCancellable: AnyCancellable?
+  var lastUpdatedAt: String?
+
   @ObservationIgnored private var projectionTimer: Timer?
+  @ObservationIgnored private var lastUpdatedAtCancellable: AnyCancellable?
+
+  #if DEBUG
+    let logger = Logger(subsystem: "kreta", category: "TrainMapStore")
+  #endif
 
   init(service: TrainMapService) {
     self.service = service
+
+    lastUpdatedAtCancellable = convexClient.subscribe(
+      to: "gapeka:getLastUpdatedAt", yielding: String.self
+    )
+    .receive(on: DispatchQueue.main)
+    .sink(
+      receiveCompletion: { completion in
+        switch completion {
+        case .finished:
+          self.logger.debug("LastUpdatedAt subscription completed")
+        case .failure(let error):
+          self.logger.error("LastUpdatedAt subscription error: \(error)")
+        }
+      },
+      receiveValue: { lastUpdatedAt in
+        self.logger.debug("Received lastUpdatedAt: \(lastUpdatedAt)")
+        self.lastUpdatedAt = lastUpdatedAt
+      })
   }
 
-  func loadInitial() async throws {
-    print("🚂 TrainMapStore: Starting loadInitial()")
+  func loadData(at timestamp: String) async throws {
+    logger.debug("Starting loadData(at: \(timestamp))")
 
     isLoading = true
     defer { isLoading = false }
@@ -39,92 +64,82 @@ final class TrainMapStore {
     stopProjectionUpdates()
 
     do {
-      let latestTimestamp = try await getLastUpdatedTimestamp()
       let cachedTimestamp = cacheService.getCachedTimestamp()
+      logger.debug("Fetched cached timestamp: \(String(describing: cachedTimestamp))")
 
-      let hasCompleteCache = cacheService.hasCachedStations()
+      let hasCompleteCache =
+        cacheService.hasCachedStations()
         && cacheService.hasCachedRoutes()
         && cacheService.hasCachedTrains()
 
-      let needsUpdate = cachedTimestamp != latestTimestamp || !hasCompleteCache
+      let needsUpdate = cachedTimestamp != timestamp || !hasCompleteCache
 
       if needsUpdate {
-        print("🚂 TrainMapStore: Cache stale or missing. Fetching fresh data...")
-        let stations = try await fetchStationsFromConvex()
+        logger.debug("Cache stale or missing. Fetching fresh data...")
 
-        async let routesTask: [Route] = {
-          do {
-            let routes = try await service.fetchRoutes()
-            print("🚂 TrainMapStore: Fetched \(routes.count) routes")
-            return routes
-          } catch {
-            print("🚂 TrainMapStore: Routes fetch error: \(error)")
-            throw TrainMapError.routesFetchFailed(error.localizedDescription)
-          }
-        }()
+        // Start all fetches concurrently
+        async let stationsResult = fetchStationsFromConvex()
+        async let routesResult = service.fetchRoutes()
+        async let trainsResult = service.fetchTrainPositions()
 
-        async let trainsTask: [RawGapekaTrain] = {
-          do {
-            let raw = try await service.fetchTrainPositions()
-            print("🚂 TrainMapStore: Fetched \(raw.count) trains")
-            return raw
-          } catch {
-            print("🚂 TrainMapStore: Train positions fetch error: \(error)")
-            throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
-          }
-        }()
+        // Await and update each result as it completes
+        do {
+          let stations = try await stationsResult
+          logger.debug("Fetched \(stations.count) stations")
+          self.stations = stations
+          try cacheService.saveStations(stations)
+        } catch {
+          logger.error("Stations fetch error: \(error)")
+          throw TrainMapError.stationsSubscriptionFailed(error.localizedDescription)
+        }
 
-        let (routes, trains) = try await (routesTask, trainsTask)
+        do {
+          let routes = try await routesResult
+          logger.debug("Fetched \(routes.count) routes")
+          self.routes = routes
+          try cacheService.saveRoutes(routes)
+        } catch {
+          logger.error("Routes fetch error: \(error)")
+          throw TrainMapError.routesFetchFailed(error.localizedDescription)
+        }
 
-        stationsCancellable?.cancel()
-        self.stations = stations
-        self.routes = routes
-        self.rawTrains = trains
-
-        try cacheService.saveStations(stations)
-        try cacheService.saveRoutes(routes)
-        try cacheService.saveTrains(trains)
-        try cacheService.saveTimestamp(latestTimestamp)
+        do {
+          let trains = try await trainsResult
+          logger.debug("Fetched \(trains.count) trains")
+          self.rawTrains = trains
+          try cacheService.saveTrains(trains)
+        } catch {
+          logger.error("Train positions fetch error: \(error)")
+          throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
+        }
 
       } else {
-        print("🚂 TrainMapStore: Loading train map data from cache")
+        logger.debug("Loading train map data from cache")
         try loadCachedData()
       }
 
       startProjectionUpdates()
-      subscribeToStationsUpdates()
+      try cacheService.saveTimestamp(timestamp)
 
     } catch let error as TrainMapError {
-      print("🚂 TrainMapStore: TrainMapError encountered: \(error)")
-      if try loadCachedDataIfAvailable() {
-        print("🚂 TrainMapStore: Loaded cached data due to error")
-        startProjectionUpdates()
-        subscribeToStationsUpdates()
-      } else {
-        throw error
-      }
+      logger.error("TrainMapError encountered: \(error)")
+      throw error
     } catch {
-      print("🚂 TrainMapStore: Unexpected error: \(error)")
-      if try loadCachedDataIfAvailable() {
-        print("🚂 TrainMapStore: Loaded cached data after unexpected error")
-        startProjectionUpdates()
-        subscribeToStationsUpdates()
-      } else {
-        throw TrainMapError.dataMappingFailed(error.localizedDescription)
-      }
+      logger.error("Unexpected error: \(error)")
+      throw TrainMapError.dataMappingFailed(error.localizedDescription)
     }
   }
 }
 
 // MARK: - Data loading helpers
-private extension TrainMapStore {
-  func loadCachedData() throws {
+extension TrainMapStore {
+  fileprivate func loadCachedData() throws {
     stations = try cacheService.loadCachedStations()
     routes = try cacheService.loadCachedRoutes()
     rawTrains = try cacheService.loadCachedTrains()
   }
 
-  func loadCachedDataIfAvailable() throws -> Bool {
+  fileprivate func loadCachedDataIfAvailable() throws -> Bool {
     guard cacheService.hasCachedStations(), cacheService.hasCachedRoutes(),
       cacheService.hasCachedTrains()
     else { return false }
@@ -133,70 +148,13 @@ private extension TrainMapStore {
     return true
   }
 
-  func subscribeToStationsUpdates() {
-    print("🚂 TrainMapStore: Subscribing to stations from Convex...")
-    print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
-
-    stationsCancellable?.cancel()
-    stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
-      .receive(on: DispatchQueue.main)
-      .sink(
-        receiveCompletion: { completion in
-          switch completion {
-          case .finished:
-            print("🚂 TrainMapStore: Stations subscription completed")
-          case .failure(let error):
-            print("🚂 TrainMapStore: Stations subscription error: \(error)")
-          }
-        },
-        receiveValue: { [weak self] stations in
-          guard let self else { return }
-          print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
-          self.stations = stations
-          do {
-            try self.cacheService.saveStations(stations)
-          } catch {
-            print("🚂 TrainMapStore: Failed to update cached stations: \(error)")
-          }
-        })
-  }
-
-  func getLastUpdatedTimestamp() async throws -> String {
-    try await withCheckedThrowingContinuation { continuation in
-      var didResume = false
-      var cancellable: AnyCancellable?
-
-      cancellable = convexClient.subscribe(to: "gapeka:getLastUpdatedAt", yielding: String?.self)
-        .sink(
-          receiveCompletion: { completion in
-            if case let .failure(error) = completion, !didResume {
-              didResume = true
-              continuation.resume(
-                throwing: TrainMapError.convexConnectionFailed(error.localizedDescription))
-            }
-          },
-          receiveValue: { timestamp in
-            guard !didResume else { return }
-            cancellable?.cancel()
-            guard let timestamp else {
-              didResume = true
-              continuation.resume(
-                throwing: TrainMapError.invalidDataFormat("Missing lastUpdatedAt timestamp"))
-              return
-            }
-
-            didResume = true
-            continuation.resume(returning: timestamp)
-          })
-    }
-  }
-
-  func fetchStationsFromConvex() async throws -> [Station] {
+  fileprivate func fetchStationsFromConvex() async throws -> [Station] {
     try await withCheckedThrowingContinuation { continuation in
       var didResume = false
       var cancellable: AnyCancellable?
 
       cancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+        .receive(on: DispatchQueue.main)
         .sink(
           receiveCompletion: { completion in
             if case let .failure(error) = completion, !didResume {
@@ -266,12 +224,14 @@ extension TrainMapStore {
     let store = TrainMapStore(service: TrainMapService(httpClient: .development))
     store.stations = [
       Station(
+        id: "GMR",
         code: "GMR",
         name: "Gambir",
         position: Position(latitude: -6.1774, longitude: 106.8306),
         city: nil
       ),
       Station(
+        id: "JNG",
         code: "JNG",
         name: "Jatinegara",
         position: Position(latitude: -6.2149, longitude: 106.8707),

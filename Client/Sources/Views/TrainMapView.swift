@@ -36,17 +36,17 @@ struct TrainMapView: View {
     .mapControlVisibility(.hidden)
     .mapStyle(mapStyleForCurrentSelection)
     .ignoresSafeArea()
-    .task {
-      do {
-        try await mapStore.loadInitial()
-      } catch let error as TrainMapError {
-        let errorMessage = "\(error.errorName): \(error.localizedDescription)"
-        print("🚂 TrainMapView: \(errorMessage)")
-        showToast(errorMessage)
-      } catch {
-        let errorMessage = "UnknownError: \(error.localizedDescription)"
-        print("🚂 TrainMapView: \(errorMessage)")
-        showToast(errorMessage)
+    .onChange(of: mapStore.lastUpdatedAt) { _, lastUpdatedAt in
+      guard let lastUpdatedAt else { return }
+
+      Task(priority: .high) {
+        do {
+          try await mapStore.loadData(at: lastUpdatedAt)
+        } catch let error as TrainMapError {
+          let errorMessage = "\(error.errorName): \(error.localizedDescription)"
+          print("🚂 TrainMapView: \(errorMessage)")
+          showToast(errorMessage)
+        }
       }
     }
   }

@@ -5,6 +5,7 @@
 //  Created by Mohammad Azam on 9/5/24.
 //
 
+import ConvexMobile
 import Foundation
 
 struct RegisterResponse: Codable {
@@ -319,39 +320,35 @@ struct SaveOrderResponse: Codable {
   let message: String?
 }
 
-struct Coordinates: Codable {
-  let latitude: Double
-  let longitude: Double
+struct PositionResponse: Decodable {
+  @ConvexFloat
+  var latitude: Double
+  @ConvexFloat
+  var longitude: Double
 }
 
-struct RawStation: Codable {
-  let cd: String
-  let nm: String
-  let coordinates: Coordinates
-
-  var asStation: Station {
-    return Station(
-      code: cd,
-      name: nm,
-      position: Position(latitude: coordinates.latitude, longitude: coordinates.longitude),
-      city: nil)
-  }
+struct StationResponse: Decodable, Identifiable {
+  let id: String
+  let code: String
+  let name: String
+  let position: PositionResponse
+  let city: String?
 }
 
 // MARK: - Routes decoding models
 struct RawRoutePath: Codable {
-  let pos: [Coordinates]
+  let pos: [Position]
   let pos_cm: [Double]?
 }
 
 struct RawRouteNode: Codable {
   let len_cm: Double
   let paths: [RawRoutePath]
-  let coordinates: [Coordinates]
+  let coordinates: [Position]
 
   func asRoute(id: String) -> Route? {
     // Prefer `coordinates` if present; otherwise, flatten all `paths.pos`
-    let coords: [Coordinates]
+    let coords: [Position]
     if !coordinates.isEmpty {
       coords = coordinates
     } else if !paths.isEmpty {
