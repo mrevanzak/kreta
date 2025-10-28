@@ -1,0 +1,60 @@
+{
+  "originHash" : "85d65cb6f2cac67b919daeea86618ba86c1bc7126f57200ba2111fe913e05631",
+  "pins" : [
+    {
+      "identity" : "calendarview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Mijick/CalendarView.git",
+      "state" : {
+        "revision" : "168cf14a50d33684caa2a411bbd0b3f988e9dff6",
+        "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "convex-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/get-convex/convex-swift",
+      "state" : {
+        "revision" : "8930e29ad2baccd242770606eea09209a2346961",
+        "version" : "0.5.6"
+      }
+    },
+    {
+      "identity" : "debugswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/DebugSwift/DebugSwift.git",
+      "state" : {
+        "revision" : "6454d3660957ee46d584520e3093bb7f37ac2d27",
+        "version" : "1.7.20"
+      }
+    },
+    {
+      "identity" : "jwtdecode.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/auth0/JWTDecode.swift.git",
+      "state" : {
+        "revision" : "36a5ce735a61c4bc119593f43ce2c027b4ca7392",
+        "version" : "3.3.0"
+      }
+    },
+    {
+      "identity" : "popups",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Mijick/Popups",
+      "state" : {
+        "revision" : "3aa55233eda7bbcbd98b52a6f63d5a7e1955189a",
+        "version" : "4.0.5"
+      }
+    },
+    {
+      "identity" : "stripe-ios-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/stripe/stripe-ios-spm",
+      "state" : {
+        "revision" : "51c2a67246ff06fb0df78d34b665ad1b9cd8489c",
+        "version" : "24.24.3"
+      }
+    }
+  ],
+  "version" : 3
+}
