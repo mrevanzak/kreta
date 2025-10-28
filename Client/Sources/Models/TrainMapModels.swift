@@ -2,14 +2,14 @@ import ConvexMobile
 import CoreLocation
 import Foundation
 
-struct Position: Decodable {
+struct Position: Codable {
   @ConvexFloat
   var latitude: Double
   @ConvexFloat
   var longitude: Double
 }
 
-struct Station: Decodable, Identifiable {
+struct Station: Codable, Identifiable {
   // Use station code (e.g., "GMR") as stable identifier
   var id: String { code }
   let code: String
@@ -124,6 +124,32 @@ struct Route: Identifiable {
 
   private static func lerp(_ from: Double, _ to: Double, _ t: Double) -> Double {
     from + (to - from) * t
+  }
+}
+
+extension Route: Codable {
+  private enum CodingKeys: String, CodingKey {
+    case id
+    case name
+    case path
+    case numericIdentifier
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let id = try container.decode(String.self, forKey: .id)
+    let name = try container.decode(String.self, forKey: .name)
+    let path = try container.decode([Position].self, forKey: .path)
+    let numericIdentifier = try container.decodeIfPresent(Int.self, forKey: .numericIdentifier)
+    self.init(id: id, name: name, path: path, numericIdentifier: numericIdentifier)
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(name, forKey: .name)
+    try container.encode(path, forKey: .path)
+    try container.encodeIfPresent(numericIdentifier, forKey: .numericIdentifier)
   }
 }
 

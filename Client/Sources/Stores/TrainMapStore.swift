@@ -7,6 +7,7 @@ import Observation
 final class TrainMapStore {
   private let service: TrainMapService
   private let convexClient = Dependencies.shared.convexClient
+  private let cacheService = TrainMapCacheService()
 
   var isLoading: Bool = false
   var selectedMapStyle: MapStyleOption = .hybrid
@@ -38,69 +39,178 @@ final class TrainMapStore {
     stopProjectionUpdates()
 
     do {
-      // Subscribe to stations from Convex
-      print("🚂 TrainMapStore: Subscribing to stations from Convex...")
-      print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
+      let latestTimestamp = try await getLastUpdatedTimestamp()
+      let cachedTimestamp = cacheService.getCachedTimestamp()
 
-      stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
-        .receive(on: DispatchQueue.main)
+      let hasCompleteCache = cacheService.hasCachedStations()
+        && cacheService.hasCachedRoutes()
+        && cacheService.hasCachedTrains()
+
+      let needsUpdate = cachedTimestamp != latestTimestamp || !hasCompleteCache
+
+      if needsUpdate {
+        print("🚂 TrainMapStore: Cache stale or missing. Fetching fresh data...")
+        let stations = try await fetchStationsFromConvex()
+
+        async let routesTask: [Route] = {
+          do {
+            let routes = try await service.fetchRoutes()
+            print("🚂 TrainMapStore: Fetched \(routes.count) routes")
+            return routes
+          } catch {
+            print("🚂 TrainMapStore: Routes fetch error: \(error)")
+            throw TrainMapError.routesFetchFailed(error.localizedDescription)
+          }
+        }()
+
+        async let trainsTask: [RawGapekaTrain] = {
+          do {
+            let raw = try await service.fetchTrainPositions()
+            print("🚂 TrainMapStore: Fetched \(raw.count) trains")
+            return raw
+          } catch {
+            print("🚂 TrainMapStore: Train positions fetch error: \(error)")
+            throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
+          }
+        }()
+
+        let (routes, trains) = try await (routesTask, trainsTask)
+
+        stationsCancellable?.cancel()
+        self.stations = stations
+        self.routes = routes
+        self.rawTrains = trains
+
+        try cacheService.saveStations(stations)
+        try cacheService.saveRoutes(routes)
+        try cacheService.saveTrains(trains)
+        try cacheService.saveTimestamp(latestTimestamp)
+
+      } else {
+        print("🚂 TrainMapStore: Loading train map data from cache")
+        try loadCachedData()
+      }
+
+      startProjectionUpdates()
+      subscribeToStationsUpdates()
+
+    } catch let error as TrainMapError {
+      print("🚂 TrainMapStore: TrainMapError encountered: \(error)")
+      if try loadCachedDataIfAvailable() {
+        print("🚂 TrainMapStore: Loaded cached data due to error")
+        startProjectionUpdates()
+        subscribeToStationsUpdates()
+      } else {
+        throw error
+      }
+    } catch {
+      print("🚂 TrainMapStore: Unexpected error: \(error)")
+      if try loadCachedDataIfAvailable() {
+        print("🚂 TrainMapStore: Loaded cached data after unexpected error")
+        startProjectionUpdates()
+        subscribeToStationsUpdates()
+      } else {
+        throw TrainMapError.dataMappingFailed(error.localizedDescription)
+      }
+    }
+  }
+}
+
+// MARK: - Data loading helpers
+private extension TrainMapStore {
+  func loadCachedData() throws {
+    stations = try cacheService.loadCachedStations()
+    routes = try cacheService.loadCachedRoutes()
+    rawTrains = try cacheService.loadCachedTrains()
+  }
+
+  func loadCachedDataIfAvailable() throws -> Bool {
+    guard cacheService.hasCachedStations(), cacheService.hasCachedRoutes(),
+      cacheService.hasCachedTrains()
+    else { return false }
+
+    try loadCachedData()
+    return true
+  }
+
+  func subscribeToStationsUpdates() {
+    print("🚂 TrainMapStore: Subscribing to stations from Convex...")
+    print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
+
+    stationsCancellable?.cancel()
+    stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+      .receive(on: DispatchQueue.main)
+      .sink(
+        receiveCompletion: { completion in
+          switch completion {
+          case .finished:
+            print("🚂 TrainMapStore: Stations subscription completed")
+          case .failure(let error):
+            print("🚂 TrainMapStore: Stations subscription error: \(error)")
+          }
+        },
+        receiveValue: { [weak self] stations in
+          guard let self else { return }
+          print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
+          self.stations = stations
+          do {
+            try self.cacheService.saveStations(stations)
+          } catch {
+            print("🚂 TrainMapStore: Failed to update cached stations: \(error)")
+          }
+        })
+  }
+
+  func getLastUpdatedTimestamp() async throws -> String {
+    try await withCheckedThrowingContinuation { continuation in
+      var didResume = false
+      var cancellable: AnyCancellable?
+
+      cancellable = convexClient.subscribe(to: "gapeka:getLastUpdatedAt", yielding: String?.self)
         .sink(
           receiveCompletion: { completion in
-            switch completion {
-            case .finished:
-              print("🚂 TrainMapStore: Stations subscription completed")
-            case .failure(let error):
-              print("🚂 TrainMapStore: Stations subscription error: \(error)")
+            if case let .failure(error) = completion, !didResume {
+              didResume = true
+              continuation.resume(
+                throwing: TrainMapError.convexConnectionFailed(error.localizedDescription))
+            }
+          },
+          receiveValue: { timestamp in
+            guard !didResume else { return }
+            cancellable?.cancel()
+            guard let timestamp else {
+              didResume = true
+              continuation.resume(
+                throwing: TrainMapError.invalidDataFormat("Missing lastUpdatedAt timestamp"))
+              return
+            }
+
+            didResume = true
+            continuation.resume(returning: timestamp)
+          })
+    }
+  }
+
+  func fetchStationsFromConvex() async throws -> [Station] {
+    try await withCheckedThrowingContinuation { continuation in
+      var didResume = false
+      var cancellable: AnyCancellable?
+
+      cancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+        .sink(
+          receiveCompletion: { completion in
+            if case let .failure(error) = completion, !didResume {
+              didResume = true
+              continuation.resume(
+                throwing: TrainMapError.stationsSubscriptionFailed(error.localizedDescription))
             }
           },
           receiveValue: { stations in
-            print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
-            self.stations = stations
+            guard !didResume else { return }
+            cancellable?.cancel()
+            didResume = true
+            continuation.resume(returning: stations)
           })
-
-      // Fetch routes and train positions concurrently
-      print("🚂 TrainMapStore: Fetching routes and train positions...")
-
-      async let routesTask: Void = {
-        do {
-          let routes = try await service.fetchRoutes()
-          print("🚂 TrainMapStore: Fetched \(routes.count) routes")
-          await MainActor.run {
-            self.routes = routes
-          }
-        } catch {
-          print("🚂 TrainMapStore: Routes fetch error: \(error)")
-          throw TrainMapError.routesFetchFailed(error.localizedDescription)
-        }
-      }()
-
-      async let trainsTask: Void = {
-        do {
-          let raw = try await service.fetchTrainPositions()
-          print("🚂 TrainMapStore: Fetched \(raw.count) trains")
-          await MainActor.run {
-            self.rawTrains = raw
-          }
-        } catch {
-          print("🚂 TrainMapStore: Train positions fetch error: \(error)")
-          throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
-        }
-      }()
-
-      // Wait for both tasks to complete
-      try await routesTask
-      try await trainsTask
-
-      projectTrains()
-      startProjectionUpdates()
-
-    } catch let error as TrainMapError {
-      // Re-throw TrainMapError as-is
-      throw error
-    } catch {
-      // Wrap other errors
-      print("🚂 TrainMapStore: Unexpected error: \(error)")
-      throw TrainMapError.dataMappingFailed(error.localizedDescription)
     }
   }
 }
