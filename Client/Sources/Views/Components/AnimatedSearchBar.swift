@@ -17,11 +17,11 @@ struct AnimatedSearchBar: View {
   let onArrivalChipTap: () -> Void
   let onDateChipTap: (() -> Void)?
   let onDateTextSubmit: (() -> Void)?
-  
+
   @Namespace private var animation
   @State private var clearingDeparture = false
   @State private var clearingArrival = false
-  
+
   var body: some View {
     HStack(spacing: 8) {
       // Departure station chip (visible from arrival step onwards, unless clearing)
@@ -38,13 +38,15 @@ struct AnimatedSearchBar: View {
           stationChip(departure, id: "departure", isClearing: clearingDeparture)
         }
         .buttonStyle(ChipButtonStyle())
-        .transition(.asymmetric(
-          insertion: .move(edge: .leading).combined(with: .opacity),
-          removal: .scale.combined(with: .opacity)
-        ))
+        .transition(
+          .asymmetric(
+            insertion: .move(edge: .leading).combined(with: .opacity),
+            removal: .scale.combined(with: .opacity)
+          )
+        )
         .sensoryFeedback(.selection, trigger: clearingDeparture)
       }
-      
+
       // Arrow (visible when departure is selected and not in departure step)
       if departureStation != nil && step != .departure {
         Image(systemName: "arrow.right")
@@ -52,7 +54,7 @@ struct AnimatedSearchBar: View {
           .foregroundStyle(.tertiary)
           .transition(.scale.combined(with: .opacity))
       }
-      
+
       // Arrival station chip (visible from date step onwards, unless clearing)
       if let arrival = arrivalStation, (step == .date || step == .results) && !clearingArrival {
         Button {
@@ -67,33 +69,37 @@ struct AnimatedSearchBar: View {
           stationChip(arrival, id: "arrival", isClearing: clearingArrival)
         }
         .buttonStyle(ChipButtonStyle())
-        .transition(.asymmetric(
-          insertion: .move(edge: .leading).combined(with: .opacity),
-          removal: .scale.combined(with: .opacity)
-        ))
+        .transition(
+          .asymmetric(
+            insertion: .move(edge: .leading).combined(with: .opacity),
+            removal: .scale.combined(with: .opacity)
+          )
+        )
         .sensoryFeedback(.selection, trigger: clearingArrival)
       }
-      
+
       // Text field for station selection (departure or arrival)
       if step == .departure || step == .arrival {
         searchTextField
-          .transition(.asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
-          ))
+          .transition(
+            .asymmetric(
+              insertion: .move(edge: .trailing).combined(with: .opacity),
+              removal: .move(edge: .leading).combined(with: .opacity)
+            ))
       }
-      
+
       // Date text field (only visible in date step when no date is selected yet)
       if step == .date && selectedDate == nil {
         dateTextField
-          .transition(.asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
-          ))
+          .transition(
+            .asymmetric(
+              insertion: .move(edge: .trailing).combined(with: .opacity),
+              removal: .move(edge: .leading).combined(with: .opacity)
+            ))
       }
-      
+
       // Date chip (visible in date and results steps when date is selected)
-      if (step == .date || step == .results), let date = selectedDate {
+      if step == .date || step == .results, let date = selectedDate {
         Spacer()
         Button {
           onDateChipTap?()
@@ -101,10 +107,11 @@ struct AnimatedSearchBar: View {
           dateChip(date)
         }
         .buttonStyle(ChipButtonStyle())
-        .transition(.asymmetric(
-          insertion: .move(edge: .leading).combined(with: .opacity),
-          removal: .scale.combined(with: .opacity)
-        ))
+        .transition(
+          .asymmetric(
+            insertion: .move(edge: .leading).combined(with: .opacity),
+            removal: .scale.combined(with: .opacity)
+          ))
       }
     }
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: step)
@@ -112,28 +119,40 @@ struct AnimatedSearchBar: View {
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: arrivalStation?.id)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: selectedDate)
   }
-  
+
   private var searchTextField: some View {
     HStack(spacing: 8) {
       Image(systemName: "magnifyingglass")
         .font(.subheadline)
         .foregroundStyle(.tertiary)
-      
+
       TextField("Stasiun / Kota", text: $searchText)
         .textFieldStyle(.plain)
+
+      if !searchText.isEmpty {
+        Button {
+          searchText = ""
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .font(.caption)
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+      }
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 10)
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
   }
-  
+
   private var dateTextField: some View {
     HStack(spacing: 8) {
       Image(systemName: "calendar")
         .font(.subheadline)
         .foregroundStyle(.tertiary)
-      
+
       TextField("Hari, Tanggal", text: $searchText)
         .textFieldStyle(.plain)
         .keyboardType(.numbersAndPunctuation)
@@ -149,14 +168,14 @@ struct AnimatedSearchBar: View {
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
   }
-  
+
   private func stationChip(_ station: Station, id: String, isClearing: Bool) -> some View {
     HStack(spacing: 6) {
       Text(station.code)
         .font(.subheadline.weight(.semibold))
         .opacity(isClearing ? 0 : 1)
         .scaleEffect(isClearing ? 0.5 : 1)
-      
+
       Image(systemName: "xmark.circle.fill")
         .font(.caption)
         .symbolRenderingMode(.hierarchical)
@@ -174,7 +193,7 @@ struct AnimatedSearchBar: View {
     .hoverEffect(.highlight)
     .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isClearing)
   }
-  
+
   private func dateChip(_ date: Date) -> some View {
     Text(date.formatted(.dateTime.day().month(.wide).year()))
       .font(.subheadline.weight(.medium))
