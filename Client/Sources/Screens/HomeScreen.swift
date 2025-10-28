@@ -8,80 +8,79 @@ struct HomeScreen: View {
     service: TrainMapService(httpClient: .development))
 
   @State private var showAddSheet = false
-  @State private var showBottomSheet = true
   @State private var selectedTrains: [ProjectedTrain] = []
 
   var body: some View {
-    ZStack(alignment: .topTrailing) {
-      TrainMapView()
-        .environment(trainMapStore)
+    Group {
+      ZStack(alignment: .topTrailing) {
+        TrainMapView()
 
-      MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
-        .padding(.trailing)
-    }
-    .sheet(isPresented: $showBottomSheet) {
-      // Bottom card
-      VStack(alignment: .leading, spacing: 16) {
-        HStack {
-          Text("Perjalanan Kereta")
-            .font(.title2).bold()
-          Spacer()
-          Menu {
-            Button("Pengaturan", systemImage: "gearshape") {}
-          } label: {
-            Circle().fill(.thinMaterial)
-              .frame(width: 38, height: 38)
-              .overlay(Image(systemName: "ellipsis").foregroundStyle(.black))
+        MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
+          .padding(.trailing)
+      }
+      .sheet(isPresented: .constant(true)) {
+        // Bottom card
+        VStack(alignment: .leading, spacing: 16) {
+          HStack {
+            Text("Perjalanan Kereta")
+              .font(.title2).bold()
+            Spacer()
+            Menu {
+              Button("Pengaturan", systemImage: "gearshape") {}
+            } label: {
+              Circle().fill(.thinMaterial)
+                .frame(width: 38, height: 38)
+                .overlay(Image(systemName: "ellipsis").foregroundStyle(.black))
+            }
           }
-        }
 
-        // Show trains if available, otherwise show add button
-        if selectedTrains.isEmpty {
-          Button {
-            showAddSheet = true
-          } label: {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .fill(Color.gray.opacity(0.15))
-              .frame(maxWidth: .infinity)
-              .overlay(
-                VStack(spacing: 10) {
-                  Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
-                  Text("Tambah Perjalanan Kereta")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                }
-              )
-          }
-          .buttonStyle(.plain)
-        } else {
-          VStack(spacing: 12) {
-            ForEach(selectedTrains) { train in
-              TrainCard(
-                train: train,
-                onDelete: {
-                  deleteTrain(train)
-                })
+          // Show trains if available, otherwise show add button
+          if selectedTrains.isEmpty {
+            Button {
+              showAddSheet = true
+            } label: {
+              RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.gray.opacity(0.15))
+                .frame(maxWidth: .infinity)
+                .overlay(
+                  VStack(spacing: 10) {
+                    Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
+                    Text("Tambah Perjalanan Kereta")
+                      .font(.headline)
+                      .foregroundStyle(.secondary)
+                  }
+                )
+            }
+            .buttonStyle(.plain)
+          } else {
+            VStack(spacing: 12) {
+              ForEach(selectedTrains) { train in
+                TrainCard(
+                  train: train,
+                  onDelete: {
+                    deleteTrain(train)
+                  })
+              }
             }
           }
         }
+        .presentationBackgroundInteraction(.enabled)
+        .presentationDetents([.fraction(0.35), .medium])
+        .presentationDragIndicator(.hidden)
+        .interactiveDismissDisabled(true)
+        .padding(.horizontal, 21)
+        .padding(.top, 23)
+        .sheet(isPresented: $showAddSheet) {
+          AddTrainView(
+            onTrainSelected: { train in
+              selectedTrains.append(train)
+              showAddSheet = false
+            }
+          )
+          .presentationDragIndicator(.visible)
+        }
       }
-      .presentationBackgroundInteraction(.enabled)
-      .presentationDetents([.fraction(0.35), .medium])
-      .presentationDragIndicator(.hidden)
-      .interactiveDismissDisabled(true)
-      .padding(.horizontal, 21)
-      .padding(.top, 23)
-      .sheet(isPresented: $showAddSheet) {
-        AddTrainView(
-          store: trainMapStore,
-          onTrainSelected: { train in
-            selectedTrains.append(train)
-            showAddSheet = false
-          }
-        )
-        .presentationDragIndicator(.visible)
-      }
-    }
+    }.environment(trainMapStore)
   }
 
   private func deleteTrain(_ train: ProjectedTrain) {
