@@ -30,7 +30,7 @@ export default defineSchema({
     .index("by_userId", ["userId"]),
 
   gapeka: defineTable({
-    lastUpdatedAt: v.number(),
+    lastUpdatedAt: v.string(),
   }).index("by_lastUpdatedAt", ["lastUpdatedAt"]),
 
   stations: defineTable({

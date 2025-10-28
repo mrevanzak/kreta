@@ -2,16 +2,24 @@ import ConvexMobile
 import CoreLocation
 import Foundation
 
-struct Position: Decodable {
-  @ConvexFloat
-  var latitude: Double
-  @ConvexFloat
-  var longitude: Double
+struct Position: Codable {
+  let latitude: Double
+  let longitude: Double
+
+  func asCLLocationCoordinate2D() -> CLLocationCoordinate2D {
+    CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+  }
 }
 
-struct Station: Decodable, Identifiable {
-  // Use station code (e.g., "GMR") as stable identifier
-  var id: String { code }
+extension StationResponse {
+  func asStation() -> Station {
+    return Station(
+      id: id, code: code, name: name,
+      position: Position(latitude: position.latitude, longitude: position.longitude), city: city)
+  }
+}
+struct Station: Codable, Identifiable {
+  let id: String?
   let code: String
   let name: String
   let position: Position
@@ -20,6 +28,14 @@ struct Station: Decodable, Identifiable {
   var coordinate: CLLocationCoordinate2D {
     CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
   }
+
+  init(id: String? = nil, code: String, name: String, position: Position, city: String? = nil) {
+    self.id = id ?? code
+    self.code = code
+    self.name = name
+    self.position = position
+    self.city = city
+  }
 }
 
 struct Train: Codable, Identifiable, Hashable {
@@ -27,9 +43,9 @@ struct Train: Codable, Identifiable, Hashable {
   let name: String
 }
 
-struct RouteSegment {
-  let from: CLLocationCoordinate2D
-  let to: CLLocationCoordinate2D
+struct RouteSegment: Codable {
+  let from: Position
+  let to: Position
   let distanceFromStartCm: Double
   let lengthCm: Double
 
@@ -38,7 +54,7 @@ struct RouteSegment {
   }
 }
 
-struct Route: Identifiable {
+struct Route: Codable, Identifiable {
   let id: String
   let name: String
   let path: [Position]
@@ -52,9 +68,7 @@ struct Route: Identifiable {
     self.path = path
     self.numericIdentifier = numericIdentifier
 
-    let coordinates = path.map {
-      CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-    }
+    let coordinates = path
     if coordinates.count < 2 {
       segments = []
       totalLengthCm = 0
@@ -68,7 +82,8 @@ struct Route: Identifiable {
       let start = coordinates[index]
       let end = coordinates[index + 1]
 
-      let distance = Route.distanceInCm(from: start, to: end)
+      let distance = Route.distanceInCm(
+        from: start.asCLLocationCoordinate2D(), to: end.asCLLocationCoordinate2D())
       let segment = RouteSegment(
         from: start,
         to: end,
@@ -111,7 +126,7 @@ struct Route: Identifiable {
       }
     }
 
-    return segments.last?.to
+    return segments.last?.to.asCLLocationCoordinate2D()
   }
 
   private static func distanceInCm(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D)
@@ -126,8 +141,7 @@ struct Route: Identifiable {
     from + (to - from) * t
   }
 }
-
-struct LiveTrain: Decodable, Identifiable {
+struct LiveTrain: Codable, Identifiable {
   let id: String
   let code: String
   let name: String
@@ -152,7 +166,7 @@ struct LiveTrain: Decodable, Identifiable {
   }
 }
 
-struct ProjectedTrain: Identifiable {
+struct ProjectedTrain: Codable, Identifiable {
   let id: String
   let code: String
   let name: String

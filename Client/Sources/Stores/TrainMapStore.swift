@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import OSLog
 import Observation
 
 @MainActor
@@ -7,6 +8,7 @@ import Observation
 final class TrainMapStore {
   private let service: TrainMapService
   private let convexClient = Dependencies.shared.convexClient
+  private let cacheService = TrainMapCacheService()
 
   var isLoading: Bool = false
   var selectedMapStyle: MapStyleOption = .hybrid
@@ -22,15 +24,37 @@ final class TrainMapStore {
     didSet { projectTrains() }
   }
 
-  @ObservationIgnored private var stationsCancellable: AnyCancellable?
+  var lastUpdatedAt: String?
+
   @ObservationIgnored private var projectionTimer: Timer?
+  @ObservationIgnored private var lastUpdatedAtCancellable: AnyCancellable?
+
+  let logger = Logger(subsystem: "kreta", category: String(describing: TrainMapStore.self))
 
   init(service: TrainMapService) {
     self.service = service
+
+    lastUpdatedAtCancellable = convexClient.subscribe(
+      to: "gapeka:getLastUpdatedAt", yielding: String.self
+    )
+    .receive(on: DispatchQueue.main)
+    .sink(
+      receiveCompletion: { completion in
+        switch completion {
+        case .finished:
+          self.logger.debug("LastUpdatedAt subscription completed")
+        case .failure(let error):
+          self.logger.error("LastUpdatedAt subscription error: \(error)")
+        }
+      },
+      receiveValue: { lastUpdatedAt in
+        self.logger.debug("Received lastUpdatedAt: \(lastUpdatedAt)")
+        self.lastUpdatedAt = lastUpdatedAt
+      })
   }
 
-  func loadInitial() async throws {
-    print("🚂 TrainMapStore: Starting loadInitial()")
+  func loadData(at timestamp: String) async throws {
+    logger.debug("Starting loadData(at: \(timestamp))")
 
     isLoading = true
     defer { isLoading = false }
@@ -38,69 +62,111 @@ final class TrainMapStore {
     stopProjectionUpdates()
 
     do {
-      // Subscribe to stations from Convex
-      print("🚂 TrainMapStore: Subscribing to stations from Convex...")
-      print("🚂 TrainMapStore: Convex URL: \(Constants.Convex.deploymentUrl)")
+      let cachedTimestamp = cacheService.getCachedTimestamp()
+      logger.debug("Fetched cached timestamp: \(String(describing: cachedTimestamp))")
 
-      stationsCancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
+      let hasCompleteCache =
+        cacheService.hasCachedStations()
+        && cacheService.hasCachedRoutes()
+        && cacheService.hasCachedTrains()
+
+      let needsUpdate = cachedTimestamp != timestamp || !hasCompleteCache
+
+      if needsUpdate {
+        logger.debug("Cache stale or missing. Fetching fresh data...")
+
+        // Start all fetches concurrently
+        async let stationsResult = fetchStationsFromConvex()
+        async let routesResult = service.fetchRoutes()
+        async let trainsResult = service.fetchTrainPositions()
+
+        // Await and update each result as it completes
+        do {
+          let stations = try await stationsResult
+          logger.debug("Fetched \(stations.count) stations")
+          self.stations = stations
+          try cacheService.saveStations(stations)
+        } catch {
+          logger.error("Stations fetch error: \(error)")
+          throw TrainMapError.stationsSubscriptionFailed(error.localizedDescription)
+        }
+
+        do {
+          let routes = try await routesResult
+          logger.debug("Fetched \(routes.count) routes")
+          self.routes = routes
+          try cacheService.saveRoutes(routes)
+        } catch {
+          logger.error("Routes fetch error: \(error)")
+          throw TrainMapError.routesFetchFailed(error.localizedDescription)
+        }
+
+        do {
+          let trains = try await trainsResult
+          logger.debug("Fetched \(trains.count) trains")
+          self.rawTrains = trains
+          try cacheService.saveTrains(trains)
+        } catch {
+          logger.error("Train positions fetch error: \(error)")
+          throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
+        }
+
+      } else {
+        logger.debug("Loading train map data from cache")
+        try loadCachedData()
+      }
+
+      startProjectionUpdates()
+      try cacheService.saveTimestamp(timestamp)
+
+    } catch let error as TrainMapError {
+      logger.error("TrainMapError encountered: \(error)")
+      throw error
+    } catch {
+      logger.error("Unexpected error: \(error)")
+      throw TrainMapError.dataMappingFailed(error.localizedDescription)
+    }
+  }
+}
+
+// MARK: - Data loading helpers
+extension TrainMapStore {
+  fileprivate func loadCachedData() throws {
+    stations = try cacheService.loadCachedStations()
+    routes = try cacheService.loadCachedRoutes()
+    rawTrains = try cacheService.loadCachedTrains()
+  }
+
+  fileprivate func loadCachedDataIfAvailable() throws -> Bool {
+    guard cacheService.hasCachedStations(), cacheService.hasCachedRoutes(),
+      cacheService.hasCachedTrains()
+    else { return false }
+
+    try loadCachedData()
+    return true
+  }
+
+  fileprivate func fetchStationsFromConvex() async throws -> [Station] {
+    try await withCheckedThrowingContinuation { continuation in
+      var didResume = false
+      var cancellable: AnyCancellable?
+
+      cancellable = convexClient.subscribe(to: "stations:get", yielding: [Station].self)
         .receive(on: DispatchQueue.main)
         .sink(
           receiveCompletion: { completion in
-            switch completion {
-            case .finished:
-              print("🚂 TrainMapStore: Stations subscription completed")
-            case .failure(let error):
-              print("🚂 TrainMapStore: Stations subscription error: \(error)")
+            if case let .failure(error) = completion, !didResume {
+              didResume = true
+              continuation.resume(
+                throwing: TrainMapError.stationsSubscriptionFailed(error.localizedDescription))
             }
           },
           receiveValue: { stations in
-            print("🚂 TrainMapStore: Received \(stations.count) stations from Convex")
-            self.stations = stations
+            guard !didResume else { return }
+            cancellable?.cancel()
+            didResume = true
+            continuation.resume(returning: stations)
           })
-
-      // Fetch routes and train positions concurrently
-      print("🚂 TrainMapStore: Fetching routes and train positions...")
-
-      async let routesTask: Void = {
-        do {
-          let routes = try await service.fetchRoutes()
-          print("🚂 TrainMapStore: Fetched \(routes.count) routes")
-          await MainActor.run {
-            self.routes = routes
-          }
-        } catch {
-          print("🚂 TrainMapStore: Routes fetch error: \(error)")
-          throw TrainMapError.routesFetchFailed(error.localizedDescription)
-        }
-      }()
-
-      async let trainsTask: Void = {
-        do {
-          let raw = try await service.fetchTrainPositions()
-          print("🚂 TrainMapStore: Fetched \(raw.count) trains")
-          await MainActor.run {
-            self.rawTrains = raw
-          }
-        } catch {
-          print("🚂 TrainMapStore: Train positions fetch error: \(error)")
-          throw TrainMapError.trainPositionsFetchFailed(error.localizedDescription)
-        }
-      }()
-
-      // Wait for both tasks to complete
-      try await routesTask
-      try await trainsTask
-
-      projectTrains()
-      startProjectionUpdates()
-
-    } catch let error as TrainMapError {
-      // Re-throw TrainMapError as-is
-      throw error
-    } catch {
-      // Wrap other errors
-      print("🚂 TrainMapStore: Unexpected error: \(error)")
-      throw TrainMapError.dataMappingFailed(error.localizedDescription)
     }
   }
 }
@@ -156,12 +222,14 @@ extension TrainMapStore {
     let store = TrainMapStore(service: TrainMapService(httpClient: .development))
     store.stations = [
       Station(
+        id: "GMR",
         code: "GMR",
         name: "Gambir",
         position: Position(latitude: -6.1774, longitude: 106.8306),
         city: nil
       ),
       Station(
+        id: "JNG",
         code: "JNG",
         name: "Jatinegara",
         position: Position(latitude: -6.2149, longitude: 106.8707),
