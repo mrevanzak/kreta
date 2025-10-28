@@ -7,32 +7,27 @@
 
 import SwiftUI
 
-  @MainActor
+@MainActor
 struct AddTrainView: View {
-  @State private var viewModel: AddTrainViewModel
+  @Environment(TrainMapStore.self) private var store
   @Environment(\.dismiss) private var dismiss
+
+  @State private var viewModel: ViewModel = ViewModel()
+
   let onTrainSelected: (ProjectedTrain) -> Void
 
-  init(store: TrainMapStore, onTrainSelected: @escaping (ProjectedTrain) -> Void) {
-    _viewModel = State(initialValue: AddTrainViewModel(store: store))
-    self.onTrainSelected = onTrainSelected
-  }
-  
   var body: some View {
-    NavigationStack {
-      VStack(spacing: 0) {
-        // Header
-        headerView
-        
-        // Content based on step
-        contentView
-      }
-      .navigationBarHidden(true)
+    VStack(spacing: 0) {
+      headerView(viewModel: viewModel)
+      contentView(viewModel: viewModel)
     }
     .padding(.top)
+    .task {
+      viewModel.bootstrap(availableTrains: store.trains, allStations: store.stations)
+    }
   }
-  
-  private var headerView: some View {
+
+  private func headerView(viewModel: ViewModel) -> some View {
     VStack(alignment: .leading, spacing: 8) {
       // Title bar
       HStack {
@@ -46,20 +41,20 @@ struct AddTrainView: View {
               .foregroundStyle(.primary)
           }
         }
-        
+
         VStack(alignment: .leading) {
           Text("Tambah Perjalanan Kereta")
             .font(.title2.weight(.bold))
-          
+
           // Subtitle
           Text(viewModel.showCalendar ? "Pilih Tanggal" : viewModel.stepTitle)
             .font(.callout)
             .foregroundStyle(.secondary)
-          
+
         }
-        
+
         Spacer()
-        
+
         Button {
           dismiss()
         } label: {
@@ -69,8 +64,7 @@ struct AddTrainView: View {
             .symbolRenderingMode(.hierarchical)
         }
       }
-      
-      
+
       // Animated search bar
       AnimatedSearchBar(
         step: viewModel.currentStep,
@@ -94,24 +88,24 @@ struct AddTrainView: View {
     }
     .padding()
   }
-  
+
   @ViewBuilder
-  private var contentView: some View {
+  private func contentView(viewModel: ViewModel) -> some View {
     switch viewModel.currentStep {
     case .departure, .arrival:
-      stationListView
+      stationListView(viewModel: viewModel)
     case .date:
       if viewModel.showCalendar {
-        calendarView
+        calendarView(viewModel: viewModel)
       } else {
-        datePickerView
+        datePickerView(viewModel: viewModel)
       }
     case .results:
-      trainResultsView
+      trainResultsView(viewModel: viewModel)
     }
   }
-  
-  private var stationListView: some View {
+
+  private func stationListView(viewModel: ViewModel) -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.filteredStations) { station in
@@ -119,7 +113,7 @@ struct AddTrainView: View {
             .onTapGesture {
               viewModel.selectStation(station)
             }
-          
+
           Divider()
             .padding(.leading, 72)
         }
@@ -129,11 +123,11 @@ struct AddTrainView: View {
       if viewModel.filteredStations.isEmpty {
         ContentUnavailableView.search(text: viewModel.searchText)
       }
-      
+
     }
   }
-  
-  private var datePickerView: some View {
+
+  private func datePickerView(viewModel: ViewModel) -> some View {
     VStack(spacing: 16) {
       DateOptionRow(
         icon: "calendar.badge.clock",
@@ -143,9 +137,9 @@ struct AddTrainView: View {
       .onTapGesture {
         viewModel.selectDate(Date())
       }
-      
+
       Divider()
-      
+
       DateOptionRow(
         icon: "calendar",
         title: "Besok",
@@ -157,9 +151,9 @@ struct AddTrainView: View {
           viewModel.selectDate(tomorrow)
         }
       }
-      
+
       Divider()
-      
+
       DateOptionRow(
         icon: "calendar.badge.plus",
         title: "Pilih berdasarkan hari",
@@ -168,13 +162,13 @@ struct AddTrainView: View {
       .onTapGesture {
         viewModel.showCalendarView()
       }
-      
+
       Spacer()
     }
     .padding()
   }
-  
-  private var calendarView: some View {
+
+  private func calendarView(viewModel: ViewModel) -> some View {
     CalendarView(
       selectedDate: Binding(
         get: { viewModel.selectedDate ?? Date() },
@@ -185,8 +179,8 @@ struct AddTrainView: View {
       }
     )
   }
-  
-  private var trainResultsView: some View {
+
+  private func trainResultsView(viewModel: ViewModel) -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.availableTrains) { train in
@@ -195,7 +189,7 @@ struct AddTrainView: View {
             .onTapGesture {
               onTrainSelected(train)
             }
-          
+
           Divider()
             .padding(.leading, 16)
         }
@@ -205,8 +199,5 @@ struct AddTrainView: View {
 }
 
 #Preview {
-  let mockStore = TrainMapStore.preview
-  
-  AddTrainView(store: mockStore, onTrainSelected: { _ in })
-    .environment(mockStore)
+  AddTrainView(onTrainSelected: { _ in })
 }
