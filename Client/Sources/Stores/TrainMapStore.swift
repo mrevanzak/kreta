@@ -29,9 +29,7 @@ final class TrainMapStore {
   @ObservationIgnored private var projectionTimer: Timer?
   @ObservationIgnored private var lastUpdatedAtCancellable: AnyCancellable?
 
-  #if DEBUG
-    let logger = Logger(subsystem: "kreta", category: "TrainMapStore")
-  #endif
+  let logger = Logger(subsystem: "kreta", category: String(describing: TrainMapStore.self))
 
   init(service: TrainMapService) {
     self.service = service
