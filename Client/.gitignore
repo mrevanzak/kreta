@@ -16,7 +16,6 @@ xcuserdata/
 # Swift Package Manager
 .swiftpm/
 .build/
-Package.resolved
 
 # CocoaPods
 Pods/
@@ -31,7 +30,6 @@ Carthage/Build/
 # Xcode Automatically Generated Files
 *.moved-aside
 *.xcuserstate
-*.xcworkspace
 
 # Device-Specific
 *.plist
