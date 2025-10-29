@@ -320,21 +320,6 @@ struct SaveOrderResponse: Codable {
   let message: String?
 }
 
-struct PositionResponse: Decodable {
-  @ConvexFloat
-  var latitude: Double
-  @ConvexFloat
-  var longitude: Double
-}
-
-struct StationResponse: Decodable, Identifiable {
-  let id: String
-  let code: String
-  let name: String
-  let position: PositionResponse
-  let city: String?
-}
-
 // MARK: - Routes decoding models
 struct RawRoutePath: Codable {
   let pos: [Position]

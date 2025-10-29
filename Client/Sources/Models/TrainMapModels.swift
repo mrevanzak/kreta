@@ -11,13 +11,6 @@ struct Position: Codable {
   }
 }
 
-extension StationResponse {
-  func asStation() -> Station {
-    return Station(
-      id: id, code: code, name: name,
-      position: Position(latitude: position.latitude, longitude: position.longitude), city: city)
-  }
-}
 struct Station: Codable, Identifiable {
   let id: String?
   let code: String
