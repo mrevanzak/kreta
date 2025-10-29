@@ -10,7 +10,7 @@ import SwiftUI
 struct TrainCard: View {
   let train: ProjectedTrain
   let onDelete: () -> Void
-  
+
   var body: some View {
     VStack(spacing: 0) {
       // Header with train name and class
@@ -20,14 +20,14 @@ struct TrainCard: View {
           Text(train.name)
             .fontWeight(.bold)
             .foregroundStyle(.white)
-          
+
         }
         .frame(maxWidth: .infinity)
-        
+
         // Delete button aligned to trailing
         HStack {
           Spacer()
-          
+
           Button(action: {
             onDelete()
           }) {
@@ -39,7 +39,7 @@ struct TrainCard: View {
       .padding(.horizontal)
       .padding(.vertical, 12)
       .background(Color.black)
-      
+
       // Journey details
       HStack(spacing: 0) {
         // Departure station
@@ -55,22 +55,20 @@ struct TrainCard: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        
-        
+
         // Train icon and duration
         VStack(spacing: 8) {
           Image("keretaDark")
             .resizable()
             .scaledToFit()
-          
+
           Text(formattedDuration())
             .font(.caption)
             .foregroundStyle(.cyan)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        
-        
+
         // Arrival station
         VStack(spacing: 4) {
           Text(train.toStation?.code ?? "--")
@@ -94,7 +92,7 @@ struct TrainCard: View {
     .clipShape(RoundedRectangle(cornerRadius: 20))
     .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
   }
-  
+
   // Helper function to format duration
   private func formattedDuration() -> String {
     guard let departure = train.journeyDeparture, let arrival = train.journeyArrival else {
@@ -104,7 +102,7 @@ struct TrainCard: View {
     let interval = arrival.timeIntervalSince(departure)
     let hours = Int(interval) / 3600
     let minutes = (Int(interval) % 3600) / 60
-    
+
     if hours > 0 && minutes > 0 {
       return "Tiba Dalam \(hours)Jam \(minutes)Menit"
     } else if hours > 0 {
@@ -119,7 +117,6 @@ struct TrainCard: View {
     return date.formatted(.dateTime.hour().minute())
   }
 }
-
 
 #Preview {
   let stations = [
@@ -136,7 +133,7 @@ struct TrainCard: View {
       city: "Jakarta"
     ),
   ]
-  
+
   let train = ProjectedTrain(
     id: "T1-0",
     code: "T1",
@@ -144,6 +141,7 @@ struct TrainCard: View {
     position: Position(latitude: -6.1950, longitude: 106.8500),
     moving: true,
     bearing: 45,
+    routeIdentifier: "L1",
     speedKph: 60,
     fromStation: stations[0],
     toStation: stations[1],
@@ -153,11 +151,11 @@ struct TrainCard: View {
     journeyDeparture: Date().addingTimeInterval(-60 * 60),
     journeyArrival: Date().addingTimeInterval(2 * 60 * 60)
   )
-  
+
   ZStack {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
-    
+
     TrainCard(train: train, onDelete: {})
       .padding()
   }

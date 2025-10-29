@@ -88,6 +88,7 @@ struct TrainServiceRow: View {
     position: Position(latitude: -6.1950, longitude: 106.8500),
     moving: true,
     bearing: 45,
+    routeIdentifier: "L1",
     speedKph: 60,
     fromStation: stations[0],
     toStation: stations[1],

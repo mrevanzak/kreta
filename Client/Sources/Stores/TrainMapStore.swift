@@ -12,6 +12,13 @@ final class TrainMapStore {
 
   var isLoading: Bool = false
   var selectedMapStyle: MapStyleOption = .hybrid
+  var selectedTrain: ProjectedTrain? {
+    didSet {
+      if let selectedTrain {
+        projectTrains()
+      }
+    }
+  }
 
   var stations: [Station] = [] {
     didSet { projectTrains() }
@@ -181,11 +188,6 @@ extension TrainMapStore {
 
     let stationLookup = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
     let routeLookupByIdentifier = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
-    let routeLookupByNumeric = Dictionary(
-      uniqueKeysWithValues: routes.compactMap { route -> (Int, Route)? in
-        guard let identifier = route.numericIdentifier else { return nil }
-        return (identifier, route)
-      })
 
     let projected = rawTrains.compactMap { train in
       TrainProjector.projectTrain(
@@ -193,7 +195,6 @@ extension TrainMapStore {
         train: train,
         stationsByCode: stationLookup,
         routesByIdentifier: routeLookupByIdentifier,
-        routesByNumericIdentifier: routeLookupByNumeric
       )
     }
 
@@ -213,6 +214,17 @@ extension TrainMapStore {
   func stopProjectionUpdates() {
     projectionTimer?.invalidate()
     projectionTimer = nil
+  }
+}
+
+// MARK: - Selected train management
+extension TrainMapStore {
+  func selectTrain(train: ProjectedTrain) {
+    selectedTrain = train
+  }
+
+  func removeSelectedTrain() {
+    selectedTrain = nil
   }
 }
 
@@ -246,7 +258,6 @@ extension TrainMapStore {
           Position(latitude: -6.2050, longitude: 106.8600),
           Position(latitude: -6.2149, longitude: 106.8707),
         ],
-        numericIdentifier: 1
       )
     ]
     store.trains = [
@@ -257,6 +268,7 @@ extension TrainMapStore {
         position: Position(latitude: -6.1950, longitude: 106.8500),
         moving: true,
         bearing: 45,
+        routeIdentifier: "L1",
         speedKph: 60,
         fromStation: store.stations.first,
         toStation: store.stations.last,

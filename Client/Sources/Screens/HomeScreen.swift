@@ -73,7 +73,7 @@ struct HomeScreen: View {
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train in
-              selectedTrains.append(train)
+              trainMapStore.selectTrain(train: train)
               showAddSheet = false
             }
           )

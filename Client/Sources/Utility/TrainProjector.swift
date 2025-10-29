@@ -54,7 +54,9 @@ enum TrainProjector {
   }
 
   private static func bearing(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double? {
-    if abs(from.latitude - to.latitude) < .ulpOfOne && abs(from.longitude - to.longitude) < .ulpOfOne {
+    if abs(from.latitude - to.latitude) < .ulpOfOne
+      && abs(from.longitude - to.longitude) < .ulpOfOne
+    {
       return nil
     }
 
@@ -70,7 +72,8 @@ enum TrainProjector {
     return angle
   }
 
-  private static func coordinateOnRoute(distanceCm: Double, route: Route) -> CLLocationCoordinate2D? {
+  private static func coordinateOnRoute(distanceCm: Double, route: Route) -> CLLocationCoordinate2D?
+  {
     let clamped = max(0, min(distanceCm, route.totalLengthCm))
     return route.coordinateAt(distanceCm: clamped)
   }
@@ -86,12 +89,8 @@ enum TrainProjector {
   private static func route(
     for path: RawGapekaPath,
     routesByIdentifier: [String: Route],
-    routesByNumericIdentifier: [Int: Route]
   ) -> Route? {
     guard let routeId = path.routeId else { return nil }
-    if let numeric = routesByNumericIdentifier[routeId] {
-      return numeric
-    }
     return routesByIdentifier[String(routeId)]
   }
 
@@ -148,17 +147,12 @@ enum TrainProjector {
   ) -> ProjectedTrain? {
     let stationLookup = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
     let routeLookupByIdentifier = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
-    let routeLookupByNumeric = Dictionary(uniqueKeysWithValues: routes.compactMap { route -> (Int, Route)? in
-      guard let identifier = route.numericIdentifier else { return nil }
-      return (identifier, route)
-    })
 
     return projectTrain(
       now: now,
       train: train,
       stationsByCode: stationLookup,
       routesByIdentifier: routeLookupByIdentifier,
-      routesByNumericIdentifier: routeLookupByNumeric
     )
   }
 
@@ -167,7 +161,6 @@ enum TrainProjector {
     train: RawGapekaTrain,
     stationsByCode: [String: Station],
     routesByIdentifier: [String: Route],
-    routesByNumericIdentifier: [Int: Route]
   ) -> ProjectedTrain? {
     let nowMs = now.timeIntervalSince1970 * 1_000
     let journeyWindow = normalizeTimeWindow(
@@ -228,6 +221,7 @@ enum TrainProjector {
         position: position,
         moving: moving,
         bearing: resolvedBearing,
+        routeIdentifier: nil,
         speedKph: speedKph,
         fromStation: fromStation,
         toStation: toStation,
@@ -238,11 +232,12 @@ enum TrainProjector {
         journeyArrival: journeyDates.arrival
       )
     } else {
-      guard let route = route(
-        for: step,
-        routesByIdentifier: routesByIdentifier,
-        routesByNumericIdentifier: routesByNumericIdentifier
-      ) else {
+      guard
+        let route = route(
+          for: step,
+          routesByIdentifier: routesByIdentifier,
+        )
+      else {
         // Fallback to straight-line interpolation between stations
         guard let origin = fromStation?.coordinate, let destination = toStation?.coordinate else {
           return nil
@@ -257,7 +252,8 @@ enum TrainProjector {
         let clampedProgress = max(0, min(1, elapsed / duration))
         let coordinate = lerp(origin, destination, t: clampedProgress)
         let distanceMeters = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
-          .distance(from: CLLocation(latitude: destination.latitude, longitude: destination.longitude))
+          .distance(
+            from: CLLocation(latitude: destination.latitude, longitude: destination.longitude))
         let durationSeconds = max(segmentDates.arrival.timeIntervalSince(segmentDates.start), 1)
         let speed = durationSeconds > 0 ? (distanceMeters / 1_000) / (durationSeconds / 3_600) : nil
 
@@ -274,6 +270,7 @@ enum TrainProjector {
           position: position,
           moving: moving,
           bearing: resolvedBearing,
+          routeIdentifier: nil,
           speedKph: speedKph,
           fromStation: fromStation,
           toStation: toStation,
@@ -295,7 +292,8 @@ enum TrainProjector {
       let clampedProgress = max(0, min(1, elapsed / duration))
 
       let distanceForward = (route.totalLengthCm / duration) * elapsed
-      let routedDistance = step.invRoute
+      let routedDistance =
+        step.invRoute
         ? max(0, route.totalLengthCm - distanceForward)
         : min(route.totalLengthCm, distanceForward)
 
@@ -304,14 +302,16 @@ enum TrainProjector {
       }
 
       let delta = min(defaultBearingSampleCm, route.totalLengthCm)
-      let neighborDistance = step.invRoute
+      let neighborDistance =
+        step.invRoute
         ? max(0, routedDistance - delta)
         : min(route.totalLengthCm, routedDistance + delta)
       let neighborCoordinate = coordinateOnRoute(distanceCm: neighborDistance, route: route)
       let heading = neighborCoordinate.flatMap { bearing(from: coordinate, to: $0) }
 
       let distanceKm = route.totalLengthCm / 100_000
-      let segmentDurationSeconds = max(segmentDates.arrival.timeIntervalSince(segmentDates.start), 1)
+      let segmentDurationSeconds = max(
+        segmentDates.arrival.timeIntervalSince(segmentDates.start), 1)
       let speed = segmentDurationSeconds > 0 ? distanceKm / (segmentDurationSeconds / 3_600) : nil
 
       position = Position(latitude: coordinate.latitude, longitude: coordinate.longitude)
@@ -327,6 +327,7 @@ enum TrainProjector {
         position: position,
         moving: moving,
         bearing: resolvedBearing,
+        routeIdentifier: route.id,
         speedKph: speedKph,
         fromStation: fromStation,
         toStation: toStation,

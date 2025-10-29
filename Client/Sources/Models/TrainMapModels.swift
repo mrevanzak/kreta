@@ -53,13 +53,11 @@ struct Route: Codable, Identifiable {
   let path: [Position]
   let segments: [RouteSegment]
   let totalLengthCm: Double
-  let numericIdentifier: Int?
 
-  init(id: String, name: String, path: [Position], numericIdentifier: Int? = nil) {
+  init(id: String, name: String, path: [Position]) {
     self.id = id
     self.name = name
     self.path = path
-    self.numericIdentifier = numericIdentifier
 
     let coordinates = path
     if coordinates.count < 2 {
@@ -166,6 +164,7 @@ struct ProjectedTrain: Codable, Identifiable {
   let position: Position
   let moving: Bool
   let bearing: Double?
+  let routeIdentifier: String?
 
   // Optional contextual data to keep legacy UI components functional
   let speedKph: Double?
