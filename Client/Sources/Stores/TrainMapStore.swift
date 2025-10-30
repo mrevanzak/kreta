@@ -41,6 +41,11 @@ final class TrainMapStore {
   init(service: TrainMapService) {
     self.service = service
 
+    // Load cached data immediately on init for instant display
+    if (try? loadCachedDataIfAvailable()) != nil {
+      logger.debug("Loaded cached data on initialization")
+    }
+
     lastUpdatedAtCancellable = convexClient.subscribe(
       to: "gapeka:getLastUpdatedAt", yielding: String.self
     )
