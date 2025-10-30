@@ -65,7 +65,7 @@ struct HomeScreen: View {
           }
         }
         .presentationBackgroundInteraction(.enabled)
-        .presentationDetents([.fraction(0.35), .medium])
+        .presentationDetents([.fraction(0.35)])
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
         .padding(.horizontal, 21)
@@ -73,6 +73,7 @@ struct HomeScreen: View {
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train in
+              selectedTrains.append(train)
               trainMapStore.selectTrain(train: train)
               showAddSheet = false
             }
