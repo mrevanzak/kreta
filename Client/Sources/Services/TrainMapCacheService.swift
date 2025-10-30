@@ -1,83 +1,66 @@
+import Disk
 import Foundation
 
 struct TrainMapCacheService {
-  private let fileManager = FileManager.default
-
-  private var cacheDirectory: URL {
-    fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-      .appendingPathComponent("TrainMapCache", isDirectory: true)
-  }
-
-  private var stationsURL: URL { cacheDirectory.appendingPathComponent("stations.json") }
-  private var routesURL: URL { cacheDirectory.appendingPathComponent("routes.json") }
-  private var trainsURL: URL { cacheDirectory.appendingPathComponent("trains.json") }
-  private var timestampURL: URL { cacheDirectory.appendingPathComponent("lastUpdatedAt.txt") }
-
-  init() {
-    try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
-  }
+  private let cacheFolder = "TrainMapCache"
+  private let stationsFile = "stations.json"
+  private let routesFile = "routes.json"
+  private let trainsFile = "trains.json"
+  private let timestampFile = "lastUpdatedAt.txt"
 
   // MARK: - Timestamp
-
   func getCachedTimestamp() -> String? {
-    try? String(contentsOf: timestampURL, encoding: .utf8)
+    do {
+      let url = try Disk.url(for: "\(cacheFolder)/\(timestampFile)", in: .applicationSupport)
+      return try String(contentsOf: url, encoding: .utf8)
+    } catch {
+      return nil
+    }
   }
 
   func saveTimestamp(_ timestamp: String) throws {
-    try timestamp.write(to: timestampURL, atomically: true, encoding: .utf8)
+    let url = try Disk.url(for: "\(cacheFolder)/\(timestampFile)", in: .applicationSupport)
+    try timestamp.write(to: url, atomically: true, encoding: .utf8)
   }
 
   // MARK: - Stations
-
   func saveStations(_ stations: [Station]) throws {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .sortedKeys
-    let data = try encoder.encode(stations)
-    try data.write(to: stationsURL, options: .atomic)
+    try Disk.save(stations, to: .applicationSupport, as: "\(cacheFolder)/\(stationsFile)")
   }
 
   func loadCachedStations() throws -> [Station] {
-    let data = try Data(contentsOf: stationsURL)
-    return try JSONDecoder().decode([Station].self, from: data)
+    try Disk.retrieve(
+      "\(cacheFolder)/\(stationsFile)", from: .applicationSupport, as: [Station].self)
   }
 
   func hasCachedStations() -> Bool {
-    fileManager.fileExists(atPath: stationsURL.path)
+    Disk.exists("\(cacheFolder)/\(stationsFile)", in: .applicationSupport)
   }
 
   // MARK: - Routes
-
   func saveRoutes(_ routes: [Route]) throws {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .sortedKeys
-    let data = try encoder.encode(routes)
-    try data.write(to: routesURL, options: .atomic)
+    try Disk.save(routes, to: .applicationSupport, as: "\(cacheFolder)/\(routesFile)")
   }
 
   func loadCachedRoutes() throws -> [Route] {
-    let data = try Data(contentsOf: routesURL)
-    return try JSONDecoder().decode([Route].self, from: data)
+    try Disk.retrieve("\(cacheFolder)/\(routesFile)", from: .applicationSupport, as: [Route].self)
   }
 
   func hasCachedRoutes() -> Bool {
-    fileManager.fileExists(atPath: routesURL.path)
+    Disk.exists("\(cacheFolder)/\(routesFile)", in: .applicationSupport)
   }
 
   // MARK: - Trains
-
   func saveTrains(_ trains: [RawGapekaTrain]) throws {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .sortedKeys
-    let data = try encoder.encode(trains)
-    try data.write(to: trainsURL, options: .atomic)
+    try Disk.save(trains, to: .applicationSupport, as: "\(cacheFolder)/\(trainsFile)")
   }
 
   func loadCachedTrains() throws -> [RawGapekaTrain] {
-    let data = try Data(contentsOf: trainsURL)
-    return try JSONDecoder().decode([RawGapekaTrain].self, from: data)
+    try Disk.retrieve(
+      "\(cacheFolder)/\(trainsFile)", from: .applicationSupport, as: [RawGapekaTrain].self)
   }
 
   func hasCachedTrains() -> Bool {
-    fileManager.fileExists(atPath: trainsURL.path)
+    Disk.exists("\(cacheFolder)/\(trainsFile)", in: .applicationSupport)
   }
 }

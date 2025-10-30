@@ -31,6 +31,7 @@
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
 		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		C5AB85292EB3770D009E242A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
+		C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC973F2EB3C0BE00E46229 /* Disk */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */,
 				4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */,
 				8D8021892CFCF28E006C709C /* StripePayments in Frameworks */,
 				8D8021872CFCF28E006C709C /* StripePaymentSheet in Frameworks */,
@@ -187,6 +189,7 @@
 				C51929E22EAB3AC30036AE74 /* MijickPopups */,
 				4E428AD02EAEF22D008DC212 /* MijickCalendarView */,
 				661BA6F9401C4744B476177E /* Sentry */,
+				C5CC973F2EB3C0BE00E46229 /* Disk */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -250,6 +253,7 @@
 				C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */,
 				4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */,
 				5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -708,6 +712,14 @@
 				minimumVersion = 1.7.20;
 			};
 		};
+		C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/saoudrizwan/Disk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -785,6 +797,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */;
 			productName = DebugSwift;
+		};
+		C5CC973F2EB3C0BE00E46229 /* Disk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */;
+			productName = Disk;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

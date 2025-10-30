@@ -51,7 +51,7 @@ enum OrderError: Error {
 
 enum TrainMapError: LocalizedError {
   case convexConnectionFailed(String)
-  case stationsSubscriptionFailed(String)
+  case stationsFetchFailed(String)
   case routesFetchFailed(String)
   case trainPositionsFetchFailed(String)
   case dataMappingFailed(String)
@@ -62,7 +62,7 @@ enum TrainMapError: LocalizedError {
     switch self {
     case .convexConnectionFailed(let details):
       return "Failed to connect to train data service: \(details)"
-    case .stationsSubscriptionFailed(let details):
+    case .stationsFetchFailed(let details):
       return "Failed to load train stations: \(details)"
     case .routesFetchFailed(let details):
       return "Failed to load train routes: \(details)"
@@ -79,7 +79,7 @@ enum TrainMapError: LocalizedError {
 
   var recoverySuggestion: String? {
     switch self {
-    case .convexConnectionFailed, .stationsSubscriptionFailed:
+    case .convexConnectionFailed, .stationsFetchFailed:
       return
         "Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
     case .routesFetchFailed, .trainPositionsFetchFailed:
@@ -95,7 +95,7 @@ enum TrainMapError: LocalizedError {
     switch self {
     case .convexConnectionFailed:
       return "ConvexConnectionError"
-    case .stationsSubscriptionFailed:
+    case .stationsFetchFailed:
       return "StationsSubscriptionError"
     case .routesFetchFailed:
       return "RoutesFetchError"
