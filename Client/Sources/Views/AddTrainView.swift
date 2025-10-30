@@ -120,10 +120,14 @@ struct AddTrainView: View {
       }
     }
     .overlay {
-      if viewModel.filteredStations.isEmpty {
+      if viewModel.isLoadingConnections {
+        ProgressView()
+          .controlSize(.large)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(.ultraThinMaterial)
+      } else if viewModel.filteredStations.isEmpty {
         ContentUnavailableView.search(text: viewModel.searchText)
       }
-
     }
   }
 
@@ -183,16 +187,33 @@ struct AddTrainView: View {
   private func trainResultsView(viewModel: ViewModel) -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
-        ForEach(viewModel.availableTrains) { train in
-          TrainServiceRow(train: train)
+        ForEach(viewModel.filteredTrains) { train in
+          TrainResultRow(train: train)
             .contentShape(Rectangle())
             .onTapGesture {
-              onTrainSelected(train)
+              // Find the corresponding ProjectedTrain from the store
+              if let projectedTrain = store.trains.first(where: { $0.id.starts(with: train.id) }) {
+                onTrainSelected(projectedTrain)
+              }
             }
 
           Divider()
             .padding(.leading, 16)
         }
+      }
+    }
+    .overlay {
+      if viewModel.isLoadingTrains {
+        ProgressView()
+          .controlSize(.large)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(.ultraThinMaterial)
+      } else if viewModel.filteredTrains.isEmpty {
+        ContentUnavailableView(
+          "Tidak ada kereta tersedia",
+          systemImage: "train.side.front.car",
+          description: Text("Tidak ada layanan kereta untuk rute ini pada tanggal yang dipilih")
+        )
       }
     }
   }

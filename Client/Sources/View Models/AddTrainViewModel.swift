@@ -20,19 +20,68 @@ extension AddTrainView {
   @Observable
   final class ViewModel {
     var allStations: [Station] = []
+    var connectedStations: [Station] = []
     var availableTrains: [ProjectedTrain] = []
+    var filteredTrains: [Train] = []
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
     var showCalendar: Bool = false
+    var isLoadingConnections: Bool = false
+    var isLoadingTrains: Bool = false
 
     var selectedDepartureStation: Station?
     var selectedArrivalStation: Station?
     var selectedDate: Date?
+    
+    private let stationConnectionService = StationConnectionService()
+    private let trainConnectionService = TrainConnectionService()
 
     func bootstrap(availableTrains: [ProjectedTrain], allStations: [Station]) {
       self.availableTrains = availableTrains
       self.allStations = allStations
+    }
+    
+    /// Fetch connected stations for the selected departure station
+    func fetchConnectedStations() async {
+      guard let departureId = selectedDepartureStation?.id else {
+        connectedStations = []
+        return
+      }
+      
+      isLoadingConnections = true
+      defer { isLoadingConnections = false }
+      
+      do {
+        connectedStations = try await stationConnectionService.fetchConnectedStations(
+          departureStationId: departureId
+        )
+      } catch {
+        print("Failed to fetch connected stations: \(error)")
+        connectedStations = []
+      }
+    }
+    
+    /// Fetch trains that connect the selected departure and arrival stations
+    func fetchAvailableTrains() async {
+      guard let departureId = selectedDepartureStation?.id,
+            let arrivalId = selectedArrivalStation?.id else {
+        filteredTrains = []
+        return
+      }
+      
+      isLoadingTrains = true
+      defer { isLoadingTrains = false }
+      
+      do {
+        filteredTrains = try await trainConnectionService.fetchTrains(
+          departureStationId: departureId,
+          arrivalStationId: arrivalId
+        )
+      } catch {
+        print("Failed to fetch available trains: \(error)")
+        filteredTrains = []
+      }
     }
 
     func parseAndSelectDate(from text: String) {
@@ -96,7 +145,8 @@ extension AddTrainView {
       case .departure:
         stations = allStations
       case .arrival:
-        stations = allStations.filter { $0.id != selectedDepartureStation?.id }
+        // Use connected stations from Convex query
+        stations = connectedStations
       case .date, .results:
         return []
       }
@@ -130,6 +180,10 @@ extension AddTrainView {
         selectedDepartureStation = station
         currentStep = .arrival
         searchText = ""
+        // Fetch connected stations in background
+        Task {
+          await fetchConnectedStations()
+        }
       case .arrival:
         selectedArrivalStation = station
         currentStep = .date
@@ -143,6 +197,10 @@ extension AddTrainView {
       selectedDate = date
       showCalendar = false
       currentStep = .results
+      // Fetch trains for the selected route
+      Task {
+        await fetchAvailableTrains()
+      }
     }
 
     func showCalendarView() {
@@ -159,6 +217,8 @@ extension AddTrainView {
       selectedArrivalStation = nil
       selectedDate = nil
       availableTrains = []
+      connectedStations = []
+      filteredTrains = []
       showCalendar = false
       currentStep = .departure
       searchText = ""
@@ -168,14 +228,20 @@ extension AddTrainView {
       selectedArrivalStation = nil
       selectedDate = nil
       availableTrains = []
+      filteredTrains = []
       showCalendar = false
       currentStep = .arrival
       searchText = ""
+      // Re-fetch connected stations
+      Task {
+        await fetchConnectedStations()
+      }
     }
 
     func goBackToDate() {
       selectedDate = nil
       availableTrains = []
+      filteredTrains = []
       showCalendar = false
       currentStep = .date
       searchText = ""
@@ -188,6 +254,8 @@ extension AddTrainView {
       selectedDate = nil
       searchText = ""
       availableTrains = []
+      connectedStations = []
+      filteredTrains = []
       showCalendar = false
     }
   }

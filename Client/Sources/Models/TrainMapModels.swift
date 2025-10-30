@@ -33,6 +33,7 @@ struct Station: Codable, Identifiable {
 
 struct Train: Codable, Identifiable, Hashable {
   let id: String
+  let code: String
   let name: String
 }
 

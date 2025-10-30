@@ -83,6 +83,11 @@ struct AddTrainViewModelTests {
     ),
   ]
   
+  let mockFilteredTrains = [
+    Train(id: "T1", code: "ARGO", name: "Argo Bromo Anggrek"),
+    Train(id: "T2", code: "GAYA", name: "Gaya Baru Malam Selatan"),
+  ]
+  
   // MARK: - Initialization Tests
   
   @Test("ViewModel initializes with correct default state")
@@ -97,6 +102,10 @@ struct AddTrainViewModelTests {
     #expect(viewModel.selectedDate == nil)
     #expect(viewModel.allStations.isEmpty)
     #expect(viewModel.availableTrains.isEmpty)
+    #expect(viewModel.connectedStations.isEmpty)
+    #expect(viewModel.filteredTrains.isEmpty)
+    #expect(viewModel.isLoadingConnections == false)
+    #expect(viewModel.isLoadingTrains == false)
   }
   
   @Test("Bootstrap populates stations and trains")
@@ -180,25 +189,31 @@ struct AddTrainViewModelTests {
   
   // MARK: - Station Filtering Tests
   
-  @Test("Filtered stations excludes departure station in arrival step")
-  func testFilteredStationsExcludesDeparture() {
+  @Test("Filtered stations uses connected stations in arrival step")
+  func testFilteredStationsUsesConnectedStations() async {
     let viewModel = AddTrainView.ViewModel()
     viewModel.bootstrap(availableTrains: mockTrains, allStations: mockStations)
     
-    let gambir = mockStations[0]
-    viewModel.selectStation(gambir)
+    // Manually set connected stations to simulate Convex response
+    viewModel.connectedStations = Array(mockStations.suffix(2))
     
-    // Now in arrival step
+    // Move to arrival step
+    viewModel.currentStep = .arrival
+    
     let filtered = viewModel.filteredStations
     
-    #expect(!filtered.contains(where: { $0.id == gambir.id }))
-    #expect(filtered.count == mockStations.count - 1)
+    // Should only show connected stations
+    #expect(filtered.count == 2)
   }
   
-  @Test("Search text filters stations by name")
-  func testSearchByName() {
+  @Test("Search text filters connected stations by name in arrival step")
+  func testSearchByNameInArrivalStep() {
     let viewModel = AddTrainView.ViewModel()
     viewModel.bootstrap(availableTrains: mockTrains, allStations: mockStations)
+    
+    // Simulate connected stations
+    viewModel.connectedStations = [mockStations[1], mockStations[2]]
+    viewModel.currentStep = .arrival
     
     viewModel.searchText = "bandung"
     let filtered = viewModel.filteredStations
@@ -292,6 +307,7 @@ struct AddTrainViewModelTests {
     
     // Set up full state
     viewModel.selectStation(mockStations[0])
+    viewModel.connectedStations = Array(mockStations.suffix(2))
     viewModel.selectStation(mockStations[1])
     viewModel.selectDate(Date())
     
@@ -302,6 +318,7 @@ struct AddTrainViewModelTests {
     #expect(viewModel.selectedDepartureStation == nil)
     #expect(viewModel.selectedArrivalStation == nil)
     #expect(viewModel.selectedDate == nil)
+    #expect(viewModel.connectedStations.isEmpty)
     #expect(viewModel.searchText.isEmpty)
     #expect(viewModel.showCalendar == false)
   }
@@ -313,6 +330,7 @@ struct AddTrainViewModelTests {
     
     // Set up state
     viewModel.selectStation(mockStations[0])
+    viewModel.connectedStations = Array(mockStations.suffix(2))
     viewModel.selectStation(mockStations[1])
     viewModel.selectDate(Date())
     
@@ -355,6 +373,8 @@ struct AddTrainViewModelTests {
     
     // Set up full state
     viewModel.selectStation(mockStations[0])
+    viewModel.connectedStations = Array(mockStations.suffix(2))
+    viewModel.filteredTrains = mockFilteredTrains
     viewModel.selectStation(mockStations[1])
     viewModel.selectDate(Date())
     
@@ -365,6 +385,8 @@ struct AddTrainViewModelTests {
     #expect(viewModel.selectedDepartureStation == nil)
     #expect(viewModel.selectedArrivalStation == nil)
     #expect(viewModel.selectedDate == nil)
+    #expect(viewModel.connectedStations.isEmpty)
+    #expect(viewModel.filteredTrains.isEmpty)
     #expect(viewModel.searchText.isEmpty)
     #expect(viewModel.showCalendar == false)
   }
