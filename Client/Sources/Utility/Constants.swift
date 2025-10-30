@@ -10,8 +10,16 @@ import Foundation
 struct Constants {
   struct Convex {
     // Point this to your Convex deployment; consider swapping via build configs
-    static let deploymentUrl: String =
-      ProcessInfo.processInfo.environment["CONVEX_URL"]!
+    static let deploymentUrl: String = {
+      if let url = ProcessInfo.processInfo.environment["CONVEX_URL"], !url.isEmpty {
+        return url
+      }
+      #if DEBUG
+        print(
+          "⚠️ [kreta] CONVEX_URL not set. Configure it in the Xcode scheme or shell environment.")
+      #endif
+      return "https://convex.invalid"
+    }()
   }
 
   struct Urls {
