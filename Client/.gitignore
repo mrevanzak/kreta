@@ -63,3 +63,4 @@ playground.xcworkspace
 .env.*
 
 !info.plist
+.sentryclirc
