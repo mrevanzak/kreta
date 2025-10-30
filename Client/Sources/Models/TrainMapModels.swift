@@ -132,30 +132,6 @@ struct Route: Codable, Identifiable {
     from + (to - from) * t
   }
 }
-struct LiveTrain: Codable, Identifiable {
-  let id: String
-  let code: String
-  let name: String
-
-  let position: Position
-  let bearing: Double?
-  let speedKph: Double?
-
-  // Current segment context
-  let fromStation: Station
-  let toStation: Station
-  let segmentDeparture: Date
-  let segmentArrival: Date
-  let progress: Double
-
-  // Whole journey context
-  let journeyDeparture: Date
-  let journeyArrival: Date
-
-  var coordinate: CLLocationCoordinate2D {
-    CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
-  }
-}
 
 struct ProjectedTrain: Codable, Identifiable {
   let id: String
