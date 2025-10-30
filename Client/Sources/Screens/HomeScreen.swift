@@ -8,6 +8,7 @@ struct HomeScreen: View {
     service: TrainMapService(httpClient: .development))
 
   @State private var showAddSheet = false
+  @State private var showFeedbackBoard = false
   @State private var selectedTrains: [ProjectedTrain] = []
 
   var body: some View {
@@ -26,6 +27,9 @@ struct HomeScreen: View {
               .font(.title2).bold()
             Spacer()
             Menu {
+              Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
+                showFeedbackBoard = true
+              }
               Button("Pengaturan", systemImage: "gearshape") {}
             } label: {
               Circle().fill(.thinMaterial)
@@ -79,6 +83,11 @@ struct HomeScreen: View {
             }
           )
           .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showFeedbackBoard) {
+          FeedbackBoardView()
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
         }
       }
     }.environment(trainMapStore)
