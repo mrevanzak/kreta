@@ -3,7 +3,7 @@ import { query } from "./_generated/server";
 
 export const list = query({
   args: {
-    departureStationId: v.union(v.string(), v.null()),
+    departureStationId: v.optional(v.string()),
   },
   handler: async (ctx, { departureStationId }) => {
     if (!departureStationId) {
