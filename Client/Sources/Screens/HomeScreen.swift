@@ -9,6 +9,7 @@ struct HomeScreen: View {
 
   @State private var showAddSheet = false
   @State private var selectedTrains: [ProjectedTrain] = []
+  @State private var showFeedbackBoard = false
 
   var body: some View {
     Group {
@@ -26,6 +27,9 @@ struct HomeScreen: View {
               .font(.title2).bold()
             Spacer()
             Menu {
+              Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
+                showFeedbackBoard = true
+              }
               Button("Pengaturan", systemImage: "gearshape") {}
             } label: {
               Circle().fill(.thinMaterial)
@@ -81,7 +85,13 @@ struct HomeScreen: View {
           .presentationDragIndicator(.visible)
         }
       }
-    }.environment(trainMapStore)
+    }
+    .environment(trainMapStore)
+    .sheet(isPresented: $showFeedbackBoard) {
+      FeedbackBoardView()
+        .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
+    }
   }
 
   private func deleteTrain(_ train: ProjectedTrain) {

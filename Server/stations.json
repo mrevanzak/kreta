@@ -1,0 +1,4622 @@
+[
+    {
+        "id": "3",
+        "code": "KRN",
+        "name": "Krian",
+        "position": {
+            "latitude": -7.4103699,
+            "longitude": 112.5859064
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "4",
+        "code": "BH",
+        "name": "Boharan",
+        "position": {
+            "latitude": -7.38798765295108,
+            "longitude": 112.619284105956
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "5",
+        "code": "STP",
+        "name": "Sawotratap",
+        "position": {
+            "latitude": -7.3690879,
+            "longitude": 112.7292847
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "6",
+        "code": "BDR",
+        "name": "Buduran",
+        "position": {
+            "latitude": -7.4282441,
+            "longitude": 112.7228797
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "7",
+        "code": "GDG",
+        "name": "Gedangan",
+        "position": {
+            "latitude": -7.3892886,
+            "longitude": 112.7285903
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "8",
+        "code": "BJK",
+        "name": "Banjarkemantren",
+        "position": {
+            "latitude": -7.41169185942867,
+            "longitude": 112.726119967699
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "9",
+        "code": "JMS",
+        "name": "Jemursari",
+        "position": {
+            "latitude": -7.3299988,
+            "longitude": 112.731193
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "10",
+        "code": "KTL",
+        "name": "Kertomenanggal",
+        "position": {
+            "latitude": -7.340325,
+            "longitude": 112.7294763
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "11",
+        "code": "WR",
+        "name": "Waru",
+        "position": {
+            "latitude": -7.3530692,
+            "longitude": 112.7293842
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "12",
+        "code": "MI",
+        "name": "Mangli",
+        "position": {
+            "latitude": -8.1910608,
+            "longitude": 113.6478601
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "13",
+        "code": "KK",
+        "name": "Klakah",
+        "position": {
+            "latitude": -7.9941551,
+            "longitude": 113.2493291
+        },
+        "city": "Lumajang"
+    },
+    {
+        "id": "14",
+        "code": "RDA",
+        "name": "Randuagung",
+        "position": {
+            "latitude": -8.0703352,
+            "longitude": 113.3053409
+        },
+        "city": "Randuagung"
+    },
+    {
+        "id": "15",
+        "code": "JTR",
+        "name": "Jatiroto",
+        "position": {
+            "latitude": -8.1232297,
+            "longitude": 113.3641571
+        },
+        "city": "Jatiroto"
+    },
+    {
+        "id": "17",
+        "code": "RN",
+        "name": "Ranuyoso",
+        "position": {
+            "latitude": -7.9541659,
+            "longitude": 113.2368286
+        },
+        "city": "Lumajang"
+    },
+    {
+        "id": "18",
+        "code": "LEC",
+        "name": "Leces",
+        "position": {
+            "latitude": -7.8464736,
+            "longitude": 113.2289417
+        },
+        "city": "Probolinggo"
+    },
+    {
+        "id": "19",
+        "code": "MLS",
+        "name": "Malasan",
+        "position": {
+            "latitude": -7.8862824,
+            "longitude": 113.2605843
+        },
+        "city": "Probolinggo"
+    },
+    {
+        "id": "20",
+        "code": "BYM",
+        "name": "Bayeman",
+        "position": {
+            "latitude": -7.734683,
+            "longitude": 113.1191772
+        },
+        "city": "Probolinggo"
+    },
+    {
+        "id": "21",
+        "code": "RO",
+        "name": "Rejoso",
+        "position": {
+            "latitude": -7.6916189,
+            "longitude": 112.9681814
+        },
+        "city": "Pasuruan"
+    },
+    {
+        "id": "22",
+        "code": "GI",
+        "name": "Grati",
+        "position": {
+            "latitude": -7.7175858,
+            "longitude": 113.0124018
+        },
+        "city": "Batas Desa Sumberanyar"
+    },
+    {
+        "id": "23",
+        "code": "SGJ",
+        "name": "Singojuruh",
+        "position": {
+            "latitude": -8.3065888,
+            "longitude": 114.2408984
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "24",
+        "code": "AGO",
+        "name": "Argopuro",
+        "position": {
+            "latitude": -8.183026,
+            "longitude": 114.369561
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "25",
+        "code": "KTG",
+        "name": "Ketapang",
+        "position": {
+            "latitude": -8.1405428,
+            "longitude": 114.3970569
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "26",
+        "code": "RGP",
+        "name": "Rogojampi",
+        "position": {
+            "latitude": -8.30471861279191,
+            "longitude": 114.292460751258
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "27",
+        "code": "BWI",
+        "name": "Banyuwangi Kota",
+        "position": {
+            "latitude": -8.22286939414084,
+            "longitude": 114.340647513677
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "28",
+        "code": "GLM",
+        "name": "Glenmore",
+        "position": {
+            "latitude": -8.29940590053823,
+            "longitude": 114.049496240207
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "29",
+        "code": "TGR",
+        "name": "Temuguruh",
+        "position": {
+            "latitude": -8.3095729,
+            "longitude": 114.2011821
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "30",
+        "code": "SWD",
+        "name": "Sumberwadung",
+        "position": {
+            "latitude": -8.3016779,
+            "longitude": 114.1053606
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "31",
+        "code": "KSL",
+        "name": "Kalisetail",
+        "position": {
+            "latitude": -8.30275513097184,
+            "longitude": 114.139764242546
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "32",
+        "code": "SPL",
+        "name": "Sempolan",
+        "position": {
+            "latitude": -8.1923288,
+            "longitude": 113.8962382
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "33",
+        "code": "KBR",
+        "name": "Kalibaru",
+        "position": {
+            "latitude": -8.2886622,
+            "longitude": 113.9835089
+        },
+        "city": "Banyuwangi"
+    },
+    {
+        "id": "34",
+        "code": "GRN",
+        "name": "Garahan",
+        "position": {
+            "latitude": -8.2252081,
+            "longitude": 113.8959403
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "35",
+        "code": "MRW",
+        "name": "Mrawan",
+        "position": {
+            "latitude": -8.27232521175914,
+            "longitude": 113.926774106361
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "36",
+        "code": "JR",
+        "name": "Jember",
+        "position": {
+            "latitude": -8.1653361,
+            "longitude": 113.7029091
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "37",
+        "code": "AJ",
+        "name": "Arjasa",
+        "position": {
+            "latitude": -8.1295903,
+            "longitude": 113.7426371
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "38",
+        "code": "LDO",
+        "name": "Ledokombo",
+        "position": {
+            "latitude": -8.14067673565612,
+            "longitude": 113.875640498416
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "39",
+        "code": "KTK",
+        "name": "Kotok",
+        "position": {
+            "latitude": -8.1263091,
+            "longitude": 113.7789164
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "40",
+        "code": "KLT",
+        "name": "Kalisat",
+        "position": {
+            "latitude": -8.1273131,
+            "longitude": 113.8127005
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "41",
+        "code": "RBP",
+        "name": "Rambipuji",
+        "position": {
+            "latitude": -8.2035482,
+            "longitude": 113.6134942
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "42",
+        "code": "TGL",
+        "name": "Tanggul",
+        "position": {
+            "latitude": -8.1633955,
+            "longitude": 113.4490211
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "43",
+        "code": "BSS",
+        "name": "Bangsalsari",
+        "position": {
+            "latitude": -8.2028153,
+            "longitude": 113.5327134
+        },
+        "city": "Jember"
+    },
+    {
+        "id": "44",
+        "code": "TNG",
+        "name": "Tangerang",
+        "position": {
+            "latitude": -6.1768034,
+            "longitude": 106.6304498
+        },
+        "city": "Tangerang"
+    },
+    {
+        "id": "45",
+        "code": "CSK",
+        "name": "Cisauk",
+        "position": {
+            "latitude": -6.3244876,
+            "longitude": 106.6415
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "46",
+        "code": "CKY",
+        "name": "Cikoya",
+        "position": {
+            "latitude": -6.3358292,
+            "longitude": 106.4108254
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "47",
+        "code": "CC",
+        "name": "Cicayur",
+        "position": {
+            "latitude": -6.3293652,
+            "longitude": 106.6197225
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "48",
+        "code": "PRP",
+        "name": "Parungpanjang",
+        "position": {
+            "latitude": -6.3442907,
+            "longitude": 106.5693584
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "49",
+        "code": "CJT",
+        "name": "Cilejit",
+        "position": {
+            "latitude": -6.3539068,
+            "longitude": 106.5091259
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "50",
+        "code": "JMU",
+        "name": "Jurangmangu",
+        "position": {
+            "latitude": -6.2888049,
+            "longitude": 106.7288047
+        },
+        "city": "Tangerang Selatan"
+    },
+    {
+        "id": "51",
+        "code": "SRP",
+        "name": "Serpong",
+        "position": {
+            "latitude": -6.3201381,
+            "longitude": 106.6655266
+        },
+        "city": "Tangerang Selatan"
+    },
+    {
+        "id": "52",
+        "code": "RU",
+        "name": "Rawabuntu",
+        "position": {
+            "latitude": -6.3148991,
+            "longitude": 106.6760868
+        },
+        "city": "Tangerang Selatan"
+    },
+    {
+        "id": "53",
+        "code": "SDM",
+        "name": "Sudimara",
+        "position": {
+            "latitude": -6.2970829,
+            "longitude": 106.7121573
+        },
+        "city": "Tangerang Selatan"
+    },
+    {
+        "id": "54",
+        "code": "PDJ",
+        "name": "Pondokranji",
+        "position": {
+            "latitude": -6.2766683,
+            "longitude": 106.7446813
+        },
+        "city": "Tangerang Selatan"
+    },
+    {
+        "id": "55",
+        "code": "KBY",
+        "name": "Kebayoran",
+        "position": {
+            "latitude": -6.2367504,
+            "longitude": 106.7826589
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "56",
+        "code": "TOJB",
+        "name": "Tonjongbaru",
+        "position": {
+            "latitude": -6.0312292,
+            "longitude": 106.1214263
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "57",
+        "code": "CKL",
+        "name": "Cikeusal",
+        "position": {
+            "latitude": -6.2170763,
+            "longitude": 106.2445323
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "59",
+        "code": "SG",
+        "name": "Serang",
+        "position": {
+            "latitude": -6.1124575,
+            "longitude": 106.1586895
+        },
+        "city": "Serang"
+    },
+    {
+        "id": "60",
+        "code": "WLT",
+        "name": "Walantaka",
+        "position": {
+            "latitude": -6.1555661,
+            "longitude": 106.2188383
+        },
+        "city": "Serang"
+    },
+    {
+        "id": "61",
+        "code": "MJ",
+        "name": "Maja",
+        "position": {
+            "latitude": -6.3318543,
+            "longitude": 106.3950182
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "62",
+        "code": "CTR",
+        "name": "Citeras",
+        "position": {
+            "latitude": -6.3350982,
+            "longitude": 106.331842
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "63",
+        "code": "CT",
+        "name": "Catang",
+        "position": {
+            "latitude": -6.26566678991929,
+            "longitude": 106.267868521778
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "64",
+        "code": "JBU",
+        "name": "Jambubaru",
+        "position": {
+            "latitude": -6.3031095,
+            "longitude": 106.2604224
+        },
+        "city": "Kab Serang"
+    },
+    {
+        "id": "65",
+        "code": "RK",
+        "name": "Rangkasbitung",
+        "position": {
+            "latitude": -6.3526635,
+            "longitude": 106.2518325
+        },
+        "city": "Lebak"
+    },
+    {
+        "id": "66",
+        "code": "TGS",
+        "name": "Tigaraksa",
+        "position": {
+            "latitude": -6.3286918,
+            "longitude": 106.4343627
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "67",
+        "code": "DAR",
+        "name": "Daru",
+        "position": {
+            "latitude": -6.3370744,
+            "longitude": 106.4921372
+        },
+        "city": "Kabupaten Tangerang"
+    },
+    {
+        "id": "68",
+        "code": "TEJ",
+        "name": "Tenjo",
+        "position": {
+            "latitude": -6.3270228,
+            "longitude": 106.461104
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "69",
+        "code": "BOI",
+        "name": "Bojongindah",
+        "position": {
+            "latitude": -6.1602267,
+            "longitude": 106.7360615
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "70",
+        "code": "RW",
+        "name": "Rawabuaya",
+        "position": {
+            "latitude": -6.1627563,
+            "longitude": 106.7227805
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "71",
+        "code": "KDS",
+        "name": "Kalideres",
+        "position": {
+            "latitude": -6.1661506,
+            "longitude": 106.7025108
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "72",
+        "code": "PSG",
+        "name": "Pesing",
+        "position": {
+            "latitude": -6.1611889,
+            "longitude": 106.7715864
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "73",
+        "code": "TKO",
+        "name": "Taman Kota",
+        "position": {
+            "latitude": -6.1584472,
+            "longitude": 106.7558252
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "74",
+        "code": "PSM",
+        "name": "Pasarminggu",
+        "position": {
+            "latitude": -6.2814981,
+            "longitude": 106.845189
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "75",
+        "code": "CW",
+        "name": "Cawang",
+        "position": {
+            "latitude": -6.2425502,
+            "longitude": 106.8587053
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "76",
+        "code": "PSMB",
+        "name": "Pasarminggubaru",
+        "position": {
+            "latitude": -6.262404,
+            "longitude": 106.8519772
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "77",
+        "code": "DRN",
+        "name": "Durenkalibata",
+        "position": {
+            "latitude": -6.2552284,
+            "longitude": 106.8551686
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "78",
+        "code": "CLT",
+        "name": "Cilebut",
+        "position": {
+            "latitude": -6.5306871,
+            "longitude": 106.8007132
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "79",
+        "code": "UI",
+        "name": "Univ. Indonesia",
+        "position": {
+            "latitude": -6.3604972,
+            "longitude": 106.8318183
+        },
+        "city": "Depok"
+    },
+    {
+        "id": "80",
+        "code": "TNT",
+        "name": "Tanjungbarat",
+        "position": {
+            "latitude": -6.30804226405513,
+            "longitude": 106.83896251951
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "81",
+        "code": "UP",
+        "name": "Univ. Pancasila",
+        "position": {
+            "latitude": -6.33934782865069,
+            "longitude": 106.834281903852
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "82",
+        "code": "LNA",
+        "name": "Lentengagung",
+        "position": {
+            "latitude": -6.33029638128636,
+            "longitude": 106.834693093738
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "83",
+        "code": "NMO",
+        "name": "Nambo",
+        "position": {
+            "latitude": -6.4664068,
+            "longitude": 106.9063938
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "84",
+        "code": "CBN",
+        "name": "Cibinong",
+        "position": {
+            "latitude": -6.4639777,
+            "longitude": 106.8533411
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "85",
+        "code": "GPI",
+        "name": "Gunung Putri",
+        "position": {
+            "latitude": -6.47174426394646,
+            "longitude": 106.88845995308
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "86",
+        "code": "DPB",
+        "name": "Depokbaru",
+        "position": {
+            "latitude": -6.3903704,
+            "longitude": 106.8220638
+        },
+        "city": "Depok"
+    },
+    {
+        "id": "87",
+        "code": "POC",
+        "name": "Pondokcina",
+        "position": {
+            "latitude": -6.3690644,
+            "longitude": 106.8321054
+        },
+        "city": "Depok"
+    },
+    {
+        "id": "88",
+        "code": "SB",
+        "name": "Surabayakota",
+        "position": {
+            "latitude": -7.24298712576294,
+            "longitude": 112.742155262355
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "90",
+        "code": "SBI",
+        "name": "Surabaya Pasarturi",
+        "position": {
+            "latitude": -7.24808238857663,
+            "longitude": 112.730946353831
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "91",
+        "code": "TES",
+        "name": "Tandes",
+        "position": {
+            "latitude": -7.258879843252,
+            "longitude": 112.687027935856
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "92",
+        "code": "KDA",
+        "name": "Kandangan",
+        "position": {
+            "latitude": -7.25113073073116,
+            "longitude": 112.658348408166
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "93",
+        "code": "IDO",
+        "name": "Indro",
+        "position": {
+            "latitude": -7.17675494172565,
+            "longitude": 112.664468517177
+        },
+        "city": "Gresik"
+    },
+    {
+        "id": "94",
+        "code": "GBN",
+        "name": "Gambringan",
+        "position": {
+            "latitude": -7.1438023,
+            "longitude": 110.9151322
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "95",
+        "code": "BBG",
+        "name": "Brumbung",
+        "position": {
+            "latitude": -7.0218865,
+            "longitude": 110.5177721
+        },
+        "city": "Demak"
+    },
+    {
+        "id": "96",
+        "code": "TG",
+        "name": "Tegal",
+        "position": {
+            "latitude": -6.8648361,
+            "longitude": 109.1427139
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "97",
+        "code": "CNP",
+        "name": "Cirebon Prujakan",
+        "position": {
+            "latitude": -6.7147665,
+            "longitude": 108.5578918
+        },
+        "city": "Kota Cirebon"
+    },
+    {
+        "id": "98",
+        "code": "CKP",
+        "name": "Cikampek",
+        "position": {
+            "latitude": -6.40651494001584,
+            "longitude": 107.45888309973
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "99",
+        "code": "JNG",
+        "name": "Jatinegara",
+        "position": {
+            "latitude": -6.214898,
+            "longitude": 106.8703418
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "100",
+        "code": "MTR",
+        "name": "Matraman",
+        "position": {
+            "latitude": -6.21262708512316,
+            "longitude": 106.859768816842
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "101",
+        "code": "TEB",
+        "name": "Tebet",
+        "position": {
+            "latitude": -6.22639806264005,
+            "longitude": 106.8584534635
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "102",
+        "code": "MRI",
+        "name": "Manggarai",
+        "position": {
+            "latitude": -6.21017286348505,
+            "longitude": 106.849931159144
+        },
+        "city": "Jakarta Selatan"
+    },
+    {
+        "id": "103",
+        "code": "SGU",
+        "name": "Surabayagubeng",
+        "position": {
+            "latitude": -7.2653668325434,
+            "longitude": 112.752276128172
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "104",
+        "code": "NGA",
+        "name": "Ngagel",
+        "position": {
+            "latitude": -7.2882477,
+            "longitude": 112.7479877
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "105",
+        "code": "MGR",
+        "name": "Margorejo",
+        "position": {
+            "latitude": -7.31437698047662,
+            "longitude": 112.734530464968
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "106",
+        "code": "WO",
+        "name": "Wonokromo",
+        "position": {
+            "latitude": -7.30207268861972,
+            "longitude": 112.739242861714
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "107",
+        "code": "SPJ",
+        "name": "Sepanjang",
+        "position": {
+            "latitude": -7.3469578,
+            "longitude": 112.698382
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "108",
+        "code": "KDN",
+        "name": "Kedinding",
+        "position": {
+            "latitude": -7.4377031699317,
+            "longitude": 112.551701228241
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "109",
+        "code": "TRK",
+        "name": "Tarik",
+        "position": {
+            "latitude": -7.4594037,
+            "longitude": 112.5172258
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "110",
+        "code": "KTS",
+        "name": "Kertosono",
+        "position": {
+            "latitude": -7.59221942705438,
+            "longitude": 112.100636090924
+        },
+        "city": "Nganjuk"
+    },
+    {
+        "id": "111",
+        "code": "SLO",
+        "name": "Solobalapan",
+        "position": {
+            "latitude": -7.55640579914983,
+            "longitude": 110.821441987403
+        },
+        "city": "Surakarta"
+    },
+    {
+        "id": "113",
+        "code": "PWS",
+        "name": "Purwosari",
+        "position": {
+            "latitude": -7.56154399157366,
+            "longitude": 110.796460307028
+        },
+        "city": "Surakarta"
+    },
+    {
+        "id": "114",
+        "code": "YIA",
+        "name": "Yogyakarta International Airport",
+        "position": {
+            "latitude": -7.8971114,
+            "longitude": 110.0605327
+        },
+        "city": "Kulonprogo"
+    },
+    {
+        "id": "115",
+        "code": "KDG",
+        "name": "Kedundang",
+        "position": {
+            "latitude": -7.8781287887983,
+            "longitude": 110.099327334485
+        },
+        "city": "Kulonprogo"
+    },
+    {
+        "id": "116",
+        "code": "KYA",
+        "name": "Kroya",
+        "position": {
+            "latitude": -7.6299512,
+            "longitude": 109.2535442
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "117",
+        "code": "PPK",
+        "name": "Prupuk",
+        "position": {
+            "latitude": -7.1236299,
+            "longitude": 108.9804138
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "118",
+        "code": "KH",
+        "name": "Kasugihan",
+        "position": {
+            "latitude": -7.6178545,
+            "longitude": 109.1257904
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "119",
+        "code": "CB",
+        "name": "Cibatu",
+        "position": {
+            "latitude": -7.10008921327419,
+            "longitude": 107.979251526844
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "120",
+        "code": "STM",
+        "name": "Segitigamesigit",
+        "position": {
+            "latitude": -7.2444681,
+            "longitude": 112.7353489
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "121",
+        "code": "TLN",
+        "name": "Tulangan",
+        "position": {
+            "latitude": -7.46552162944859,
+            "longitude": 112.65105653325
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "122",
+        "code": "TGA",
+        "name": "Tanggulangin",
+        "position": {
+            "latitude": -7.50689960427833,
+            "longitude": 112.708043924647
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "123",
+        "code": "PWJ",
+        "name": "Pagerwojo",
+        "position": {
+            "latitude": -7.44200176611989,
+            "longitude": 112.715323232992
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "124",
+        "code": "SDA",
+        "name": "Sidoarjo",
+        "position": {
+            "latitude": -7.45676334080245,
+            "longitude": 112.712656771204
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "125",
+        "code": "PR",
+        "name": "Porong",
+        "position": {
+            "latitude": -7.5383542,
+            "longitude": 112.7017448
+        },
+        "city": "Sidoarjo"
+    },
+    {
+        "id": "126",
+        "code": "BG",
+        "name": "Bangil",
+        "position": {
+            "latitude": -7.5987392,
+            "longitude": 112.7779623
+        },
+        "city": "Pasuruan"
+    },
+    {
+        "id": "127",
+        "code": "PS",
+        "name": "Pasuruan",
+        "position": {
+            "latitude": -7.63774385940711,
+            "longitude": 112.910136645108
+        },
+        "city": "Kota Pasuruan"
+    },
+    {
+        "id": "128",
+        "code": "SMO",
+        "name": "Adi Soemarmo",
+        "position": {
+            "latitude": -7.5135955,
+            "longitude": 110.7477517
+        },
+        "city": "Desa Ngesrep"
+    },
+    {
+        "id": "129",
+        "code": "KDO",
+        "name": "Kadipiro",
+        "position": {
+            "latitude": -7.53085445777702,
+            "longitude": 110.817913103567
+        },
+        "city": "Surakarta"
+    },
+    {
+        "id": "130",
+        "code": "GD",
+        "name": "Gundih",
+        "position": {
+            "latitude": -7.2219272,
+            "longitude": 110.9004314
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "131",
+        "code": "KRL",
+        "name": "Karangtalun",
+        "position": {
+            "latitude": -7.6846449,
+            "longitude": 109.0229646
+        },
+        "city": "Kelurahan Karangtalun"
+    },
+    {
+        "id": "132",
+        "code": "CP",
+        "name": "Cilacap",
+        "position": {
+            "latitude": -7.7360988135489,
+            "longitude": 109.00702711343
+        },
+        "city": "Desa Tambakreja"
+    },
+    {
+        "id": "133",
+        "code": "KKD",
+        "name": "Karangkandri",
+        "position": {
+            "latitude": -7.66623292613054,
+            "longitude": 109.07569359473
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "134",
+        "code": "GM",
+        "name": "Gumilir",
+        "position": {
+            "latitude": -7.68508500069184,
+            "longitude": 109.042502067749
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "135",
+        "code": "MER",
+        "name": "Merak",
+        "position": {
+            "latitude": -5.930249,
+            "longitude": 105.9967553
+        },
+        "city": "Cilegon"
+    },
+    {
+        "id": "136",
+        "code": "CGD",
+        "name": "Cigading",
+        "position": {
+            "latitude": -6.020892,
+            "longitude": 105.9663972
+        },
+        "city": "Cilegon"
+    },
+    {
+        "id": "137",
+        "code": "KEN",
+        "name": "Krenceng",
+        "position": {
+            "latitude": -6.0098396,
+            "longitude": 106.0231208
+        },
+        "city": "Cilegon"
+    },
+    {
+        "id": "138",
+        "code": "CLG",
+        "name": "Cilegon",
+        "position": {
+            "latitude": -6.0197037,
+            "longitude": 106.0531192
+        },
+        "city": "Cilegon"
+    },
+    {
+        "id": "139",
+        "code": "PLM",
+        "name": "Palmerah",
+        "position": {
+            "latitude": -6.2071372,
+            "longitude": 106.7975907
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "140",
+        "code": "THB",
+        "name": "Tanahabang",
+        "position": {
+            "latitude": -6.1855181,
+            "longitude": 106.810782
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "141",
+        "code": "GRG",
+        "name": "Grogol",
+        "position": {
+            "latitude": -6.16205371838393,
+            "longitude": 106.788876605194
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "142",
+        "code": "DU",
+        "name": "Duri",
+        "position": {
+            "latitude": -6.1550734,
+            "longitude": 106.801291
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "143",
+        "code": "BST",
+        "name": "Bandara Soekarno Hatta",
+        "position": {
+            "latitude": -6.1275444,
+            "longitude": 106.6518132
+        },
+        "city": "Tangerang"
+    },
+    {
+        "id": "144",
+        "code": "THI",
+        "name": "Tanah Tinggi",
+        "position": {
+            "latitude": -6.17514546467445,
+            "longitude": 106.646706981607
+        },
+        "city": "Tangerang"
+    },
+    {
+        "id": "145",
+        "code": "PI",
+        "name": "Poris",
+        "position": {
+            "latitude": -6.16971290067165,
+            "longitude": 106.680749716802
+        },
+        "city": "Tangerang"
+    },
+    {
+        "id": "146",
+        "code": "BPR",
+        "name": "Batuceper",
+        "position": {
+            "latitude": -6.17219461086285,
+            "longitude": 106.66528994859
+        },
+        "city": "Tangerang"
+    },
+    {
+        "id": "147",
+        "code": "PDRG",
+        "name": "Pondokrajeg",
+        "position": {
+            "latitude": -6.4606886,
+            "longitude": 106.8242843
+        },
+        "city": "Depok"
+    },
+    {
+        "id": "148",
+        "code": "BJD",
+        "name": "Bojonggede",
+        "position": {
+            "latitude": -6.4931993,
+            "longitude": 106.7950422
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "149",
+        "code": "CTA",
+        "name": "Citayam",
+        "position": {
+            "latitude": -6.44905661891198,
+            "longitude": 106.802356825548
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "150",
+        "code": "DP",
+        "name": "Depok",
+        "position": {
+            "latitude": -6.4031832,
+            "longitude": 106.8175521
+        },
+        "city": "Depok"
+    },
+    {
+        "id": "151",
+        "code": "TPK",
+        "name": "Tanjungpriuk",
+        "position": {
+            "latitude": -6.1107404,
+            "longitude": 106.8816494
+        },
+        "city": "Jakarta Utara"
+    },
+    {
+        "id": "152",
+        "code": "AC",
+        "name": "Ancol",
+        "position": {
+            "latitude": -6.1280619,
+            "longitude": 106.845558
+        },
+        "city": "Jakarta Utara"
+    },
+    {
+        "id": "154",
+        "code": "AK",
+        "name": "Angke",
+        "position": {
+            "latitude": -6.14473732042036,
+            "longitude": 106.800676257629
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "155",
+        "code": "KPB",
+        "name": "Kampungbandan",
+        "position": {
+            "latitude": -6.1327517591008,
+            "longitude": 106.829098032177
+        },
+        "city": "Jakarta Utara"
+    },
+    {
+        "id": "156",
+        "code": "RJW",
+        "name": "Rajawali",
+        "position": {
+            "latitude": -6.1463028,
+            "longitude": 106.8372131
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "157",
+        "code": "KLM",
+        "name": "Kalimas",
+        "position": {
+            "latitude": -7.2197023,
+            "longitude": 112.734897
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "158",
+        "code": "MST",
+        "name": "Mesigit",
+        "position": {
+            "latitude": -7.24113361896081,
+            "longitude": 112.726898844713
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "159",
+        "code": "SBE",
+        "name": "Benteng",
+        "position": {
+            "latitude": -7.22129091954874,
+            "longitude": 112.743746466544
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "160",
+        "code": "SDT",
+        "name": "Sidotopo",
+        "position": {
+            "latitude": -7.2353794,
+            "longitude": 112.7567561
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "161",
+        "code": "BNW",
+        "name": "Benowo",
+        "position": {
+            "latitude": -7.23393136806243,
+            "longitude": 112.615265780457
+        },
+        "city": "Surabaya"
+    },
+    {
+        "id": "162",
+        "code": "CME",
+        "name": "Cerme",
+        "position": {
+            "latitude": -7.22427047651448,
+            "longitude": 112.570788716761
+        },
+        "city": "Gresik"
+    },
+    {
+        "id": "163",
+        "code": "DD",
+        "name": "Duduk",
+        "position": {
+            "latitude": -7.15473647798001,
+            "longitude": 112.520427162745
+        },
+        "city": "Gresik"
+    },
+    {
+        "id": "164",
+        "code": "LMG",
+        "name": "Lamongan",
+        "position": {
+            "latitude": -7.1124583,
+            "longitude": 112.4202248
+        },
+        "city": "Lamongan"
+    },
+    {
+        "id": "165",
+        "code": "SBN",
+        "name": "Surabayan",
+        "position": {
+            "latitude": -7.09976635397637,
+            "longitude": 112.3554645978
+        },
+        "city": "Lamongan"
+    },
+    {
+        "id": "166",
+        "code": "PC",
+        "name": "Pucuk",
+        "position": {
+            "latitude": -7.0976311806986,
+            "longitude": 112.269804350813
+        },
+        "city": "Lamongan"
+    },
+    {
+        "id": "167",
+        "code": "GEB",
+        "name": "Gembong",
+        "position": {
+            "latitude": -7.10234060585778,
+            "longitude": 112.22230484061
+        },
+        "city": "Lamongan"
+    },
+    {
+        "id": "168",
+        "code": "BBT",
+        "name": "Babat",
+        "position": {
+            "latitude": -7.1063413,
+            "longitude": 112.1688479
+        },
+        "city": "Lamongan"
+    },
+    {
+        "id": "169",
+        "code": "BWO",
+        "name": "Bowerno",
+        "position": {
+            "latitude": -7.13121106955656,
+            "longitude": 112.099919590823
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "170",
+        "code": "SRJ",
+        "name": "Sumberrejo",
+        "position": {
+            "latitude": -7.17777475714596,
+            "longitude": 112.001583789839
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "171",
+        "code": "KPS",
+        "name": "Kapas",
+        "position": {
+            "latitude": -7.199336880187,
+            "longitude": 111.933399981211
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "172",
+        "code": "BJ",
+        "name": "Bojonegoro",
+        "position": {
+            "latitude": -7.164406,
+            "longitude": 111.8865702
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "173",
+        "code": "KIT",
+        "name": "Kalitidu",
+        "position": {
+            "latitude": -7.13182201333853,
+            "longitude": 111.767294807111
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "174",
+        "code": "TBO",
+        "name": "Tobo",
+        "position": {
+            "latitude": -7.17207596374286,
+            "longitude": 111.6542791051
+        },
+        "city": "Bojonegoro"
+    },
+    {
+        "id": "175",
+        "code": "CU",
+        "name": "Cepu",
+        "position": {
+            "latitude": -7.1545817,
+            "longitude": 111.5908579
+        },
+        "city": "Blora"
+    },
+    {
+        "id": "176",
+        "code": "KPA",
+        "name": "Kapuan",
+        "position": {
+            "latitude": -7.1891034305864,
+            "longitude": 111.554225604622
+        },
+        "city": "Blora"
+    },
+    {
+        "id": "177",
+        "code": "WDU",
+        "name": "Wadu",
+        "position": {
+            "latitude": -7.19630950860726,
+            "longitude": 111.500488684926
+        },
+        "city": "Blora"
+    },
+    {
+        "id": "178",
+        "code": "RBG",
+        "name": "Randublatung",
+        "position": {
+            "latitude": -7.19214934091075,
+            "longitude": 111.398056052383
+        },
+        "city": "Blora"
+    },
+    {
+        "id": "179",
+        "code": "DPL",
+        "name": "Doplang",
+        "position": {
+            "latitude": -7.18281765423131,
+            "longitude": 111.288058507235
+        },
+        "city": "Blora"
+    },
+    {
+        "id": "180",
+        "code": "SL",
+        "name": "Sulur",
+        "position": {
+            "latitude": -7.1742217213177,
+            "longitude": 111.222826938155
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "181",
+        "code": "KNN",
+        "name": "Kradenan",
+        "position": {
+            "latitude": -7.1503602780998,
+            "longitude": 111.146842006342
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "182",
+        "code": "PNL",
+        "name": "Panunggalan",
+        "position": {
+            "latitude": -7.1527232235457,
+            "longitude": 111.060723322557
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "183",
+        "code": "JBN",
+        "name": "Jambon",
+        "position": {
+            "latitude": -7.15035665515926,
+            "longitude": 111.010094511043
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "184",
+        "code": "NBO",
+        "name": "Ngrombo",
+        "position": {
+            "latitude": -7.14539662031646,
+            "longitude": 110.900566758272
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "185",
+        "code": "SDI",
+        "name": "Sedadi",
+        "position": {
+            "latitude": -7.14082416726422,
+            "longitude": 110.848733196795
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "186",
+        "code": "KGT",
+        "name": "Karangjati",
+        "position": {
+            "latitude": -7.10142916443846,
+            "longitude": 110.779036760519
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "187",
+        "code": "GUB",
+        "name": "Gubug",
+        "position": {
+            "latitude": -7.06105226201813,
+            "longitude": 110.669455157566
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "188",
+        "code": "TGW",
+        "name": "Tegowanu",
+        "position": {
+            "latitude": -7.05307832168656,
+            "longitude": 110.602411300564
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "189",
+        "code": "ATA",
+        "name": "Alastua",
+        "position": {
+            "latitude": -6.98458443486155,
+            "longitude": 110.475829943876
+        },
+        "city": "Kota Semarang"
+    },
+    {
+        "id": "190",
+        "code": "SMT",
+        "name": "Semarang Tawang",
+        "position": {
+            "latitude": -6.96415478629222,
+            "longitude": 110.42767423473
+        },
+        "city": "Kota Semarang"
+    },
+    {
+        "id": "191",
+        "code": "SMC",
+        "name": "Semarang Poncol",
+        "position": {
+            "latitude": -6.97280529913034,
+            "longitude": 110.414560371314
+        },
+        "city": "Kota Semarang"
+    },
+    {
+        "id": "192",
+        "code": "JRK",
+        "name": "Jerakah",
+        "position": {
+            "latitude": -6.98037879798586,
+            "longitude": 110.362474064359
+        },
+        "city": "Kota Semarang"
+    },
+    {
+        "id": "193",
+        "code": "MKG",
+        "name": "Mangkang",
+        "position": {
+            "latitude": -6.97083908208313,
+            "longitude": 110.302227393803
+        },
+        "city": "Kota Semarang"
+    },
+    {
+        "id": "194",
+        "code": "KLN",
+        "name": "Kaliwungu",
+        "position": {
+            "latitude": -6.95963589934389,
+            "longitude": 110.254894949882
+        },
+        "city": "Kendal"
+    },
+    {
+        "id": "195",
+        "code": "KBD",
+        "name": "Kalibodri",
+        "position": {
+            "latitude": -6.9737219,
+            "longitude": 110.1481872
+        },
+        "city": "Kendal"
+    },
+    {
+        "id": "196",
+        "code": "WLR",
+        "name": "Weleri",
+        "position": {
+            "latitude": -6.97077360733228,
+            "longitude": 110.069925394054
+        },
+        "city": "Kendal"
+    },
+    {
+        "id": "197",
+        "code": "KNS",
+        "name": "Krengseng",
+        "position": {
+            "latitude": -6.9524767,
+            "longitude": 110.0277912
+        },
+        "city": "Batang"
+    },
+    {
+        "id": "198",
+        "code": "PLB",
+        "name": "Plabuan",
+        "position": {
+            "latitude": -6.91987877115954,
+            "longitude": 109.956318678544
+        },
+        "city": "Batang"
+    },
+    {
+        "id": "199",
+        "code": "KRP",
+        "name": "Kuripan",
+        "position": {
+            "latitude": -6.9237751,
+            "longitude": 109.8940825
+        },
+        "city": "Batang"
+    },
+    {
+        "id": "200",
+        "code": "UJN",
+        "name": "Ujungnegoro",
+        "position": {
+            "latitude": -6.9086041,
+            "longitude": 109.7892026
+        },
+        "city": "Batang"
+    },
+    {
+        "id": "201",
+        "code": "BTG",
+        "name": "Batang",
+        "position": {
+            "latitude": -6.9098213,
+            "longitude": 109.7475973
+        },
+        "city": "Batang"
+    },
+    {
+        "id": "202",
+        "code": "PK",
+        "name": "Pekalongan",
+        "position": {
+            "latitude": -6.8898935,
+            "longitude": 109.6633049
+        },
+        "city": "Pekalongan"
+    },
+    {
+        "id": "203",
+        "code": "SRI",
+        "name": "Sragi",
+        "position": {
+            "latitude": -6.9238165,
+            "longitude": 109.570661
+        },
+        "city": "Pekalongan"
+    },
+    {
+        "id": "204",
+        "code": "CO",
+        "name": "Comal",
+        "position": {
+            "latitude": -6.9093181,
+            "longitude": 109.5367232
+        },
+        "city": "Pemalang"
+    },
+    {
+        "id": "205",
+        "code": "PTA",
+        "name": "Petarukan",
+        "position": {
+            "latitude": -6.8976616,
+            "longitude": 109.4493577
+        },
+        "city": "Pemalang"
+    },
+    {
+        "id": "206",
+        "code": "PML",
+        "name": "Pemalang",
+        "position": {
+            "latitude": -6.8873522,
+            "longitude": 109.3881922
+        },
+        "city": "Pemalang"
+    },
+    {
+        "id": "207",
+        "code": "SD",
+        "name": "Surodadi",
+        "position": {
+            "latitude": -6.8806039,
+            "longitude": 109.2752665
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "208",
+        "code": "LR",
+        "name": "Larangan",
+        "position": {
+            "latitude": -6.86810329883157,
+            "longitude": 109.18545302588
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "209",
+        "code": "TGG",
+        "name": "Tanggung",
+        "position": {
+            "latitude": -7.09150968976344,
+            "longitude": 110.603231133029
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "210",
+        "code": "KEJ",
+        "name": "Kedungjati",
+        "position": {
+            "latitude": -7.1635346,
+            "longitude": 110.6356884
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "211",
+        "code": "PDS",
+        "name": "Padas",
+        "position": {
+            "latitude": -7.17917491307433,
+            "longitude": 110.671919780817
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "212",
+        "code": "KSO",
+        "name": "Karangsono",
+        "position": {
+            "latitude": -7.1963391338528,
+            "longitude": 110.825638310321
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "213",
+        "code": "TW",
+        "name": "Telawa",
+        "position": {
+            "latitude": -7.1857931263907,
+            "longitude": 110.751909949937
+        },
+        "city": "Boyolali"
+    },
+    {
+        "id": "214",
+        "code": "BB",
+        "name": "Brebes",
+        "position": {
+            "latitude": -6.87449376711333,
+            "longitude": 109.043707803218
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "215",
+        "code": "TGN",
+        "name": "Tanjung",
+        "position": {
+            "latitude": -6.8770976,
+            "longitude": 108.8597012
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "216",
+        "code": "LOS",
+        "name": "Losari",
+        "position": {
+            "latitude": -6.84662828324038,
+            "longitude": 108.798275899197
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "217",
+        "code": "BBK",
+        "name": "Babakan",
+        "position": {
+            "latitude": -6.86054082378555,
+            "longitude": 108.718723075695
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "218",
+        "code": "WDW",
+        "name": "Waruduwur",
+        "position": {
+            "latitude": -6.78564629685935,
+            "longitude": 108.625315912735
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "219",
+        "code": "SLW",
+        "name": "Slawi",
+        "position": {
+            "latitude": -6.98189717832621,
+            "longitude": 109.136545336629
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "220",
+        "code": "MGS",
+        "name": "Margasari",
+        "position": {
+            "latitude": -7.09203838779367,
+            "longitude": 109.023689705945
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "221",
+        "code": "BLP",
+        "name": "Balapulang",
+        "position": {
+            "latitude": -7.0496683,
+            "longitude": 109.0963743
+        },
+        "city": "Tegal"
+    },
+    {
+        "id": "222",
+        "code": "LWG",
+        "name": "Luwung",
+        "position": {
+            "latitude": -6.7774981,
+            "longitude": 108.5932299
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "223",
+        "code": "SDU",
+        "name": "Sindanglaut",
+        "position": {
+            "latitude": -6.83284627062372,
+            "longitude": 108.625865851428
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "224",
+        "code": "CLD",
+        "name": "Ciledug",
+        "position": {
+            "latitude": -6.90270902576945,
+            "longitude": 108.744046300224
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "225",
+        "code": "KGG",
+        "name": "Ketanggungan",
+        "position": {
+            "latitude": -6.93839524188937,
+            "longitude": 108.884348720714
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "226",
+        "code": "SGG",
+        "name": "Songgom",
+        "position": {
+            "latitude": -7.02431442243529,
+            "longitude": 108.989005124211
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "227",
+        "code": "LRA",
+        "name": "Larangan",
+        "position": {
+            "latitude": -6.99035119345662,
+            "longitude": 108.948832848532
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "228",
+        "code": "JTB",
+        "name": "Jatibarang",
+        "position": {
+            "latitude": -6.47281660148507,
+            "longitude": 108.306392480031
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "229",
+        "code": "KTM",
+        "name": "Kertasemaya",
+        "position": {
+            "latitude": -6.52829414735586,
+            "longitude": 108.353392902691
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "230",
+        "code": "AWN",
+        "name": "Arjawinangun",
+        "position": {
+            "latitude": -6.64455649905502,
+            "longitude": 108.414554459342
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "231",
+        "code": "CLH",
+        "name": "Cilegeh",
+        "position": {
+            "latitude": -6.46386668134134,
+            "longitude": 108.035269716651
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "232",
+        "code": "KAB",
+        "name": "Kadokangabus",
+        "position": {
+            "latitude": -6.46788392423974,
+            "longitude": 108.106820797558
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "233",
+        "code": "TLS",
+        "name": "Telagasari",
+        "position": {
+            "latitude": -6.46482195395913,
+            "longitude": 108.234744807349
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "234",
+        "code": "TIS",
+        "name": "Terisi",
+        "position": {
+            "latitude": -6.46998824668892,
+            "longitude": 108.16108151409
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "235",
+        "code": "PAS",
+        "name": "Pasirbungur",
+        "position": {
+            "latitude": -6.42630777429014,
+            "longitude": 107.688539843073
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "236",
+        "code": "CKM",
+        "name": "Cikaum",
+        "position": {
+            "latitude": -6.43547204022517,
+            "longitude": 107.739564132387
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "237",
+        "code": "PGB",
+        "name": "Pegadenbaru",
+        "position": {
+            "latitude": -6.45361486001579,
+            "longitude": 107.817086597087
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "238",
+        "code": "HGL",
+        "name": "Haurgeulis",
+        "position": {
+            "latitude": -6.45853480396774,
+            "longitude": 107.940957444256
+        },
+        "city": "Indramayu"
+    },
+    {
+        "id": "239",
+        "code": "CRA",
+        "name": "Cipunegara",
+        "position": {
+            "latitude": -6.45529038300452,
+            "longitude": 107.883026410827
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "240",
+        "code": "TJS",
+        "name": "Tanjungrasa",
+        "position": {
+            "latitude": -6.4085646687843,
+            "longitude": 107.540657538809
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "241",
+        "code": "BDW",
+        "name": "Bangoduwa",
+        "position": {
+            "latitude": -6.66297545250136,
+            "longitude": 108.460060178118
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "242",
+        "code": "PRI",
+        "name": "Pringkasap",
+        "position": {
+            "latitude": -6.418085609819,
+            "longitude": 107.634514293452
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "243",
+        "code": "PAB",
+        "name": "Pabuaran",
+        "position": {
+            "latitude": -6.40908944066407,
+            "longitude": 107.584014176415
+        },
+        "city": "Subang"
+    },
+    {
+        "id": "244",
+        "code": "CN",
+        "name": "Cirebon",
+        "position": {
+            "latitude": -6.70541687286987,
+            "longitude": 108.555342049767
+        },
+        "city": "Kota Cirebon"
+    },
+    {
+        "id": "245",
+        "code": "CNK",
+        "name": "Cangkring",
+        "position": {
+            "latitude": -6.6794452,
+            "longitude": 108.5007458
+        },
+        "city": "Kabupaten Cirebon"
+    },
+    {
+        "id": "246",
+        "code": "KDH",
+        "name": "Kedunggedeh",
+        "position": {
+            "latitude": -6.26994012076102,
+            "longitude": 107.261144962628
+        },
+        "city": "Kab Bekasi"
+    },
+    {
+        "id": "247",
+        "code": "KW",
+        "name": "Karawang",
+        "position": {
+            "latitude": -6.305102,
+            "longitude": 107.3002438
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "248",
+        "code": "KLI",
+        "name": "Klari",
+        "position": {
+            "latitude": -6.34982505283313,
+            "longitude": 107.345389102789
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "249",
+        "code": "CIT",
+        "name": "Cibitung",
+        "position": {
+            "latitude": -6.2618811,
+            "longitude": 107.0836549
+        },
+        "city": "Kab Bekasi"
+    },
+    {
+        "id": "250",
+        "code": "TLM",
+        "name": "Telaga Murni",
+        "position": {
+            "latitude": -6.25748676664615,
+            "longitude": 107.111228197073
+        },
+        "city": "Kab Bekasi"
+    },
+    {
+        "id": "251",
+        "code": "LMB",
+        "name": "Lemahabang",
+        "position": {
+            "latitude": -6.2707165358768,
+            "longitude": 107.179633839149
+        },
+        "city": "Kab Bekasi"
+    },
+    {
+        "id": "252",
+        "code": "CKR",
+        "name": "Cikarang",
+        "position": {
+            "latitude": -6.2551986,
+            "longitude": 107.1448423
+        },
+        "city": "Cikarang"
+    },
+    {
+        "id": "253",
+        "code": "CUK",
+        "name": "Cakung",
+        "position": {
+            "latitude": -6.2191179,
+            "longitude": 106.9520435
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "254",
+        "code": "KRI",
+        "name": "Kranji",
+        "position": {
+            "latitude": -6.2244786,
+            "longitude": 106.9796847
+        },
+        "city": "Bekasi"
+    },
+    {
+        "id": "255",
+        "code": "BKS",
+        "name": "Bekasi",
+        "position": {
+            "latitude": -6.23624891923449,
+            "longitude": 106.998718910372
+        },
+        "city": "Bekasi"
+    },
+    {
+        "id": "256",
+        "code": "TB",
+        "name": "Tambun",
+        "position": {
+            "latitude": -6.2586312564125,
+            "longitude": 107.055806558555
+        },
+        "city": "Tambun"
+    },
+    {
+        "id": "257",
+        "code": "BKST",
+        "name": "Bekasitimur",
+        "position": {
+            "latitude": -6.24687721916642,
+            "longitude": 107.018197181685
+        },
+        "city": "Bekasi"
+    },
+    {
+        "id": "258",
+        "code": "KLD",
+        "name": "Klender",
+        "position": {
+            "latitude": -6.21337744956634,
+            "longitude": 106.899408536656
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "259",
+        "code": "DWN",
+        "name": "Dawuan",
+        "position": {
+            "latitude": -6.3931033523329,
+            "longitude": 107.433346853156
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "260",
+        "code": "KOS",
+        "name": "Kosambi",
+        "position": {
+            "latitude": -6.36911053115115,
+            "longitude": 107.374772466507
+        },
+        "city": "Karawang"
+    },
+    {
+        "id": "261",
+        "code": "KLDB",
+        "name": "Klenderbaru",
+        "position": {
+            "latitude": -6.2177126,
+            "longitude": 106.9402519
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "262",
+        "code": "BUA",
+        "name": "Buaran",
+        "position": {
+            "latitude": -6.2156303,
+            "longitude": 106.9229619
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "263",
+        "code": "JUA",
+        "name": "Juanda",
+        "position": {
+            "latitude": -6.1669386,
+            "longitude": 106.8304933
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "264",
+        "code": "SW",
+        "name": "Sawahbesar",
+        "position": {
+            "latitude": -6.1607027,
+            "longitude": 106.8276759
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "265",
+        "code": "MGB",
+        "name": "Manggabesar",
+        "position": {
+            "latitude": -6.14979976917886,
+            "longitude": 106.827014180906
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "266",
+        "code": "JAY",
+        "name": "Jayakarta",
+        "position": {
+            "latitude": -6.1412428,
+            "longitude": 106.8230715
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "267",
+        "code": "JAKK",
+        "name": "Jakarta Kota",
+        "position": {
+            "latitude": -6.1376687,
+            "longitude": 106.8147969
+        },
+        "city": "Jakarta Barat"
+    },
+    {
+        "id": "268",
+        "code": "CKI",
+        "name": "Cikini",
+        "position": {
+            "latitude": -6.19852465808216,
+            "longitude": 106.841260484788
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "269",
+        "code": "GDD",
+        "name": "Gondangdia",
+        "position": {
+            "latitude": -6.1858239,
+            "longitude": 106.8325914
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "270",
+        "code": "GMR",
+        "name": "Gambir",
+        "position": {
+            "latitude": -6.1762137,
+            "longitude": 106.8305238
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "271",
+        "code": "POK",
+        "name": "Pondokjati",
+        "position": {
+            "latitude": -6.20912638406923,
+            "longitude": 106.86233091936
+        },
+        "city": "Jakarta Timur"
+    },
+    {
+        "id": "272",
+        "code": "KMT",
+        "name": "Kramat",
+        "position": {
+            "latitude": -6.19364183558518,
+            "longitude": 106.856485495801
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "273",
+        "code": "KMO",
+        "name": "Kemayoran",
+        "position": {
+            "latitude": -6.16168257167975,
+            "longitude": 106.841534274763
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "274",
+        "code": "GST",
+        "name": "Gangsentiong",
+        "position": {
+            "latitude": -6.1861629228708,
+            "longitude": 106.850861125633
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "275",
+        "code": "PSE",
+        "name": "Pasarsenen",
+        "position": {
+            "latitude": -6.173701,
+            "longitude": 106.8441828
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "276",
+        "code": "SUD",
+        "name": "Sudirman",
+        "position": {
+            "latitude": -6.20242324163052,
+            "longitude": 106.823449302577
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "277",
+        "code": "SUDB",
+        "name": "Sudirmanbaru",
+        "position": {
+            "latitude": -6.20161172704146,
+            "longitude": 106.819719229793
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "278",
+        "code": "KAT",
+        "name": "Karet",
+        "position": {
+            "latitude": -6.2009696775916,
+            "longitude": 106.816761645539
+        },
+        "city": "Jakarta Pusat"
+    },
+    {
+        "id": "279",
+        "code": "RI",
+        "name": "Ranji",
+        "position": {
+            "latitude": -6.9355122,
+            "longitude": 106.9692257
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "280",
+        "code": "PRK",
+        "name": "Parungkuda",
+        "position": {
+            "latitude": -6.8463525,
+            "longitude": 106.7605117
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "281",
+        "code": "KE",
+        "name": "Karangtengah",
+        "position": {
+            "latitude": -6.8963303,
+            "longitude": 106.8224199
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "282",
+        "code": "CBD",
+        "name": "Cibadak",
+        "position": {
+            "latitude": -6.8882771,
+            "longitude": 106.7804647
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "283",
+        "code": "MSG",
+        "name": "Maseng",
+        "position": {
+            "latitude": -6.7035375,
+            "longitude": 106.8141249
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "284",
+        "code": "CJE",
+        "name": "Cijambe",
+        "position": {
+            "latitude": -6.8177505,
+            "longitude": 106.7598
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "285",
+        "code": "CCR",
+        "name": "Cicurug",
+        "position": {
+            "latitude": -6.7900033,
+            "longitude": 106.7797781
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "286",
+        "code": "CGB",
+        "name": "Cigombong",
+        "position": {
+            "latitude": -6.7425216,
+            "longitude": 106.8033999
+        },
+        "city": "Kab Bogor"
+    },
+    {
+        "id": "287",
+        "code": "BOO",
+        "name": "Bogor",
+        "position": {
+            "latitude": -6.5942843,
+            "longitude": 106.7907239
+        },
+        "city": "Bogor"
+    },
+    {
+        "id": "288",
+        "code": "CS",
+        "name": "Ciomas",
+        "position": {
+            "latitude": -6.663614,
+            "longitude": 106.8169792
+        },
+        "city": "Bogor"
+    },
+    {
+        "id": "289",
+        "code": "BTT",
+        "name": "Batutulis",
+        "position": {
+            "latitude": -6.626138,
+            "longitude": 106.8096986
+        },
+        "city": "Bogor"
+    },
+    {
+        "id": "290",
+        "code": "BOP",
+        "name": "Bogor Paledang",
+        "position": {
+            "latitude": -6.5977719,
+            "longitude": 106.7905885
+        },
+        "city": "Bogor"
+    },
+    {
+        "id": "291",
+        "code": "CPT",
+        "name": "Cipatat",
+        "position": {
+            "latitude": -6.8215554,
+            "longitude": 107.3868594
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "292",
+        "code": "SLJ",
+        "name": "Selajambe",
+        "position": {
+            "latitude": -6.8136442,
+            "longitude": 107.222992
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "293",
+        "code": "RM",
+        "name": "Rajamandala",
+        "position": {
+            "latitude": -6.8245276,
+            "longitude": 107.3465746
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "294",
+        "code": "CPY",
+        "name": "Cipeuyeum",
+        "position": {
+            "latitude": -6.81854,
+            "longitude": 107.2985481
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "295",
+        "code": "CRJ",
+        "name": "Ciranjang",
+        "position": {
+            "latitude": -6.8142102,
+            "longitude": 107.2517109
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "296",
+        "code": "CIK",
+        "name": "Cilaku",
+        "position": {
+            "latitude": -6.8882561,
+            "longitude": 107.1262986
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "297",
+        "code": "TPR",
+        "name": "Tipar",
+        "position": {
+            "latitude": -6.8167696,
+            "longitude": 107.1876182
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "298",
+        "code": "MLB",
+        "name": "Maleber",
+        "position": {
+            "latitude": -6.8178429,
+            "longitude": 107.1755911
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "299",
+        "code": "CJ",
+        "name": "Cianjur",
+        "position": {
+            "latitude": -6.8241498,
+            "longitude": 107.143161
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "300",
+        "code": "CRG",
+        "name": "Cireungas",
+        "position": {
+            "latitude": -6.9586858,
+            "longitude": 107.0375856
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "301",
+        "code": "GDS",
+        "name": "Gandasoli",
+        "position": {
+            "latitude": -6.9415838,
+            "longitude": 106.9923451
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "302",
+        "code": "CBB",
+        "name": "Cibeber",
+        "position": {
+            "latitude": -6.9375313,
+            "longitude": 107.1211484
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "303",
+        "code": "SSI",
+        "name": "Sindangresmi",
+        "position": {
+            "latitude": -6.9539131,
+            "longitude": 107.1095733
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "304",
+        "code": "LP",
+        "name": "Lampegan",
+        "position": {
+            "latitude": -6.9499225,
+            "longitude": 107.0613455
+        },
+        "city": "Cianjur"
+    },
+    {
+        "id": "305",
+        "code": "SI",
+        "name": "Sukabumi",
+        "position": {
+            "latitude": -6.925258,
+            "longitude": 106.9301184
+        },
+        "city": "Sukabumi"
+    },
+    {
+        "id": "306",
+        "code": "CSA",
+        "name": "Cisaat",
+        "position": {
+            "latitude": -6.9140736,
+            "longitude": 106.8874666
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "307",
+        "code": "PON",
+        "name": "Pondok Leungsir",
+        "position": {
+            "latitude": -6.9050211,
+            "longitude": 106.8531784
+        },
+        "city": "Kab Sukabumi"
+    },
+    {
+        "id": "308",
+        "code": "SKP",
+        "name": "Sikampuh",
+        "position": {
+            "latitude": -7.6258932,
+            "longitude": 109.1974835
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "309",
+        "code": "MA",
+        "name": "Maos",
+        "position": {
+            "latitude": -7.6190429,
+            "longitude": 109.1394133
+        },
+        "city": "Desa Karangkemiri"
+    },
+    {
+        "id": "310",
+        "code": "GK",
+        "name": "Gadobangkong",
+        "position": {
+            "latitude": -6.8645723,
+            "longitude": 107.5151339
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "311",
+        "code": "CD",
+        "name": "Cikadongdong",
+        "position": {
+            "latitude": -6.71553294760234,
+            "longitude": 107.390820780495
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "312",
+        "code": "RH",
+        "name": "Rendeh",
+        "position": {
+            "latitude": -6.7362256,
+            "longitude": 107.398489
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "313",
+        "code": "MSI",
+        "name": "Maswati",
+        "position": {
+            "latitude": -6.7607939,
+            "longitude": 107.4089422
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "314",
+        "code": "CA",
+        "name": "Ciganea",
+        "position": {
+            "latitude": -6.5737471,
+            "longitude": 107.4309483
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "315",
+        "code": "CG",
+        "name": "Cisomang",
+        "position": {
+            "latitude": -6.6860285,
+            "longitude": 107.3978807
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "316",
+        "code": "SUT",
+        "name": "Sukatani",
+        "position": {
+            "latitude": -6.6108232,
+            "longitude": 107.4084911
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "317",
+        "code": "PLD",
+        "name": "Plered",
+        "position": {
+            "latitude": -6.6415997,
+            "longitude": 107.3912664
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "318",
+        "code": "PWK",
+        "name": "Purwakarta",
+        "position": {
+            "latitude": -6.5520327,
+            "longitude": 107.4461003
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "319",
+        "code": "CBR",
+        "name": "Cibungur",
+        "position": {
+            "latitude": -6.46784239348641,
+            "longitude": 107.479584923728
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "320",
+        "code": "SAD",
+        "name": "Sadang",
+        "position": {
+            "latitude": -6.5105442,
+            "longitude": 107.4561404
+        },
+        "city": "Purwakarta"
+    },
+    {
+        "id": "321",
+        "code": "LBJ",
+        "name": "Lebakjero",
+        "position": {
+            "latitude": -7.0536081,
+            "longitude": 107.8939436
+        },
+        "city": "Kabupaten Bandung"
+    },
+    {
+        "id": "322",
+        "code": "LO",
+        "name": "Leuwigoong",
+        "position": {
+            "latitude": -7.1033188,
+            "longitude": 107.9581639
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "323",
+        "code": "KRAI",
+        "name": "Karangsari",
+        "position": {
+            "latitude": -7.0984118,
+            "longitude": 107.9311162
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "324",
+        "code": "LL",
+        "name": "Leles",
+        "position": {
+            "latitude": -7.08444293433139,
+            "longitude": 107.899785190915
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "325",
+        "code": "RCK",
+        "name": "Rancaekek",
+        "position": {
+            "latitude": -6.9650894,
+            "longitude": 107.7564644
+        },
+        "city": "Kabupaten Bandung"
+    },
+    {
+        "id": "326",
+        "code": "NG",
+        "name": "Nagreg",
+        "position": {
+            "latitude": -7.01824971904648,
+            "longitude": 107.886253360768
+        },
+        "city": "Kabupaten Bandung"
+    },
+    {
+        "id": "327",
+        "code": "CCL",
+        "name": "Cicalengka",
+        "position": {
+            "latitude": -6.9822009,
+            "longitude": 107.8332602
+        },
+        "city": "Kabupaten Bandung"
+    },
+    {
+        "id": "328",
+        "code": "HRP",
+        "name": "Haurpugur",
+        "position": {
+            "latitude": -6.9808307,
+            "longitude": 107.7998788
+        },
+        "city": "Kabupaten Bandung"
+    },
+    {
+        "id": "329",
+        "code": "CTH",
+        "name": "Cikudapateuh",
+        "position": {
+            "latitude": -6.91881289630894,
+            "longitude": 107.626047514501
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "330",
+        "code": "CMK",
+        "name": "Cimekar",
+        "position": {
+            "latitude": -6.9489636,
+            "longitude": 107.712105
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "331",
+        "code": "GDB",
+        "name": "Gedebage",
+        "position": {
+            "latitude": -6.94085599717257,
+            "longitude": 107.689836368026
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "332",
+        "code": "KAC",
+        "name": "Kiaracondong",
+        "position": {
+            "latitude": -6.9251039,
+            "longitude": 107.6466381
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "333",
+        "code": "CMI",
+        "name": "Cimahi",
+        "position": {
+            "latitude": -6.885848365558,
+            "longitude": 107.536084150826
+        },
+        "city": "Cimahi"
+    },
+    {
+        "id": "334",
+        "code": "CMD",
+        "name": "Cimindi",
+        "position": {
+            "latitude": -6.89608956766651,
+            "longitude": 107.56117371029
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "335",
+        "code": "BD",
+        "name": "Bandung",
+        "position": {
+            "latitude": -6.914401,
+            "longitude": 107.602827
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "336",
+        "code": "CIR",
+        "name": "Ciroyom",
+        "position": {
+            "latitude": -6.9138883,
+            "longitude": 107.5903028
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "337",
+        "code": "AND",
+        "name": "Andir",
+        "position": {
+            "latitude": -6.90832188866002,
+            "longitude": 107.5796451825
+        },
+        "city": "Kota Bandung"
+    },
+    {
+        "id": "338",
+        "code": "PDL",
+        "name": "Padalarang",
+        "position": {
+            "latitude": -6.842418,
+            "longitude": 107.4968557
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "339",
+        "code": "SKT",
+        "name": "Sasaksaat",
+        "position": {
+            "latitude": -6.78016713858542,
+            "longitude": 107.431965287957
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "340",
+        "code": "CLE",
+        "name": "Cilame",
+        "position": {
+            "latitude": -6.8034258,
+            "longitude": 107.4638804
+        },
+        "city": "Bandung Barat"
+    },
+    {
+        "id": "341",
+        "code": "BJR",
+        "name": "Banjar",
+        "position": {
+            "latitude": -7.3762944,
+            "longitude": 108.5419504
+        },
+        "city": "Banjar"
+    },
+    {
+        "id": "342",
+        "code": "TSM",
+        "name": "Tasikmalaya",
+        "position": {
+            "latitude": -7.3233879,
+            "longitude": 108.2248035
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "343",
+        "code": "MNJ",
+        "name": "Manonjaya",
+        "position": {
+            "latitude": -7.3532402,
+            "longitude": 108.3026662
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "344",
+        "code": "AW",
+        "name": "Awipari",
+        "position": {
+            "latitude": -7.3539275,
+            "longitude": 108.2748717
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "345",
+        "code": "CAA",
+        "name": "Cirahayu",
+        "position": {
+            "latitude": -7.1341926,
+            "longitude": 108.1185969
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "346",
+        "code": "IH",
+        "name": "Indihiang",
+        "position": {
+            "latitude": -7.2871828,
+            "longitude": 108.20115
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "347",
+        "code": "RJP",
+        "name": "Rajapolah",
+        "position": {
+            "latitude": -7.2204613,
+            "longitude": 108.1910778
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "348",
+        "code": "CAW",
+        "name": "Ciawi",
+        "position": {
+            "latitude": -7.1573465,
+            "longitude": 108.1451342
+        },
+        "city": "Tasikmalaya"
+    },
+    {
+        "id": "349",
+        "code": "CPD",
+        "name": "Cipeundeuy",
+        "position": {
+            "latitude": -7.093512,
+            "longitude": 108.1005364
+        },
+        "city": "Malangbong"
+    },
+    {
+        "id": "350",
+        "code": "BMW",
+        "name": "Bumiwaluya",
+        "position": {
+            "latitude": -7.0586302,
+            "longitude": 108.070972
+        },
+        "city": "Malangbong"
+    },
+    {
+        "id": "351",
+        "code": "WB",
+        "name": "Warungbandrek",
+        "position": {
+            "latitude": -7.06475195342963,
+            "longitude": 108.007013685101
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "352",
+        "code": "KWG",
+        "name": "Kawunganten",
+        "position": {
+            "latitude": -7.5908439,
+            "longitude": 108.9193887
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "353",
+        "code": "LBG",
+        "name": "Lebeng",
+        "position": {
+            "latitude": -7.62127521430539,
+            "longitude": 109.07693492717
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "354",
+        "code": "JRL",
+        "name": "Jeruklegi",
+        "position": {
+            "latitude": -7.6229403,
+            "longitude": 109.0181055
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "355",
+        "code": "MLW",
+        "name": "Meluwung",
+        "position": {
+            "latitude": -7.394311,
+            "longitude": 108.69948
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "356",
+        "code": "LN",
+        "name": "Langen",
+        "position": {
+            "latitude": -7.3601649,
+            "longitude": 108.6369296
+        },
+        "city": "Banjar"
+    },
+    {
+        "id": "357",
+        "code": "GDM",
+        "name": "Gandrungmangun",
+        "position": {
+            "latitude": -7.5285694,
+            "longitude": 108.8594943
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "358",
+        "code": "SDR",
+        "name": "Sidareja",
+        "position": {
+            "latitude": -7.4867473,
+            "longitude": 108.8083435
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "359",
+        "code": "CPI",
+        "name": "Cipari",
+        "position": {
+            "latitude": -7.4402324,
+            "longitude": 108.76082
+        },
+        "city": "Cilacap"
+    },
+    {
+        "id": "360",
+        "code": "KNP",
+        "name": "Karangpucung",
+        "position": {
+            "latitude": -7.3534677,
+            "longitude": 108.4940833
+        },
+        "city": "Banjar"
+    },
+    {
+        "id": "361",
+        "code": "BJG",
+        "name": "Bojong",
+        "position": {
+            "latitude": -7.3473803,
+            "longitude": 108.4302087
+        },
+        "city": "Ciamis"
+    },
+    {
+        "id": "362",
+        "code": "CI",
+        "name": "Ciamis",
+        "position": {
+            "latitude": -7.3292438,
+            "longitude": 108.3569197
+        },
+        "city": "Ciamis"
+    },
+    {
+        "id": "363",
+        "code": "PSJ",
+        "name": "Pasirjengkol",
+        "position": {
+            "latitude": -7.1282363,
+            "longitude": 107.9924417
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "364",
+        "code": "GRT",
+        "name": "Garut",
+        "position": {
+            "latitude": -7.2134006,
+            "longitude": 107.9023164
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "365",
+        "code": "WNR",
+        "name": "Wanaraja",
+        "position": {
+            "latitude": -7.16487126665976,
+            "longitude": 107.976719222443
+        },
+        "city": "Garut"
+    },
+    {
+        "id": "366",
+        "code": "STA",
+        "name": "Solokota",
+        "position": {
+            "latitude": -7.57572325551306,
+            "longitude": 110.836305896063
+        },
+        "city": "Surakarta"
+    },
+    {
+        "id": "367",
+        "code": "WNG",
+        "name": "Wonogiri",
+        "position": {
+            "latitude": -7.8166983,
+            "longitude": 110.9216013
+        },
+        "city": "Wonogiri"
+    },
+    {
+        "id": "368",
+        "code": "PNT",
+        "name": "Pasarnguter",
+        "position": {
+            "latitude": -7.7423049,
+            "longitude": 110.8799978
+        },
+        "city": "Sukoharjo"
+    },
+    {
+        "id": "369",
+        "code": "SKH",
+        "name": "Sukoharjo",
+        "position": {
+            "latitude": -7.6803243,
+            "longitude": 110.843595
+        },
+        "city": "Sukoharjo"
+    },
+    {
+        "id": "370",
+        "code": "GPK",
+        "name": "Goprak",
+        "position": {
+            "latitude": -7.27287535261503,
+            "longitude": 110.897168151779
+        },
+        "city": "Grobogan"
+    },
+    {
+        "id": "371",
+        "code": "KO",
+        "name": "Kalioso",
+        "position": {
+            "latitude": -7.46614179560772,
+            "longitude": 110.804929012514
+        },
+        "city": "Kalioso"
+    },
+    {
+        "id": "372",
+        "code": "SLM",
+        "name": "Salem",
+        "position": {
+            "latitude": -7.395318,
+            "longitude": 110.8272677
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "373",
+        "code": "SUM",
+        "name": "Sumberlawang",
+        "position": {
+            "latitude": -7.3279847,
+            "longitude": 110.863402
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "374",
+        "code": "KSB",
+        "name": "Kesamben",
+        "position": {
+            "latitude": -8.1495604,
+            "longitude": 112.3639353
+        },
+        "city": "Blitar"
+    },
+    {
+        "id": "375",
+        "code": "MLK",
+        "name": "Malangkotalama",
+        "position": {
+            "latitude": -7.9944108,
+            "longitude": 112.6328436
+        },
+        "city": "Kota Malang"
+    },
+    {
+        "id": "376",
+        "code": "PSI",
+        "name": "Pakisaji",
+        "position": {
+            "latitude": -8.0697539,
+            "longitude": 112.5982774
+        },
+        "city": "Kabupaten Malang"
+    },
+    {
+        "id": "377",
+        "code": "KPN",
+        "name": "Kepanjen",
+        "position": {
+            "latitude": -8.1318273,
+            "longitude": 112.5734509
+        },
+        "city": "Kabupaten Malang"
+    },
+    {
+        "id": "378",
+        "code": "LW",
+        "name": "Lawang",
+        "position": {
+            "latitude": -7.8373772,
+            "longitude": 112.6978993
+        },
+        "city": "Kabupaten Malang"
+    },
+    {
+        "id": "379",
+        "code": "ML",
+        "name": "Malang",
+        "position": {
+            "latitude": -7.9769686,
+            "longitude": 112.6372503
+        },
+        "city": "Kota Malang"
+    },
+    {
+        "id": "380",
+        "code": "SGS",
+        "name": "Singosari",
+        "position": {
+            "latitude": -7.8968731,
+            "longitude": 112.6661065
+        },
+        "city": "Kota Malang"
+    },
+    {
+        "id": "381",
+        "code": "BMG",
+        "name": "Blimbing",
+        "position": {
+            "latitude": -7.9400337,
+            "longitude": 112.6448064
+        },
+        "city": "Kota Malang"
+    },
+    {
+        "id": "382",
+        "code": "SN",
+        "name": "Sengon",
+        "position": {
+            "latitude": -7.7550132,
+            "longitude": 112.7245151
+        },
+        "city": "Pasuruan"
+    },
+    {
+        "id": "383",
+        "code": "WN",
+        "name": "Wonokerto",
+        "position": {
+            "latitude": -7.6618139,
+            "longitude": 112.7550925
+        },
+        "city": "Pasuruan"
+    },
+    {
+        "id": "384",
+        "code": "SKJ",
+        "name": "Sukorejo",
+        "position": {
+            "latitude": -7.71940568128808,
+            "longitude": 112.723515805572
+        },
+        "city": "Pasuruan"
+    },
+    {
+        "id": "385",
+        "code": "MGN",
+        "name": "Minggiran",
+        "position": {
+            "latitude": -7.7284569,
+            "longitude": 112.0572869
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "386",
+        "code": "PPR",
+        "name": "Papar",
+        "position": {
+            "latitude": -7.6976134,
+            "longitude": 112.0796546
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "387",
+        "code": "PWA",
+        "name": "Purwoasri",
+        "position": {
+            "latitude": -7.6473934,
+            "longitude": 112.1002034
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "388",
+        "code": "KRS",
+        "name": "Kras",
+        "position": {
+            "latitude": -7.9486688,
+            "longitude": 111.960283
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "389",
+        "code": "SS",
+        "name": "Susuhan",
+        "position": {
+            "latitude": -7.7715517,
+            "longitude": 112.0260188
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "390",
+        "code": "NDL",
+        "name": "Ngadiluwih",
+        "position": {
+            "latitude": -7.8987598,
+            "longitude": 111.9877034
+        },
+        "city": "Kabupaten Kediri"
+    },
+    {
+        "id": "391",
+        "code": "KD",
+        "name": "Kediri",
+        "position": {
+            "latitude": -7.8185209,
+            "longitude": 112.015369
+        },
+        "city": "Kota Kediri"
+    },
+    {
+        "id": "392",
+        "code": "NT",
+        "name": "Ngunut",
+        "position": {
+            "latitude": -8.102882,
+            "longitude": 112.0124923
+        },
+        "city": "Tulungagung"
+    },
+    {
+        "id": "393",
+        "code": "NJG",
+        "name": "Ngujang",
+        "position": {
+            "latitude": -8.010477,
+            "longitude": 111.9269761
+        },
+        "city": "Tulungagung"
+    },
+    {
+        "id": "394",
+        "code": "SBL",
+        "name": "Sumbergempol",
+        "position": {
+            "latitude": -8.0826978,
+            "longitude": 111.9452568
+        },
+        "city": "Tulungagung"
+    },
+    {
+        "id": "395",
+        "code": "TA",
+        "name": "Tulungagung",
+        "position": {
+            "latitude": -8.06296861803682,
+            "longitude": 111.904629615519
+        },
+        "city": "Tulungagung"
+    },
+    {
+        "id": "396",
+        "code": "WG",
+        "name": "Wlingi",
+        "position": {
+            "latitude": -8.0887428,
+            "longitude": 112.3204664
+        },
+        "city": "Blitar"
+    },
+    {
+        "id": "397",
+        "code": "TAL",
+        "name": "Talun",
+        "position": {
+            "latitude": -8.0917058,
+            "longitude": 112.2889147
+        },
+        "city": "Blitar"
+    },
+    {
+        "id": "398",
+        "code": "RJ",
+        "name": "Rejotangan",
+        "position": {
+            "latitude": -8.1208749,
+            "longitude": 112.081657
+        },
+        "city": "Tulungagung"
+    },
+    {
+        "id": "400",
+        "code": "BL",
+        "name": "Blitar",
+        "position": {
+            "latitude": -8.101126,
+            "longitude": 112.1613948
+        },
+        "city": "Blitar"
+    },
+    {
+        "id": "402",
+        "code": "NB",
+        "name": "Ngebruk",
+        "position": {
+            "latitude": -8.1519471,
+            "longitude": 112.5165114
+        },
+        "city": "Kabupaten Malang"
+    },
+    {
+        "id": "403",
+        "code": "SBP",
+        "name": "Sumberpucung",
+        "position": {
+            "latitude": -8.1583839,
+            "longitude": 112.4789358
+        },
+        "city": "Kabupaten Malang"
+    },
+    {
+        "id": "404",
+        "code": "SMB",
+        "name": "Sembung",
+        "position": {
+            "latitude": -7.58255483488117,
+            "longitude": 112.167144977753
+        },
+        "city": "Jombang"
+    },
+    {
+        "id": "405",
+        "code": "SBO",
+        "name": "Sumobito",
+        "position": {
+            "latitude": -7.51940361562827,
+            "longitude": 112.339364550593
+        },
+        "city": "Jombang"
+    },
+    {
+        "id": "406",
+        "code": "MR",
+        "name": "Mojokerto",
+        "position": {
+            "latitude": -7.4725598,
+            "longitude": 112.4339372
+        },
+        "city": "Kota Mojokerto"
+    },
+    {
+        "id": "407",
+        "code": "CRM",
+        "name": "Curahmalang",
+        "position": {
+            "latitude": -7.5076441,
+            "longitude": 112.36919
+        },
+        "city": "Mojokerto"
+    },
+    {
+        "id": "408",
+        "code": "PTR",
+        "name": "Peterongan",
+        "position": {
+            "latitude": -7.5421181,
+            "longitude": 112.2784021
+        },
+        "city": "Jombang"
+    },
+    {
+        "id": "409",
+        "code": "JG",
+        "name": "Jombang",
+        "position": {
+            "latitude": -7.5586463,
+            "longitude": 112.232248
+        },
+        "city": "Jombang"
+    },
+    {
+        "id": "410",
+        "code": "LG",
+        "name": "Linggapura",
+        "position": {
+            "latitude": -7.18504559902898,
+            "longitude": 109.012454275262
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "411",
+        "code": "NTG",
+        "name": "Notog",
+        "position": {
+            "latitude": -7.4859201,
+            "longitude": 109.2132348
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "412",
+        "code": "RDN",
+        "name": "Randegan",
+        "position": {
+            "latitude": -7.56994813662442,
+            "longitude": 109.220138015925
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "413",
+        "code": "KBS",
+        "name": "Kebasen",
+        "position": {
+            "latitude": -7.5321782,
+            "longitude": 109.2041144
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "414",
+        "code": "PAT",
+        "name": "Patuguran",
+        "position": {
+            "latitude": -7.32812363140765,
+            "longitude": 109.057904268388
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "415",
+        "code": "PWT",
+        "name": "Purwokerto",
+        "position": {
+            "latitude": -7.4207942,
+            "longitude": 109.2220123
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "416",
+        "code": "KGD",
+        "name": "Karanggandul",
+        "position": {
+            "latitude": -7.38847082302555,
+            "longitude": 109.185904021047
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "417",
+        "code": "KRR",
+        "name": "Karangsari",
+        "position": {
+            "latitude": -7.3823457,
+            "longitude": 109.1212864
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "418",
+        "code": "KRT",
+        "name": "Kretek",
+        "position": {
+            "latitude": -7.28565440748811,
+            "longitude": 109.029913916506
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "419",
+        "code": "BMA",
+        "name": "Bumiayu",
+        "position": {
+            "latitude": -7.2371504,
+            "longitude": 109.0094191
+        },
+        "city": "Brebes"
+    },
+    {
+        "id": "420",
+        "code": "WJ",
+        "name": "Wojo",
+        "position": {
+            "latitude": -7.86179622245475,
+            "longitude": 110.040448745562
+        },
+        "city": "Purworejo"
+    },
+    {
+        "id": "421",
+        "code": "IJ",
+        "name": "Ijo",
+        "position": {
+            "latitude": -7.61499147404224,
+            "longitude": 109.44691423162
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "422",
+        "code": "KJ",
+        "name": "Kemranjen",
+        "position": {
+            "latitude": -7.6213716,
+            "longitude": 109.3163347
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "423",
+        "code": "TBK",
+        "name": "Tambak",
+        "position": {
+            "latitude": -7.613078,
+            "longitude": 109.4085111
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "424",
+        "code": "SPH",
+        "name": "Sumpiuh",
+        "position": {
+            "latitude": -7.6152055,
+            "longitude": 109.3613361
+        },
+        "city": "Banyumas"
+    },
+    {
+        "id": "425",
+        "code": "KM",
+        "name": "Kebumen",
+        "position": {
+            "latitude": -7.681689,
+            "longitude": 109.6617364
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "426",
+        "code": "GB",
+        "name": "Gombong",
+        "position": {
+            "latitude": -7.6107763,
+            "longitude": 109.5072977
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "427",
+        "code": "SRW",
+        "name": "Sruweng",
+        "position": {
+            "latitude": -7.65421457751394,
+            "longitude": 109.602077363524
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "428",
+        "code": "KA",
+        "name": "Karanganyar",
+        "position": {
+            "latitude": -7.6335647,
+            "longitude": 109.5740541
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "429",
+        "code": "BTH",
+        "name": "Butuh",
+        "position": {
+            "latitude": -7.7245874,
+            "longitude": 109.8602481
+        },
+        "city": "Purworejo"
+    },
+    {
+        "id": "430",
+        "code": "WNS",
+        "name": "Wonosari",
+        "position": {
+            "latitude": -7.69752401996307,
+            "longitude": 109.701625906605
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "431",
+        "code": "PRB",
+        "name": "Prembun",
+        "position": {
+            "latitude": -7.7244788,
+            "longitude": 109.7984376
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "432",
+        "code": "KWN",
+        "name": "Kutowinangun",
+        "position": {
+            "latitude": -7.7161912,
+            "longitude": 109.7329339
+        },
+        "city": "Kebumen"
+    },
+    {
+        "id": "433",
+        "code": "JN",
+        "name": "Jenar",
+        "position": {
+            "latitude": -7.8035274,
+            "longitude": 110.0021998
+        },
+        "city": "Purworejo"
+    },
+    {
+        "id": "434",
+        "code": "KTA",
+        "name": "Kutoarjo",
+        "position": {
+            "latitude": -7.7259759,
+            "longitude": 109.9062994
+        },
+        "city": "Purworejo"
+    },
+    {
+        "id": "435",
+        "code": "WT",
+        "name": "Wates",
+        "position": {
+            "latitude": -7.85950345152306,
+            "longitude": 110.157634361682
+        },
+        "city": "Bendungan"
+    },
+    {
+        "id": "436",
+        "code": "GW",
+        "name": "Gawok",
+        "position": {
+            "latitude": -7.5894788,
+            "longitude": 110.7445507
+        },
+        "city": "Sukoharjo"
+    },
+    {
+        "id": "437",
+        "code": "DL",
+        "name": "Delanggu",
+        "position": {
+            "latitude": -7.6220765,
+            "longitude": 110.7068257
+        },
+        "city": "Klaten"
+    },
+    {
+        "id": "438",
+        "code": "BBN",
+        "name": "Brambanan",
+        "position": {
+            "latitude": -7.756646,
+            "longitude": 110.5003908
+        },
+        "city": "Klaten"
+    },
+    {
+        "id": "439",
+        "code": "CE",
+        "name": "Ceper",
+        "position": {
+            "latitude": -7.6688144,
+            "longitude": 110.6752298
+        },
+        "city": "Klaten"
+    },
+    {
+        "id": "440",
+        "code": "KT",
+        "name": "Klaten",
+        "position": {
+            "latitude": -7.7120658,
+            "longitude": 110.6037183
+        },
+        "city": "Klaten"
+    },
+    {
+        "id": "441",
+        "code": "SWT",
+        "name": "Srowot",
+        "position": {
+            "latitude": -7.7408685,
+            "longitude": 110.5503139
+        },
+        "city": "Klaten"
+    },
+    {
+        "id": "442",
+        "code": "PTN",
+        "name": "Patukan",
+        "position": {
+            "latitude": -7.7906039,
+            "longitude": 110.3260845
+        },
+        "city": "Sleman"
+    },
+    {
+        "id": "443",
+        "code": "MGW",
+        "name": "Maguwo",
+        "position": {
+            "latitude": -7.78512731966752,
+            "longitude": 110.436774580538
+        },
+        "city": "Sleman"
+    },
+    {
+        "id": "444",
+        "code": "LPN",
+        "name": "Lempuyangan",
+        "position": {
+            "latitude": -7.7900849,
+            "longitude": 110.3754063
+        },
+        "city": "Kota Yogyakarta"
+    },
+    {
+        "id": "445",
+        "code": "YK",
+        "name": "Yogyakarta",
+        "position": {
+            "latitude": -7.7894761,
+            "longitude": 110.3642535
+        },
+        "city": "Kota Yogyakarta"
+    },
+    {
+        "id": "446",
+        "code": "RWL",
+        "name": "Rewulu",
+        "position": {
+            "latitude": -7.7960445,
+            "longitude": 110.2844712
+        },
+        "city": "Bantul"
+    },
+    {
+        "id": "447",
+        "code": "STL",
+        "name": "Sentolo",
+        "position": {
+            "latitude": -7.8329757,
+            "longitude": 110.2203386
+        },
+        "city": "Kulonprogo"
+    },
+    {
+        "id": "448",
+        "code": "KDB",
+        "name": "Kedungbanteng",
+        "position": {
+            "latitude": -7.40522195416556,
+            "longitude": 111.117100059679
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "449",
+        "code": "MN",
+        "name": "Madiun",
+        "position": {
+            "latitude": -7.6185511,
+            "longitude": 111.5253774
+        },
+        "city": "Kota Madiun"
+    },
+    {
+        "id": "450",
+        "code": "MAG",
+        "name": "Magetan",
+        "position": {
+            "latitude": -7.5635087,
+            "longitude": 111.4525979
+        },
+        "city": "Magetan"
+    },
+    {
+        "id": "451",
+        "code": "GG",
+        "name": "Geneng",
+        "position": {
+            "latitude": -7.4978433,
+            "longitude": 111.4187271
+        },
+        "city": "Ngawi"
+    },
+    {
+        "id": "452",
+        "code": "BGR",
+        "name": "Bagor",
+        "position": {
+            "latitude": -7.5719079,
+            "longitude": 111.8532223
+        },
+        "city": "Nganjuk"
+    },
+    {
+        "id": "453",
+        "code": "BBD",
+        "name": "Babadan",
+        "position": {
+            "latitude": -7.5867146,
+            "longitude": 111.5893651
+        },
+        "city": "Madiun"
+    },
+    {
+        "id": "454",
+        "code": "SRD",
+        "name": "Saradan",
+        "position": {
+            "latitude": -7.54750978312298,
+            "longitude": 111.732160206777
+        },
+        "city": "Madiun"
+    },
+    {
+        "id": "455",
+        "code": "CRB",
+        "name": "Caruban",
+        "position": {
+            "latitude": -7.5511426,
+            "longitude": 111.6559437
+        },
+        "city": "Madiun"
+    },
+    {
+        "id": "456",
+        "code": "NJ",
+        "name": "Nganjuk",
+        "position": {
+            "latitude": -7.6003114,
+            "longitude": 111.9027606
+        },
+        "city": "Nganjuk"
+    },
+    {
+        "id": "457",
+        "code": "BRN",
+        "name": "Baron",
+        "position": {
+            "latitude": -7.60280982238508,
+            "longitude": 112.03937881047
+        },
+        "city": "Nganjuk"
+    },
+    {
+        "id": "458",
+        "code": "SKM",
+        "name": "Sukomoro",
+        "position": {
+            "latitude": -7.6026122,
+            "longitude": 111.9412143
+        },
+        "city": "Nganjuk"
+    },
+    {
+        "id": "459",
+        "code": "SK",
+        "name": "Solojebres",
+        "position": {
+            "latitude": -7.5620367,
+            "longitude": 110.8395489
+        },
+        "city": "Surakarta"
+    },
+    {
+        "id": "460",
+        "code": "KRO",
+        "name": "Kebonromo",
+        "position": {
+            "latitude": -7.4190516,
+            "longitude": 111.0638179
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "461",
+        "code": "SR",
+        "name": "Sragen",
+        "position": {
+            "latitude": -7.4292862,
+            "longitude": 111.0187184
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "462",
+        "code": "PL",
+        "name": "Palur",
+        "position": {
+            "latitude": -7.5680993,
+            "longitude": 110.8752632
+        },
+        "city": "Karanganyar"
+    },
+    {
+        "id": "463",
+        "code": "MSR",
+        "name": "Masaran",
+        "position": {
+            "latitude": -7.4680307,
+            "longitude": 110.9478357
+        },
+        "city": "Sragen"
+    },
+    {
+        "id": "464",
+        "code": "KMR",
+        "name": "Kemiri",
+        "position": {
+            "latitude": -7.5339765,
+            "longitude": 110.9016784
+        },
+        "city": "Karanganyar"
+    },
+    {
+        "id": "465",
+        "code": "WK",
+        "name": "Walikukun",
+        "position": {
+            "latitude": -7.3988089,
+            "longitude": 111.2240935
+        },
+        "city": "Ngawi"
+    },
+    {
+        "id": "466",
+        "code": "NGW",
+        "name": "Ngawi",
+        "position": {
+            "latitude": -7.4422521,
+            "longitude": 111.3869554
+        },
+        "city": "Paron"
+    },
+    {
+        "id": "467",
+        "code": "KG",
+        "name": "Kedunggalar",
+        "position": {
+            "latitude": -7.418389,
+            "longitude": 111.3067253
+        },
+        "city": "Kedunggalar"
+    },
+    {
+        "id": "16",
+        "code": "PB",
+        "name": "Probolinggo",
+        "position": {
+            "latitude": -7.742791,
+            "longitude": 113.2164415
+        },
+        "city": "Kota Probolinggo"
+    },
+    {
+        "id": "58",
+        "code": "KRA",
+        "name": "Karangantu",
+        "position": {
+            "latitude": -6.03902156171416,
+            "longitude": 106.162039397013
+        },
+        "city": "Serang"
+    },
+    {
+        "id": "399",
+        "code": "GRM",
+        "name": "Garum",
+        "position": {
+            "latitude": -8.0736047,
+            "longitude": 112.2174392
+        },
+        "city": "Blitar"
+    },
+    {
+        "id": "401",
+        "code": "PGJ",
+        "name": "Pogajih",
+        "position": {
+            "latitude": -8.1570331,
+            "longitude": 112.4204453
+        },
+        "city": "Blitar"
+    }
+]
