@@ -1,13 +1,12 @@
 //
-//  TrainPickerView.swift
-//  tututut
+//  AddTrainView.swift
+//  kreta
 //
 //  Created by Gilang Banyu Biru Erassunu on 22/10/25.
 //
 
 import SwiftUI
 
-@MainActor
 struct AddTrainView: View {
   @Environment(TrainMapStore.self) private var store
   @Environment(\.dismiss) private var dismiss
@@ -18,8 +17,8 @@ struct AddTrainView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      headerView(viewModel: viewModel)
-      contentView(viewModel: viewModel)
+      headerView()
+      contentView()
     }
     .padding(.top)
     .task {
@@ -27,9 +26,10 @@ struct AddTrainView: View {
     }
   }
 
-  private func headerView(viewModel: ViewModel) -> some View {
+  // MARK: - Private Views
+
+  private func headerView() -> some View {
     VStack(alignment: .leading, spacing: 8) {
-      // Title bar
       HStack {
         // Back button when calendar is shown (only in date step)
         if viewModel.showCalendar && viewModel.currentStep == .date {
@@ -90,22 +90,22 @@ struct AddTrainView: View {
   }
 
   @ViewBuilder
-  private func contentView(viewModel: ViewModel) -> some View {
+  private func contentView() -> some View {
     switch viewModel.currentStep {
     case .departure, .arrival:
-      stationListView(viewModel: viewModel)
+      stationListView()
     case .date:
       if viewModel.showCalendar {
-        calendarView(viewModel: viewModel)
+        calendarView()
       } else {
-        datePickerView(viewModel: viewModel)
+        datePickerView()
       }
     case .results:
-      trainResultsView(viewModel: viewModel)
+      trainResultsView()
     }
   }
 
-  private func stationListView(viewModel: ViewModel) -> some View {
+  private func stationListView() -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.filteredStations) { station in
@@ -131,7 +131,7 @@ struct AddTrainView: View {
     }
   }
 
-  private func datePickerView(viewModel: ViewModel) -> some View {
+  private func datePickerView() -> some View {
     VStack(spacing: 16) {
       DateOptionRow(
         icon: "calendar.badge.clock",
@@ -172,7 +172,7 @@ struct AddTrainView: View {
     .padding()
   }
 
-  private func calendarView(viewModel: ViewModel) -> some View {
+  private func calendarView() -> some View {
     CalendarView(
       selectedDate: Binding(
         get: { viewModel.selectedDate ?? Date() },
@@ -184,7 +184,7 @@ struct AddTrainView: View {
     )
   }
 
-  private func trainResultsView(viewModel: ViewModel) -> some View {
+  private func trainResultsView() -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.filteredTrains) { train in
@@ -218,6 +218,8 @@ struct AddTrainView: View {
     }
   }
 }
+
+// MARK: - Preview
 
 #Preview {
   AddTrainView(onTrainSelected: { _ in })
