@@ -9,9 +9,11 @@
  */
 
 import type * as gapeka from "../gapeka.js";
+import type * as init from "../init.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
-import type * as stations from "../stations.js";
+import type * as station from "../station.js";
+import type * as train from "../train.js";
 
 import type {
   ApiFromModules,
@@ -29,9 +31,11 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   gapeka: typeof gapeka;
+  init: typeof init;
   push: typeof push;
   registrations: typeof registrations;
-  stations: typeof stations;
+  station: typeof station;
+  train: typeof train;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

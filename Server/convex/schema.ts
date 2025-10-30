@@ -42,5 +42,56 @@ export default defineSchema({
       longitude: v.number(),
     }),
     city: v.string(),
-  }).index("by_code", ["code"]),
+  })
+    .index("by_code", ["code"])
+    .index("by_customId", ["id"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["code", "city"],
+    }),
+
+  trains: defineTable({
+    id: v.string(),
+    code: v.string(),
+    name: v.string(),
+  })
+    .index("by_code", ["code"])
+    .index("by_customId", ["id"]),
+
+  trainJourneys: defineTable({
+    trainId: v.string(),
+    trainCode: v.string(),
+    trainName: v.string(),
+
+    stationId: v.string(),
+    arrivalTime: v.number(),
+    departureTime: v.number(),
+
+    routeId: v.union(v.string(), v.null()),
+  })
+    .index("by_trainId", ["trainId"])
+    .index("by_stationId", ["stationId"])
+    .index("by_routeId", ["routeId"]),
+
+  stationConnections: defineTable({
+    stationId: v.string(),
+    connectedStationId: v.string(),
+    trainIds: v.array(v.string()),
+    earliestDeparture: v.number(),
+    latestArrival: v.number(),
+  })
+    .index("by_stationId", ["stationId"])
+    .index("by_station_connected", ["stationId", "connectedStationId"]),
+
+  routes: defineTable({
+    id: v.string(),
+    paths: v.array(
+      v.array(
+        v.object({
+          latitude: v.number(),
+          longitude: v.number(),
+        })
+      )
+    ),
+  }).index("by_customId", ["id"]),
 });
