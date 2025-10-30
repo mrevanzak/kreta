@@ -155,6 +155,7 @@ extension AddTrainView {
     }
 
     func goBackToDeparture() {
+      selectedDepartureStation = nil
       selectedArrivalStation = nil
       selectedDate = nil
       availableTrains = []
@@ -164,6 +165,7 @@ extension AddTrainView {
     }
 
     func goBackToArrival() {
+      selectedArrivalStation = nil
       selectedDate = nil
       availableTrains = []
       showCalendar = false
