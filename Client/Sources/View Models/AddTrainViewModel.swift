@@ -17,6 +17,14 @@ enum SelectionStep {
   case results
 }
 
+// MARK: - Journey Data
+
+struct TrainJourneyData {
+  let trainId: String
+  let segments: [JourneySegment]
+  let allStations: [Station]
+}
+
 // MARK: - AddTrainView Extension
 
 extension AddTrainView {
@@ -29,6 +37,9 @@ extension AddTrainView {
     var connectedStations: [Station] = []
     var availableTrains: [JourneyService.AvailableTrainItem] = []
     var filteredTrains: [JourneyService.AvailableTrainItem] = []
+    
+    // Store journey data separately from ProjectedTrain
+    var trainJourneyData: [String: TrainJourneyData] = [:]
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
@@ -99,11 +110,49 @@ extension AddTrainView {
     }
 
     /// Build and select a ProjectedTrain from a selected list item
-    func didSelect(_ item: JourneyService.AvailableTrainItem) -> ProjectedTrain {
+    func didSelect(_ item: JourneyService.AvailableTrainItem) async -> ProjectedTrain {
       let stationsById = Dictionary(
         uniqueKeysWithValues: allStations.map { ($0.id ?? $0.code, $0) })
       let fromStation = stationsById[item.fromStationId]
       let toStation = stationsById[item.toStationId]
+
+      // Fetch journey segments for the complete route
+      var journeySegments: [JourneySegment] = []
+      var allStationsInJourney: [Station] = []
+      
+      do {
+        let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
+        
+        // Convert to JourneySegment model
+        for (index, segment) in segments.enumerated() {
+          if index < segments.count - 1 {
+            let nextSegment = segments[index + 1]
+            journeySegments.append(
+              JourneySegment(
+                fromStationId: segment.stationId,
+                toStationId: nextSegment.stationId,
+                departureTimeMs: Double(segment.departureTime),
+                arrivalTimeMs: Double(nextSegment.arrivalTime),
+                routeId: segment.routeId
+              )
+            )
+          }
+          
+          // Collect all stations
+          if let station = stationsById[segment.stationId] {
+            allStationsInJourney.append(station)
+          }
+        }
+        
+        // Store journey data separately
+        trainJourneyData[item.trainId] = TrainJourneyData(
+          trainId: item.trainId,
+          segments: journeySegments,
+          allStations: allStationsInJourney
+        )
+      } catch {
+        print("Failed to fetch journey segments: \(error)")
+      }
 
       let projected = ProjectedTrain(
         id: item.id,

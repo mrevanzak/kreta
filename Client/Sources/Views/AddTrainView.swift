@@ -13,7 +13,7 @@ struct AddTrainView: View {
 
   @State private var viewModel: ViewModel = ViewModel()
 
-  let onTrainSelected: (ProjectedTrain) -> Void
+  let onTrainSelected: (ProjectedTrain, TrainJourneyData?) -> Void
 
   var body: some View {
     VStack(spacing: 0) {
@@ -191,8 +191,10 @@ struct AddTrainView: View {
           TrainServiceRow(item: item)
             .contentShape(Rectangle())
             .onTapGesture {
-              let projected = viewModel.didSelect(item)
-              handleTrainSelection(projected)
+              Task {
+                let projected = await viewModel.didSelect(item)
+                handleTrainSelection(projected)
+              }
             }
 
           Divider()
@@ -217,13 +219,13 @@ struct AddTrainView: View {
   }
 
   private func handleTrainSelection(_ train: ProjectedTrain) {
-    store.selectTrain(train: train)
-    onTrainSelected(train)
+    let journeyData = viewModel.trainJourneyData[train.id]
+    onTrainSelected(train, journeyData)
   }
 }
 
 // MARK: - Preview
 
 #Preview {
-  AddTrainView(onTrainSelected: { _ in })
+  AddTrainView(onTrainSelected: { _, _ in })
 }

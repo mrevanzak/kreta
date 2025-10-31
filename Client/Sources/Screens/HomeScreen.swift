@@ -9,11 +9,12 @@ struct HomeScreen: View {
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false
   @State private var selectedTrains: [ProjectedTrain] = []
+  @State private var journeyDataMap: [String: TrainJourneyData] = [:]
 
   var body: some View {
     Group {
       ZStack(alignment: .topTrailing) {
-        TrainMapView(selectedTrains: selectedTrains)
+        TrainMapView(selectedTrains: selectedTrains, journeyDataMap: journeyDataMap)
 
         MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
           .padding(.trailing)
@@ -75,8 +76,11 @@ struct HomeScreen: View {
         .padding(.top, 23)
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
-            onTrainSelected: { train in
+            onTrainSelected: { train, journeyData in
               selectedTrains.append(train)
+              if let journeyData = journeyData {
+                journeyDataMap[train.id] = journeyData
+              }
               trainMapStore.selectTrain(train: train)
               showAddSheet = false
             }

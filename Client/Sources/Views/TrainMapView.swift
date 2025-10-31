@@ -6,9 +6,11 @@ struct TrainMapView: View {
   @Environment(\.showToast) private var showToast
 
   let selectedTrains: [ProjectedTrain]
+  let journeyDataMap: [String: TrainJourneyData]
 
-  init(selectedTrains: [ProjectedTrain] = []) {
+  init(selectedTrains: [ProjectedTrain] = [], journeyDataMap: [String: TrainJourneyData] = [:]) {
     self.selectedTrains = selectedTrains
+    self.journeyDataMap = journeyDataMap
   }
 
   var body: some View {
@@ -59,49 +61,63 @@ struct TrainMapView: View {
 
   // MARK: - Computed Properties
 
-  /// Filter routes based on selected trains
+  /// Filter routes based on selected trains - builds complete journey routes from segments
   private var filteredRoutes: [Route] {
     guard !selectedTrains.isEmpty else {
       return mapStore.routes
     }
 
-    let selectedRouteIds = Set(selectedTrains.compactMap { $0.routeIdentifier })
-    return mapStore.routes.filter { selectedRouteIds.contains($0.id) }
+    // Collect all unique route IDs from journey segments
+    var routeIds = Set<String>()
+    for train in selectedTrains {
+      if let journeyData = journeyDataMap[train.id] {
+        for segment in journeyData.segments {
+          if let routeId = segment.routeId {
+            routeIds.insert(routeId)
+          }
+        }
+      }
+    }
+
+    return mapStore.routes.filter { routeIds.contains($0.id) }
   }
 
-  /// Filter stations based on selected trains
+  /// Filter stations based on selected trains - shows all stations along journey path
   private var filteredStations: [Station] {
     guard !selectedTrains.isEmpty else {
       return mapStore.stations
     }
 
-    // Get all unique stations from selected trains
+    // Get all unique stations from complete journey paths
     var stationCodes = Set<String>()
     for train in selectedTrains {
-      if let fromStation = train.fromStation {
-        stationCodes.insert(fromStation.code)
-      }
-      if let toStation = train.toStation {
-        stationCodes.insert(toStation.code)
+      if let journeyData = journeyDataMap[train.id] {
+        for station in journeyData.allStations {
+          stationCodes.insert(station.code)
+        }
       }
     }
 
     return mapStore.stations.filter { stationCodes.contains($0.code) }
   }
 
-  /// Filter trains based on selected trains
+  /// Filter trains based on selected trains - shows live projected position if available
   private var filteredTrains: [ProjectedTrain] {
     guard !selectedTrains.isEmpty else {
       return []
-      // return mapStore.
     }
 
-    return []
-
     let selectedTrainIds = Set(selectedTrains.map { $0.id })
-    // return mapStore.trains.filter { train in
-    //   selectedTrainIds.contains(train.id)
-    // }
+    print(mapStore.projectedTrain)
+    
+    // Check if the currently projected train matches any selected train
+    if let projectedTrain = mapStore.projectedTrain,
+       selectedTrainIds.contains(projectedTrain.id) {
+      return [projectedTrain]
+    }
+    
+
+    return []
   }
 
   // MARK: - Map Style Computation
