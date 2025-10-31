@@ -47,8 +47,8 @@ final class JourneyService {
 
   struct TrainJourneyRow: Codable, Sendable {
     let stationId: String
-    let arrivalTime: Int64
-    let departureTime: Int64
+    let arrivalTime: Double
+    let departureTime: Double
     let trainCode: String
     let trainName: String
     let routeId: String?

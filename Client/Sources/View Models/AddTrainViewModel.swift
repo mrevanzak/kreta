@@ -131,8 +131,8 @@ extension AddTrainView {
               JourneySegment(
                 fromStationId: segment.stationId,
                 toStationId: nextSegment.stationId,
-                departureTimeMs: Double(segment.departureTime),
-                arrivalTimeMs: Double(nextSegment.arrivalTime),
+                departureTimeMs: segment.departureTime,
+                arrivalTimeMs: nextSegment.arrivalTime,
                 routeId: segment.routeId
               )
             )
