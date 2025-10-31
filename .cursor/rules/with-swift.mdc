@@ -1,6 +1,5 @@
 ---
-description: 
-globs: 
+globs: *.swift
 alwaysApply: false
 ---
 # Swift Coding Standards and Best Practices
