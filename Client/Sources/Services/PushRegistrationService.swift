@@ -41,12 +41,13 @@ final class PushRegistrationService: @unchecked Sendable {
 
     while attempt < maxAttempts {
       do {
-        _ = try await convexClient.mutation(
+        let _: RegisterDeviceResponse = try await convexClient.mutation(
           "registrations:registerDevice",
           with: [
             "token": token,
             "userId": userId,
-          ])
+          ],
+          captureTelemetry: true)
 
         // Assume success if no error is thrown
         userDefaults.set(signature, forKey: lastRegistrationSignatureKey)

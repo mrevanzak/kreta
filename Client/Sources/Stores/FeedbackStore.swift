@@ -20,13 +20,30 @@ final class FeedbackStore {
   var isLoading = false
 
   var deviceToken: String {
-    PushRegistrationService.shared.currentToken() ?? "unknown-device"
+    // Prefer APNS token when available, otherwise use persistent device UUID
+    PushRegistrationService.shared.currentToken() ?? persistentDeviceIdentifier()
+  }
+
+  /// Generates or retrieves a persistent device identifier from keychain
+  /// This ensures each device has a unique identity even before APNS registration completes
+  private func persistentDeviceIdentifier() -> String {
+    let keychainKey = "deviceIdentifier"
+
+    // Try to retrieve existing identifier
+    if let existingId = Keychain<String>.get(keychainKey) {
+      return existingId
+    }
+
+    // Generate new UUID and store in keychain
+    let newIdentifier = UUID().uuidString
+    Keychain.set(newIdentifier, forKey: keychainKey)
+    return newIdentifier
   }
 
   init() {
     // Subscribe to feedback:list with real-time updates
     cancellable = convexClient.subscribe(
-      to: "feedback:list", yielding: [FeedbackItem].self
+      to: "feedback:list", yielding: [FeedbackItem].self, captureTelemetry: true
     )
     .receive(on: DispatchQueue.main)
     .sink(
@@ -53,7 +70,8 @@ final class FeedbackStore {
         "description": description,
         "email": email,
         "deviceToken": deviceToken,
-      ])
+      ],
+      captureTelemetry: true)
   }
 
   func toggleVote(feedbackId: String) async throws -> Bool {
@@ -62,7 +80,8 @@ final class FeedbackStore {
       with: [
         "feedbackId": feedbackId,
         "deviceToken": deviceToken,
-      ])
+      ],
+      captureTelemetry: true)
 
     // Store vote state in UserDefaults
     let key = "voted_\(deviceToken)_\(feedbackId)"
