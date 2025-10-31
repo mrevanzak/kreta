@@ -94,4 +94,22 @@ export default defineSchema({
       )
     ),
   }).index("by_customId", ["id"]),
+
+  feedback: defineTable({
+    title: v.string(),
+    description: v.string(),
+    email: v.union(v.string(), v.null()),
+    status: v.string(), // "pending", "accepted", "finished"
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_status", ["status"]),
+
+  votes: defineTable({
+    feedbackId: v.id("feedback"),
+    deviceToken: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_feedbackId", ["feedbackId"])
+    .index("by_feedback_device", ["feedbackId", "deviceToken"]),
 });

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as feedback from "../feedback.js";
 import type * as gapeka from "../gapeka.js";
 import type * as init from "../init.js";
 import type * as push from "../push.js";
@@ -30,6 +31,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  feedback: typeof feedback;
   gapeka: typeof gapeka;
   init: typeof init;
   push: typeof push;
