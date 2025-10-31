@@ -14,7 +14,7 @@ struct HomeScreen: View {
   var body: some View {
     Group {
       ZStack(alignment: .topTrailing) {
-        TrainMapView()
+        TrainMapView(selectedTrains: selectedTrains)
 
         MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
           .padding(.trailing)
