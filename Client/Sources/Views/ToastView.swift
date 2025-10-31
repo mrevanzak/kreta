@@ -68,6 +68,15 @@ struct WithToastView: ViewModifier {
         \.showToast,
         ShowToastAction { message, type in
           Task {
+            if type == .error {
+              Dependencies.shared.telemetry.addBreadcrumb(
+                message: "User-visible error",
+                category: "ui.error",
+                data: [
+                  "message": message
+                ]
+              )
+            }
             await Toast(message: message, type: type).dismissAfter(2).present()
           }
         })

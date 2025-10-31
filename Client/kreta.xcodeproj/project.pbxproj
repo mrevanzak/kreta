@@ -32,6 +32,7 @@
 		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		C5AB85292EB3770D009E242A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
 		C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC973F2EB3C0BE00E46229 /* Disk */; };
+		C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC99BC2EB446F600E46229 /* PostHog */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +103,7 @@
 				C5AB85292EB3770D009E242A /* Sentry in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
 				8D80218B2CFCF28F006C709C /* StripePaymentsUI in Frameworks */,
+				C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */,
 				8D80217D2CFCF28E006C709C /* Stripe in Frameworks */,
 				C5AB85282EB3770D009E242A /* (null) in Frameworks */,
 			);
@@ -190,6 +192,7 @@
 				4E428AD02EAEF22D008DC212 /* MijickCalendarView */,
 				661BA6F9401C4744B476177E /* Sentry */,
 				C5CC973F2EB3C0BE00E46229 /* Disk */,
+				C5CC99BC2EB446F600E46229 /* PostHog */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -254,6 +257,7 @@
 				4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */,
 				5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
+				C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -720,6 +724,14 @@
 				minimumVersion = 0.6.4;
 			};
 		};
+		C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.34.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -802,6 +814,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */;
 			productName = Disk;
+		};
+		C5CC99BC2EB446F600E46229 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -11,6 +11,15 @@ struct WithMessageView: ViewModifier {
         ShowMessageAction(action: { message, messageType, delay in
           self.messageWrapper = MessageWrapper(
             message: message, delay: delay, messageType: messageType)
+          if messageType == .error {
+            Dependencies.shared.telemetry.addBreadcrumb(
+              message: "User-visible error",
+              category: "ui.error",
+              data: [
+                "message": message
+              ]
+            )
+          }
         })
       )
       .overlay(alignment: .bottom) {

@@ -47,7 +47,7 @@ final class TrainMapStore {
     }
 
     lastUpdatedAtCancellable = convexClient.subscribe(
-      to: "gapeka:getLastUpdatedAt", yielding: String.self
+      to: "gapeka:getLastUpdatedAt", yielding: String.self, captureTelemetry: true
     )
     .receive(on: DispatchQueue.main)
     .sink(

@@ -24,6 +24,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
   ) -> Bool {
     notificationCenter.delegate = self
 
+    // Configure telemetry SDKs early
+    SentryErrorReporter.configure(
+      dsn: Constants.Sentry.dsn,
+      environment: Constants.AppMeta.environment,
+      release: Constants.AppMeta.version,
+      tracesSampleRate: Constants.AppMeta.environment == "production" ? 0.2 : 1.0,
+      profilesSampleRate: Constants.AppMeta.environment == "production" ? 0.1 : 1.0
+    )
+    PostHogAnalytics.configure(
+      apiKey: Constants.PostHog.apiKey,
+      host: Constants.PostHog.host,
+      captureScreenViews: false
+    )
+
     Task {
       // Begin monitoring ActivityKit tokens as early as possible
       await liveActivityService.startGlobalMonitoring()
