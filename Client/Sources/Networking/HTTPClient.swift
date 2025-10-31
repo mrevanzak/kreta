@@ -70,6 +70,16 @@ struct HTTPClient {
   }
 
   func load<T: Codable>(_ resource: Resource<T>) async throws -> T {
+    let telemetry = Dependencies.shared.telemetry.withContext([
+      "service": "api"
+    ])
+    let span = telemetry.startTransaction(
+      name: "HTTP \(resource.method.name) \(resource.url.lastPathComponent)",
+      context: [
+        "url": resource.url.absoluteString,
+        "method": resource.method.name,
+      ]
+    )
 
     var headers: [String: String] = [:]
 
@@ -122,10 +132,18 @@ struct HTTPClient {
       #if DEBUG
         debugLogRequestFailure(request, error: error)
       #endif
+      telemetry.capture(
+        error: error,
+        context: ["endpoint": request.url?.absoluteString ?? "<nil>"],
+        level: .error
+      )
+      span.finish(status: .error("transport"))
       throw error
     }
 
     guard let httpResponse = response as? HTTPURLResponse else {
+      telemetry.capture(message: "Invalid HTTPURLResponse", context: nil, level: .error)
+      span.finish(status: .error("invalid_response"))
       throw NetworkError.invalidResponse
     }
 
@@ -135,6 +153,16 @@ struct HTTPClient {
       break  // Success
     default:
       let errorResponse = try JSONDecoder().decode(ErrorResponse.self, from: data)
+      telemetry.capture(
+        message: "HTTP Error \(httpResponse.statusCode)",
+        context: [
+          "endpoint": httpResponse.url?.absoluteString ?? "<nil>",
+          "status": httpResponse.statusCode,
+        ],
+        level: .warning
+      )
+      span.set(tag: "status", value: "\(httpResponse.statusCode)")
+      span.finish(status: .error("HTTP \(httpResponse.statusCode)"))
       throw NetworkError.errorResponse(errorResponse)
     }
 
@@ -147,8 +175,14 @@ struct HTTPClient {
       let decoder = JSONDecoder()
       decoder.dateDecodingStrategy = .iso8601
       let result = try decoder.decode(resource.modelType, from: data)
+      span.set(tag: "status", value: "\(httpResponse.statusCode)")
+      span.finish(status: .ok)
       return result
     } catch {
+      telemetry.capture(
+        error: error, context: ["endpoint": httpResponse.url?.absoluteString ?? "<nil>"],
+        level: .error)
+      span.finish(status: .error("decoding"))
       throw NetworkError.decodingError(error)
     }
   }

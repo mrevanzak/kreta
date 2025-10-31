@@ -56,6 +56,21 @@
             value = "https://reliable-narwhal-600.convex.cloud"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "POSTHOG_API_KEY"
+            value = "phc_e3NkMLLAy3SRmt5qlMVqtQ7gYB8vq7Zz6eCcDyf4okP"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SENTRY_DSN"
+            value = "https://f0814bd5550647ede47b5dc34057f554@o4510277984124928.ingest.us.sentry.io/4510277985042432"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = ""
+            value = ""
+            isEnabled = "NO">
+         </EnvironmentVariable>
       </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
