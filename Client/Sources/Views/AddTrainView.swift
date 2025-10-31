@@ -188,13 +188,10 @@ struct AddTrainView: View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.filteredTrains) { train in
-          TrainResultRow(train: train)
+          TrainServiceRow(train: train)
             .contentShape(Rectangle())
             .onTapGesture {
-              // Find the corresponding ProjectedTrain from the store
-              if let projectedTrain = store.trains.first(where: { $0.id.starts(with: train.id) }) {
-                onTrainSelected(projectedTrain)
-              }
+              onTrainSelected(train)
             }
 
           Divider()

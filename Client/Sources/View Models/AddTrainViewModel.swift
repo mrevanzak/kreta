@@ -28,7 +28,7 @@ extension AddTrainView {
     var allStations: [Station] = []
     var connectedStations: [Station] = []
     var availableTrains: [ProjectedTrain] = []
-    var filteredTrains: [Train] = []
+    var filteredTrains: [ProjectedTrain] = []
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
@@ -85,10 +85,17 @@ extension AddTrainView {
       defer { isLoadingTrains = false }
 
       do {
-        filteredTrains = try await trainConnectionService.fetchTrains(
+        // Fetch train IDs from Convex
+        let trains = try await trainConnectionService.fetchTrains(
           departureStationId: departureId,
           arrivalStationId: arrivalId
         )
+        
+        // Map to ProjectedTrains from the store
+        let trainIds = Set(trains.map { $0.id })
+        filteredTrains = availableTrains.filter { projectedTrain in
+          trainIds.contains(where: { projectedTrain.id.starts(with: $0) })
+        }
       } catch {
         print("Failed to fetch available trains: \(error)")
         filteredTrains = []
@@ -143,7 +150,6 @@ extension AddTrainView {
       selectedDepartureStation = nil
       selectedArrivalStation = nil
       selectedDate = nil
-      availableTrains = []
       connectedStations = []
       filteredTrains = []
       showCalendar = false
@@ -154,7 +160,6 @@ extension AddTrainView {
     func goBackToArrival() {
       selectedArrivalStation = nil
       selectedDate = nil
-      availableTrains = []
       filteredTrains = []
       showCalendar = false
       currentStep = .arrival
@@ -167,7 +172,6 @@ extension AddTrainView {
 
     func goBackToDate() {
       selectedDate = nil
-      availableTrains = []
       filteredTrains = []
       showCalendar = false
       currentStep = .date
@@ -180,7 +184,6 @@ extension AddTrainView {
       selectedArrivalStation = nil
       selectedDate = nil
       searchText = ""
-      availableTrains = []
       connectedStations = []
       filteredTrains = []
       showCalendar = false
