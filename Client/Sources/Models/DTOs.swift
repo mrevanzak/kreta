@@ -20,16 +20,6 @@ struct LoginResponse: Codable {
   let username: String?
 }
 
-struct RegisterDeviceResponse: Codable {
-  let success: Bool
-  let message: String?
-}
-
-struct RegisterLiveActivityTokenResponse: Codable {
-  let success: Bool
-  let message: String?
-}
-
 struct ErrorResponse: Codable {
   let message: String?
 }
