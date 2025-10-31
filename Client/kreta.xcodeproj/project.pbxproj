@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 4E428AD02EAEF22D008DC212 /* MijickCalendarView */; };
-		7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
 		8D0FC8B32C90E03100767285 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */ = {isa = PBXBuildFile; productRef = 8D20503E2CACC09C0088CFAF /* JWTDecode */; };
 		8D3EE22F2C92698B004E4B6D /* (null) in Sources */ = {isa = PBXBuildFile; };
@@ -29,10 +28,6 @@
 		C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */ = {isa = PBXBuildFile; productRef = C51929E22EAB3AC30036AE74 /* MijickPopups */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
-		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		C5AB85292EB3770D009E242A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
-		C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC973F2EB3C0BE00E46229 /* Disk */; };
-		C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC99BC2EB446F600E46229 /* PostHog */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,7 +83,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */,
 				4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */,
 				8D8021892CFCF28E006C709C /* StripePayments in Frameworks */,
 				8D8021872CFCF28E006C709C /* StripePaymentSheet in Frameworks */,
@@ -100,12 +94,9 @@
 				C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */,
 				8D8021852CFCF28E006C709C /* StripeIdentity in Frameworks */,
 				8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */,
-				C5AB85292EB3770D009E242A /* Sentry in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
 				8D80218B2CFCF28F006C709C /* StripePaymentsUI in Frameworks */,
-				C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */,
 				8D80217D2CFCF28E006C709C /* Stripe in Frameworks */,
-				C5AB85282EB3770D009E242A /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,7 +106,6 @@
 			files = (
 				C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */,
 				C501C17A2E9616DF00CC2B4E /* WidgetKit.framework in Frameworks */,
-				7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,7 +153,6 @@
 				8DDE5FAE2C8A7D9300A0DBE0 /* Frameworks */,
 				8DDE5FAF2C8A7D9300A0DBE0 /* Resources */,
 				C501C18E2E9616E100CC2B4E /* Embed Foundation Extensions */,
-				0C7F4D1ED04F40FAB03143FA /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
 			);
@@ -190,9 +179,6 @@
 				C5892C972EA8CB370043E6B9 /* DebugSwift */,
 				C51929E22EAB3AC30036AE74 /* MijickPopups */,
 				4E428AD02EAEF22D008DC212 /* MijickCalendarView */,
-				661BA6F9401C4744B476177E /* Sentry */,
-				C5CC973F2EB3C0BE00E46229 /* Disk */,
-				C5CC99BC2EB446F600E46229 /* PostHog */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -255,9 +241,6 @@
 				C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */,
 				C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */,
 				4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */,
-				5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
-				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
-				C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -285,24 +268,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		0C7F4D1ED04F40FAB03143FA /* Upload Debug Symbols to Sentry */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
-			);
-			name = "Upload Debug Symbols to Sentry";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.\nif which sentry-cli >/dev/null; then\n  export SENTRY_ORG=kreta\n  export SENTRY_PROJECT=apple-ios\n  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n  if [ ! $? -eq 0 ]; then\n    echo \"warning: sentry-cli - $ERROR\"\n  fi\nelse\n  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DDE5FAD2C8A7D9300A0DBE0 /* Sources */ = {
@@ -468,11 +433,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
@@ -493,7 +456,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -517,11 +480,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
@@ -542,7 +503,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -562,7 +523,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -575,7 +536,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.Widget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1.Widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -598,7 +559,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -611,7 +572,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.Widget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1.Widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -668,14 +629,6 @@
 				minimumVersion = 1.1.1;
 			};
 		};
-		5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.0.0;
-			};
-		};
 		8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/auth0/JWTDecode.swift.git";
@@ -716,22 +669,6 @@
 				minimumVersion = 1.7.20;
 			};
 		};
-		C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/saoudrizwan/Disk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.6.4;
-			};
-		};
-		C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.34.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -739,11 +676,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */;
 			productName = MijickCalendarView;
-		};
-		661BA6F9401C4744B476177E /* Sentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
 		};
 		8D20503E2CACC09C0088CFAF /* JWTDecode */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -809,16 +741,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */;
 			productName = DebugSwift;
-		};
-		C5CC973F2EB3C0BE00E46229 /* Disk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */;
-			productName = Disk;
-		};
-		C5CC99BC2EB446F600E46229 /* PostHog */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */;
-			productName = PostHog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
