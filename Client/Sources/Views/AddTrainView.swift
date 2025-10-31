@@ -22,7 +22,7 @@ struct AddTrainView: View {
     }
     .padding(.top)
     .task {
-      viewModel.bootstrap(availableTrains: store.trains, allStations: store.stations)
+      viewModel.bootstrap(allStations: store.stations)
     }
   }
 
@@ -187,11 +187,12 @@ struct AddTrainView: View {
   private func trainResultsView() -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
-        ForEach(viewModel.filteredTrains) { train in
-          TrainServiceRow(train: train)
+        ForEach(viewModel.filteredTrains) { item in
+          TrainServiceRow(item: item)
             .contentShape(Rectangle())
             .onTapGesture {
-              onTrainSelected(train)
+              let projected = viewModel.didSelect(item)
+              handleTrainSelection(projected)
             }
 
           Divider()
@@ -213,6 +214,11 @@ struct AddTrainView: View {
         )
       }
     }
+  }
+
+  private func handleTrainSelection(_ train: ProjectedTrain) {
+    store.selectTrain(train: train)
+    onTrainSelected(train)
   }
 }
 

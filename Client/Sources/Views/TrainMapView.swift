@@ -4,9 +4,9 @@ import SwiftUI
 struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
   @Environment(\.showToast) private var showToast
-  
+
   let selectedTrains: [ProjectedTrain]
-  
+
   init(selectedTrains: [ProjectedTrain] = []) {
     self.selectedTrains = selectedTrains
   }
@@ -56,25 +56,25 @@ struct TrainMapView: View {
       }
     }
   }
-  
+
   // MARK: - Computed Properties
-  
+
   /// Filter routes based on selected trains
   private var filteredRoutes: [Route] {
     guard !selectedTrains.isEmpty else {
       return mapStore.routes
     }
-    
+
     let selectedRouteIds = Set(selectedTrains.compactMap { $0.routeIdentifier })
     return mapStore.routes.filter { selectedRouteIds.contains($0.id) }
   }
-  
+
   /// Filter stations based on selected trains
   private var filteredStations: [Station] {
     guard !selectedTrains.isEmpty else {
       return mapStore.stations
     }
-    
+
     // Get all unique stations from selected trains
     var stationCodes = Set<String>()
     for train in selectedTrains {
@@ -85,20 +85,23 @@ struct TrainMapView: View {
         stationCodes.insert(toStation.code)
       }
     }
-    
+
     return mapStore.stations.filter { stationCodes.contains($0.code) }
   }
-  
+
   /// Filter trains based on selected trains
   private var filteredTrains: [ProjectedTrain] {
     guard !selectedTrains.isEmpty else {
-      return mapStore.trains
+      return []
+      // return mapStore.
     }
-    
+
+    return []
+
     let selectedTrainIds = Set(selectedTrains.map { $0.id })
-    return mapStore.trains.filter { train in
-      selectedTrainIds.contains(train.id)
-    }
+    // return mapStore.trains.filter { train in
+    //   selectedTrainIds.contains(train.id)
+    // }
   }
 
   // MARK: - Map Style Computation

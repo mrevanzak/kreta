@@ -4,8 +4,7 @@ import SwiftUI
 // MARK: - Main Map Screen
 
 struct HomeScreen: View {
-  @State private var trainMapStore = TrainMapStore(
-    service: TrainMapService(httpClient: .development))
+  @State private var trainMapStore = TrainMapStore()
 
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false

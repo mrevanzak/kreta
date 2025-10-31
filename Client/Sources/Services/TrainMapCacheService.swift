@@ -5,7 +5,7 @@ struct TrainMapCacheService {
   private let cacheFolder = "TrainMapCache"
   private let stationsFile = "stations.json"
   private let routesFile = "routes.json"
-  private let trainsFile = "trains.json"
+  private let journeyFile = "journey.json"
   private let timestampFile = "lastUpdatedAt.txt"
 
   // MARK: - Timestamp
@@ -38,29 +38,30 @@ struct TrainMapCacheService {
   }
 
   // MARK: - Routes
-  func saveRoutes(_ routes: [Route]) throws {
+  func saveRoutes(_ routes: [RoutePolyline]) throws {
     try Disk.save(routes, to: .applicationSupport, as: "\(cacheFolder)/\(routesFile)")
   }
 
-  func loadCachedRoutes() throws -> [Route] {
-    try Disk.retrieve("\(cacheFolder)/\(routesFile)", from: .applicationSupport, as: [Route].self)
+  func loadCachedRoutes() throws -> [RoutePolyline] {
+    try Disk.retrieve(
+      "\(cacheFolder)/\(routesFile)", from: .applicationSupport, as: [RoutePolyline].self)
   }
 
   func hasCachedRoutes() -> Bool {
     Disk.exists("\(cacheFolder)/\(routesFile)", in: .applicationSupport)
   }
 
-  // MARK: - Trains
-  func saveTrains(_ trains: [RawGapekaTrain]) throws {
-    try Disk.save(trains, to: .applicationSupport, as: "\(cacheFolder)/\(trainsFile)")
+  // MARK: - Journeys
+  func saveJourney(_ journey: TrainJourney) throws {
+    try Disk.save(journey, to: .applicationSupport, as: "\(cacheFolder)/\(journeyFile)")
   }
 
-  func loadCachedTrains() throws -> [RawGapekaTrain] {
+  func loadCachedJourney() throws -> TrainJourney {
     try Disk.retrieve(
-      "\(cacheFolder)/\(trainsFile)", from: .applicationSupport, as: [RawGapekaTrain].self)
+      "\(cacheFolder)/\(journeyFile)", from: .applicationSupport, as: TrainJourney.self)
   }
 
-  func hasCachedTrains() -> Bool {
-    Disk.exists("\(cacheFolder)/\(trainsFile)", in: .applicationSupport)
+  func hasCachedJourney() -> Bool {
+    Disk.exists("\(cacheFolder)/\(journeyFile)", in: .applicationSupport)
   }
 }

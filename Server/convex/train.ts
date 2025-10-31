@@ -22,13 +22,12 @@ export const list = query({
     // Fetch one journey per trainId to read denormalized code/name
     const trains = await Promise.all(
       connection.trainIds.map(async (id: string) => {
-        const sample = await ctx.db
+        const journey = await ctx.db
           .query("trainJourneys")
           .withIndex("by_trainId", (q) => q.eq("trainId", id))
-          .take(1);
-        const j = sample[0];
-        if (!j) return null;
-        return { id, code: j.trainCode, name: j.trainName };
+          .first();
+        if (!journey) return null;
+        return journey;
       })
     );
     return trains.filter((t) => t !== null);

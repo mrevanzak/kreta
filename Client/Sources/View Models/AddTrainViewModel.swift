@@ -27,8 +27,8 @@ extension AddTrainView {
 
     var allStations: [Station] = []
     var connectedStations: [Station] = []
-    var availableTrains: [ProjectedTrain] = []
-    var filteredTrains: [ProjectedTrain] = []
+    var availableTrains: [JourneyService.AvailableTrainItem] = []
+    var filteredTrains: [JourneyService.AvailableTrainItem] = []
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
@@ -44,11 +44,13 @@ extension AddTrainView {
 
     private let stationConnectionService = StationConnectionService()
     private let trainConnectionService = TrainConnectionService()
+    private let journeyService = JourneyService()
+
+    // no longer caching all journeys; server provides list DTOs
 
     // MARK: - Public Methods
 
-    func bootstrap(availableTrains: [ProjectedTrain], allStations: [Station]) {
-      self.availableTrains = availableTrains
+    func bootstrap(allStations: [Station]) {
       self.allStations = allStations
     }
 
@@ -85,21 +87,46 @@ extension AddTrainView {
       defer { isLoadingTrains = false }
 
       do {
-        // Fetch train IDs from Convex
-        let trains = try await trainConnectionService.fetchTrains(
+        let items = try await journeyService.fetchProjectedForRoute(
           departureStationId: departureId,
           arrivalStationId: arrivalId
         )
-        
-        // Map to ProjectedTrains from the store
-        let trainIds = Set(trains.map { $0.id })
-        filteredTrains = availableTrains.filter { projectedTrain in
-          trainIds.contains(where: { projectedTrain.id.starts(with: $0) })
-        }
+        filteredTrains = items
       } catch {
         print("Failed to fetch available trains: \(error)")
         filteredTrains = []
       }
+    }
+
+    /// Build and select a ProjectedTrain from a selected list item
+    func didSelect(_ item: JourneyService.AvailableTrainItem) -> ProjectedTrain {
+      let stationsById = Dictionary(
+        uniqueKeysWithValues: allStations.map { ($0.id ?? $0.code, $0) })
+      let fromStation = stationsById[item.fromStationId]
+      let toStation = stationsById[item.toStationId]
+
+      let projected = ProjectedTrain(
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        position: Position(
+          latitude: fromStation?.position.latitude ?? 0,
+          longitude: fromStation?.position.longitude ?? 0
+        ),
+        moving: false,
+        bearing: nil,
+        routeIdentifier: item.routeId,
+        speedKph: nil,
+        fromStation: fromStation,
+        toStation: toStation,
+        segmentDeparture: Date(timeIntervalSince1970: TimeInterval(item.segmentDepartureMs) / 1000),
+        segmentArrival: Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000),
+        progress: nil,
+        journeyDeparture: nil,
+        journeyArrival: nil
+      )
+
+      return projected
     }
 
     func parseAndSelectDate(from text: String) {

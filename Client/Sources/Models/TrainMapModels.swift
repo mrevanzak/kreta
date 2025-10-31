@@ -157,3 +157,27 @@ struct ProjectedTrain: Codable, Identifiable {
     CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
   }
 }
+
+// MARK: - Projection-friendly DTOs (Convex)
+
+struct RoutePolyline: Codable, Identifiable, Sendable {
+  let id: String
+  let name: String
+  let path: [Position]
+}
+
+struct JourneySegment: Codable, Sendable {
+  let fromStationId: String
+  let toStationId: String
+  let departureTimeMs: Double
+  let arrivalTimeMs: Double
+  let routeId: String?
+}
+
+struct TrainJourney: Codable, Identifiable, Sendable {
+  let id: String
+  let trainId: String
+  let code: String
+  let name: String
+  let segments: [JourneySegment]
+}
