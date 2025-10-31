@@ -111,6 +111,11 @@ export const startLiveActivity = action({
         estimatedArrival: v.union(v.number(), v.null()),
         estimatedDeparture: v.union(v.number(), v.null()),
       }),
+      journeyState: v.union(
+        v.literal("beforeBoarding"),
+        v.literal("onBoard"),
+        v.literal("prepareToDropOff")
+      ),
     }),
     // Optional alert to show when starting the activity
     alertTitle: v.optional(v.string()),
@@ -173,6 +178,80 @@ export const startLiveActivity = action({
 
     try {
       const response = await apnProvider.send(note, args.startToken);
+      if (response.sent && response.sent.length > 0) {
+        return { success: true, status: 200, apnsId: note.id } as const;
+      }
+      const firstFailure = response.failed?.[0];
+      const status = firstFailure?.status ?? 500;
+      const reason =
+        firstFailure?.response?.reason ?? firstFailure?.error?.message;
+      return {
+        success: false,
+        error: String(reason ?? "Unknown APNs error"),
+        status,
+        apnsId: note.id,
+      } as const;
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: String(err instanceof Error ? err.message : err),
+      } as const;
+    }
+  },
+});
+
+// Update an existing Live Activity's content state via push notification
+export const updateLiveActivity = action({
+  args: {
+    activityToken: v.string(),
+    // Content state matching TrainActivityAttributes.ContentState
+    contentState: v.object({
+      previousStation: v.object({
+        name: v.string(),
+        code: v.string(),
+        estimatedArrival: v.union(v.number(), v.null()),
+        estimatedDeparture: v.union(v.number(), v.null()),
+      }),
+      nextStation: v.object({
+        name: v.string(),
+        code: v.string(),
+        estimatedArrival: v.union(v.number(), v.null()),
+        estimatedDeparture: v.union(v.number(), v.null()),
+      }),
+      journeyState: v.union(
+        v.literal("beforeBoarding"),
+        v.literal("onBoard"),
+        v.literal("prepareToDropOff")
+      ),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const bundleId = process.env.BUNDLE_ID ?? "";
+    if (!bundleId) {
+      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
+    }
+    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
+      return { success: false, error: "Missing APNs token env vars" } as const;
+    }
+
+    const contentState = {
+      stations: {
+        previous: args.contentState.previousStation,
+        next: args.contentState.nextStation,
+      },
+      journeyState: args.contentState.journeyState,
+    } as const;
+
+    const note = new apn.Notification();
+    note.topic = `${bundleId}.push-type.liveactivity`;
+    note.pushType = "liveactivity";
+    note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+    note.aps["content-state"] = contentState;
+    note.aps.event = "update";
+    note.aps.timestamp = Math.floor(Date.now() / 1000);
+
+    try {
+      const response = await apnProvider.send(note, args.activityToken);
       if (response.sent && response.sent.length > 0) {
         return { success: true, status: 200, apnsId: note.id } as const;
       }

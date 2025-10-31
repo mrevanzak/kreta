@@ -1,6 +1,12 @@
 import ActivityKit
 import Foundation
 
+public enum JourneyState: String, Codable, Hashable, Sendable {
+  case beforeBoarding
+  case onBoard
+  case prepareToDropOff
+}
+
 public struct TrainStation: Codable, Hashable, Sendable {
   public var name: String
   public var code: String
@@ -69,9 +75,14 @@ public struct AdjacentStations: Codable, Hashable, Sendable {
 public struct TrainActivityAttributes: ActivityAttributes, Sendable {
   public struct ContentState: Codable, Hashable, Sendable {
     public var stations: AdjacentStations
+    public var journeyState: JourneyState
 
-    public init(previousStation: TrainStation, nextStation: TrainStation) {
+    public init(
+      previousStation: TrainStation, nextStation: TrainStation,
+      journeyState: JourneyState = .beforeBoarding
+    ) {
       self.stations = AdjacentStations(previous: previousStation, next: nextStation)
+      self.journeyState = journeyState
     }
   }
 
