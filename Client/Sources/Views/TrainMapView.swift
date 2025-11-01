@@ -10,6 +10,7 @@ struct TrainMapView: View {
   @Binding var liveTrainPositions: [String: ProjectedTrain]
   
   @State private var projectionTimer: Timer?
+  @State private var cameraPosition: MapCameraPosition = .automatic
 
   init(
     selectedTrains: [ProjectedTrain] = [],
@@ -22,7 +23,7 @@ struct TrainMapView: View {
   }
 
   var body: some View {
-    Map {
+    Map(position: $cameraPosition) {
       // Lines (polylines) - show only selected train routes or all routes
       ForEach(filteredRoutes) { route in
         let coords = route.coordinates
@@ -67,6 +68,9 @@ struct TrainMapView: View {
     }
     .onChange(of: selectedTrains) { _, _ in
       startProjectingTrains()
+    }
+    .onChange(of: liveTrainPositions) { _, newPositions in
+      updateCameraPosition(with: newPositions)
     }
     .onAppear {
       startProjectingTrains()
@@ -170,9 +174,6 @@ struct TrainMapView: View {
     let now = Date()
     let nowMs = now.timeIntervalSince1970 * 1000
     
-    print("🚂 Projecting \(selectedTrains.count) trains at \(now)")
-    print("⏰ Current time: \(nowMs) ms")
-    
     var newPositions: [String: ProjectedTrain] = [:]
     
     for train in selectedTrains {
@@ -180,13 +181,6 @@ struct TrainMapView: View {
       guard let journeyData = journeyDataMap[train.id] else {
         print("⚠️ No journey data for train \(train.id)")
         continue
-      }
-      
-      print("📍 Train \(train.code): \(journeyData.segments.count) segments, \(journeyData.allStations.count) stations")
-      
-      if let firstSeg = journeyData.segments.first, let lastSeg = journeyData.segments.last {
-        print("⏱️  Journey window: \(firstSeg.departureTimeMs) -> \(lastSeg.arrivalTimeMs)")
-        print("📅 As dates: \(Date(timeIntervalSince1970: firstSeg.departureTimeMs / 1000)) -> \(Date(timeIntervalSince1970: lastSeg.arrivalTimeMs / 1000))")
       }
       
       // Convert to TrainJourney model
@@ -205,14 +199,61 @@ struct TrainMapView: View {
         stationsById: stationsById,
         routesById: routesById
       ) {
-        print("✅ Projected \(train.code) at (\(projected.position.latitude), \(projected.position.longitude)), moving: \(projected.moving)")
         newPositions[train.id] = projected
       } else {
         print("❌ Failed to project train \(train.code) - likely outside active time window")
       }
     }
-    
-    print("🎯 Updated positions for \(newPositions.count) trains")
     liveTrainPositions = newPositions
+  }
+  
+  private func updateCameraPosition(with positions: [String: ProjectedTrain]) {
+    guard !positions.isEmpty else { return }
+    
+    // If single train, follow it with smooth animation
+    if positions.count == 1, let train = positions.values.first {
+      withAnimation(.easeInOut(duration: 1.0)) {
+        cameraPosition = .region(
+          MKCoordinateRegion(
+            center: train.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+          )
+        )
+      }
+    } else {
+      // Multiple trains - show all in view
+      let coordinates = positions.values.map { $0.coordinate }
+      updateCameraToFitCoordinates(coordinates)
+    }
+  }
+  
+  private func updateCameraToFitCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
+    guard !coordinates.isEmpty else { return }
+    
+    var minLat = coordinates[0].latitude
+    var maxLat = coordinates[0].latitude
+    var minLon = coordinates[0].longitude
+    var maxLon = coordinates[0].longitude
+    
+    for coord in coordinates {
+      minLat = min(minLat, coord.latitude)
+      maxLat = max(maxLat, coord.latitude)
+      minLon = min(minLon, coord.longitude)
+      maxLon = max(maxLon, coord.longitude)
+    }
+    
+    let center = CLLocationCoordinate2D(
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLon + maxLon) / 2
+    )
+    
+    let span = MKCoordinateSpan(
+      latitudeDelta: max((maxLat - minLat) * 1.5, 0.05),
+      longitudeDelta: max((maxLon - minLon) * 1.5, 0.05)
+    )
+    
+    withAnimation(.easeInOut(duration: 1.0)) {
+      cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
+    }
   }
 }
