@@ -12,7 +12,7 @@ const apnProvider = new apn.Provider({
     keyId: process.env.APNS_KEY_ID ?? "",
     teamId: process.env.APNS_TEAM_ID ?? "",
   },
-  production: Boolean(process.env.APNS_PRODUCTION),
+  production: process.env.APNS_PRODUCTION === "true",
 });
 
 // Trigger a standard APNs alert push to a specific device token
