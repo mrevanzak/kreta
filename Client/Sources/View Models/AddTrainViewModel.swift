@@ -1,5 +1,5 @@
 //
-//  TrainBookingViewModel.swift
+//  AddTrainViewModel.swift
 //  kreta
 //
 //  Created by Gilang Banyu Biru Erassunu on 23/10/25.
@@ -8,6 +8,8 @@
 import Foundation
 import Observation
 
+// MARK: - Selection Step
+
 enum SelectionStep {
   case departure
   case arrival
@@ -15,24 +17,173 @@ enum SelectionStep {
   case results
 }
 
+// MARK: - Journey Data
+
+struct TrainJourneyData {
+  let trainId: String
+  let segments: [JourneySegment]
+  let allStations: [Station]
+}
+
+// MARK: - AddTrainView Extension
+
 extension AddTrainView {
   @MainActor
   @Observable
   final class ViewModel {
+    // MARK: - Properties
+
     var allStations: [Station] = []
-    var availableTrains: [ProjectedTrain] = []
+    var connectedStations: [Station] = []
+    var availableTrains: [JourneyService.AvailableTrainItem] = []
+    var filteredTrains: [JourneyService.AvailableTrainItem] = []
+    
+    // Store journey data separately from ProjectedTrain
+    var trainJourneyData: [String: TrainJourneyData] = [:]
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
     var showCalendar: Bool = false
+    var isLoadingConnections: Bool = false
+    var isLoadingTrains: Bool = false
 
     var selectedDepartureStation: Station?
     var selectedArrivalStation: Station?
     var selectedDate: Date?
 
-    func bootstrap(availableTrains: [ProjectedTrain], allStations: [Station]) {
-      self.availableTrains = availableTrains
+    // MARK: - Private Properties
+
+    private let stationConnectionService = StationConnectionService()
+    private let trainConnectionService = TrainConnectionService()
+    private let journeyService = JourneyService()
+
+    // no longer caching all journeys; server provides list DTOs
+
+    // MARK: - Public Methods
+
+    func bootstrap(allStations: [Station]) {
       self.allStations = allStations
+    }
+
+    /// Fetch connected stations for the selected departure station
+    func fetchConnectedStations() async {
+      guard let departureId = selectedDepartureStation?.id else {
+        connectedStations = []
+        return
+      }
+
+      isLoadingConnections = true
+      defer { isLoadingConnections = false }
+
+      do {
+        connectedStations = try await stationConnectionService.fetchConnectedStations(
+          departureStationId: departureId
+        )
+      } catch {
+        print("Failed to fetch connected stations: \(error)")
+        connectedStations = []
+      }
+    }
+
+    /// Fetch trains that connect the selected departure and arrival stations
+    func fetchAvailableTrains() async {
+      guard let departureId = selectedDepartureStation?.id,
+        let arrivalId = selectedArrivalStation?.id
+      else {
+        filteredTrains = []
+        return
+      }
+
+      isLoadingTrains = true
+      defer { isLoadingTrains = false }
+
+      do {
+        let items = try await journeyService.fetchProjectedForRoute(
+          departureStationId: departureId,
+          arrivalStationId: arrivalId
+        )
+        filteredTrains = items
+      } catch {
+        print("Failed to fetch available trains: \(error)")
+        filteredTrains = []
+      }
+    }
+
+    /// Build and select a ProjectedTrain from a selected list item
+    func didSelect(_ item: JourneyService.AvailableTrainItem) async -> ProjectedTrain {
+      let stationsById = Dictionary(
+        uniqueKeysWithValues: allStations.map { ($0.id ?? $0.code, $0) })
+      let fromStation = stationsById[item.fromStationId]
+      let toStation = stationsById[item.toStationId]
+
+      // Fetch journey segments for the complete route
+      var journeySegments: [JourneySegment] = []
+      var allStationsInJourney: [Station] = []
+      
+      do {
+        let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
+        
+        print("🚂 Fetched \(segments.count) segments for train \(item.code)")
+        
+        // Convert to JourneySegment model
+        for (index, segment) in segments.enumerated() {
+          if index < segments.count - 1 {
+            let nextSegment = segments[index + 1]
+            
+            if index == 0 {
+              print("📍 First segment: departure=\(segment.departureTime), arrival=\(nextSegment.arrivalTime)")
+              print("📅 As dates: \(Date(timeIntervalSince1970: segment.departureTime / 1000)) -> \(Date(timeIntervalSince1970: nextSegment.arrivalTime / 1000))")
+            }
+            
+            journeySegments.append(
+              JourneySegment(
+                fromStationId: segment.stationId,
+                toStationId: nextSegment.stationId,
+                departureTimeMs: segment.departureTime,
+                arrivalTimeMs: nextSegment.arrivalTime,
+                routeId: segment.routeId
+              )
+            )
+          }
+          
+          // Collect all stations
+          if let station = stationsById[segment.stationId] {
+            allStationsInJourney.append(station)
+          }
+        }
+        
+        // Store journey data separately
+        trainJourneyData[item.trainId] = TrainJourneyData(
+          trainId: item.trainId,
+          segments: journeySegments,
+          allStations: allStationsInJourney
+        )
+      } catch {
+        print("Failed to fetch journey segments: \(error)")
+      }
+
+      let projected = ProjectedTrain(
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        position: Position(
+          latitude: fromStation?.position.latitude ?? 0,
+          longitude: fromStation?.position.longitude ?? 0
+        ),
+        moving: false,
+        bearing: nil,
+        routeIdentifier: item.routeId,
+        speedKph: nil,
+        fromStation: fromStation,
+        toStation: toStation,
+        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+        segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+        progress: nil,
+        journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+        journeyArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
+      )
+
+      return projected
     }
 
     func parseAndSelectDate(from text: String) {
@@ -40,6 +191,126 @@ extension AddTrainView {
         selectDate(date)
       }
     }
+
+    func selectStation(_ station: Station) {
+      switch currentStep {
+      case .departure:
+        selectedDepartureStation = station
+        currentStep = .arrival
+        searchText = ""
+        // Fetch connected stations in background
+        Task {
+          await fetchConnectedStations()
+        }
+      case .arrival:
+        selectedArrivalStation = station
+        currentStep = .date
+        searchText = ""
+      default:
+        break
+      }
+    }
+
+    func selectDate(_ date: Date) {
+      selectedDate = date
+      showCalendar = false
+      currentStep = .results
+      // Fetch trains for the selected route
+      Task {
+        await fetchAvailableTrains()
+      }
+    }
+
+    func showCalendarView() {
+      showCalendar = true
+    }
+
+    func hideCalendar() {
+      selectedDate = nil
+      showCalendar = false
+    }
+
+    func goBackToDeparture() {
+      selectedDepartureStation = nil
+      selectedArrivalStation = nil
+      selectedDate = nil
+      connectedStations = []
+      filteredTrains = []
+      showCalendar = false
+      currentStep = .departure
+      searchText = ""
+    }
+
+    func goBackToArrival() {
+      selectedArrivalStation = nil
+      selectedDate = nil
+      filteredTrains = []
+      showCalendar = false
+      currentStep = .arrival
+      searchText = ""
+      // Re-fetch connected stations
+      Task {
+        await fetchConnectedStations()
+      }
+    }
+
+    func goBackToDate() {
+      selectedDate = nil
+      filteredTrains = []
+      showCalendar = false
+      currentStep = .date
+      searchText = ""
+    }
+
+    func reset() {
+      currentStep = .departure
+      selectedDepartureStation = nil
+      selectedArrivalStation = nil
+      selectedDate = nil
+      searchText = ""
+      connectedStations = []
+      filteredTrains = []
+      showCalendar = false
+    }
+
+    // MARK: - Computed Properties
+
+    var filteredStations: [Station] {
+      let stations: [Station]
+
+      switch currentStep {
+      case .departure:
+        stations = allStations
+      case .arrival:
+        stations = connectedStations
+      case .date, .results:
+        return []
+      }
+
+      if searchText.isEmpty {
+        return stations
+      }
+
+      return stations.filter {
+        $0.name.localizedCaseInsensitiveContains(searchText)
+          || $0.code.localizedCaseInsensitiveContains(searchText)
+      }
+    }
+
+    var stepTitle: String {
+      switch currentStep {
+      case .departure:
+        return "Pilih Stasiun Keberangkatan"
+      case .arrival:
+        return "Pilih Stasiun Tujuan"
+      case .date:
+        return "Keberangkatan Tujuan"
+      case .results:
+        return "Keberangkatan Tujuan"
+      }
+    }
+
+    // MARK: - Private Methods
 
     private func parseDateFromText(_ text: String) -> Date? {
       let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -87,108 +358,6 @@ extension AddTrainView {
       }
 
       return nil
-    }
-
-    var filteredStations: [Station] {
-      let stations: [Station]
-
-      switch currentStep {
-      case .departure:
-        stations = allStations
-      case .arrival:
-        stations = allStations.filter { $0.id != selectedDepartureStation?.id }
-      case .date, .results:
-        return []
-      }
-
-      if searchText.isEmpty {
-        return stations
-      }
-
-      return stations.filter {
-        $0.name.localizedCaseInsensitiveContains(searchText)
-          || $0.code.localizedCaseInsensitiveContains(searchText)
-      }
-    }
-
-    var stepTitle: String {
-      switch currentStep {
-      case .departure:
-        return "Pilih Stasiun Keberangkatan"
-      case .arrival:
-        return "Pilih Stasiun Tujuan"
-      case .date:
-        return "Keberangkatan Tujuan"
-      case .results:
-        return "Keberangkatan Tujuan"
-      }
-    }
-
-    func selectStation(_ station: Station) {
-      switch currentStep {
-      case .departure:
-        selectedDepartureStation = station
-        currentStep = .arrival
-        searchText = ""
-      case .arrival:
-        selectedArrivalStation = station
-        currentStep = .date
-        searchText = ""
-      default:
-        break
-      }
-    }
-
-    func selectDate(_ date: Date) {
-      selectedDate = date
-      showCalendar = false
-      currentStep = .results
-    }
-
-    func showCalendarView() {
-      showCalendar = true
-    }
-
-    func hideCalendar() {
-      selectedDate = nil
-      showCalendar = false
-    }
-
-    func goBackToDeparture() {
-      selectedDepartureStation = nil
-      selectedArrivalStation = nil
-      selectedDate = nil
-      availableTrains = []
-      showCalendar = false
-      currentStep = .departure
-      searchText = ""
-    }
-
-    func goBackToArrival() {
-      selectedArrivalStation = nil
-      selectedDate = nil
-      availableTrains = []
-      showCalendar = false
-      currentStep = .arrival
-      searchText = ""
-    }
-
-    func goBackToDate() {
-      selectedDate = nil
-      availableTrains = []
-      showCalendar = false
-      currentStep = .date
-      searchText = ""
-    }
-
-    func reset() {
-      currentStep = .departure
-      selectedDepartureStation = nil
-      selectedArrivalStation = nil
-      selectedDate = nil
-      searchText = ""
-      availableTrains = []
-      showCalendar = false
     }
   }
 }

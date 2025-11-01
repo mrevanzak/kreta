@@ -6,29 +6,43 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 
 ## 1. Project Overview & Purpose
 
-- **Primary Goal:** Native SwiftUI client for an e-commerce marketplace that integrates Convex-backed data, Stripe-based checkout flows, and ActivityKit live updates, paired with a lightweight Bun/Convex server stub.
-- **Business Domain:** Mobile commerce and order fulfillment tooling with real-time travel status experiments (train live activity prototype).
+- **Primary Goal:** Native SwiftUI iOS application for Indonesian train tracking with real-time position projection, featuring Convex-backed data, ActivityKit live updates, and a Bun/Convex server backend.
+- **Business Domain:** Public transportation tracking and monitoring, specifically Indonesian railway system (Kereta Api) with station connections, journey planning, and live train position updates.
 
 ## 2. Core Technologies & Stack
 
-- **Languages:** Swift 5.9+ (Observation framework usage), SwiftUI; TypeScript targeting Bun runtime. No Nim components are present despite legacy references.
-- **Frameworks & Runtimes:** SwiftUI, Observation, ActivityKit, WidgetKit, ConvexMobile SDK, Stripe & StripePaymentSheet, JWTDecode. Server uses Bun v1.2+ runtime with Convex cloud database/client SDK.
-- **Databases:** Convex cloud database via Convex SDK; no direct SQL/NoSQL drivers in-tree.
-- **Key Libraries/Dependencies:** `HTTPClient` abstraction atop `URLSession`; `ConvexMobile.ConvexClient`; `TrainLiveActivityService` & `TrainActivityAttributes` for live activities; StripePaymentSheet flows; JWTDecode for token validation; server depends on `convex` NPM package.
-- **Platforms:** iOS 16.1+ (ActivityKit) and iOS 17+ (Observation) simulators/devices; WidgetKit Live Activities; Bun-compatible server environments (macOS/Linux) for Convex dev server.
-- **Package Manager:** Swift Package Manager via Xcode project configuration; Bun/npm for the server package management.
+- **Languages:** Swift 5.9+ with Observation framework; TypeScript for Bun runtime backend.
+- **Client Frameworks:** SwiftUI, Observation (macros), ActivityKit, WidgetKit, ConvexMobile SDK, MapKit, CoreLocation.
+- **Backend:** Bun v1.2+ runtime with Convex cloud database (queries, mutations, subscriptions).
+- **Key Dependencies:**
+  - **Client:** `ConvexMobile` for real-time queries/subscriptions, `Sentry` for error reporting, `PostHog` for analytics, `Disk` for file caching, `DebugSwift` for debugging
+  - **Backend:** `convex` NPM package for database operations, `@parse/node-apn` for push notifications
+  - **Development:** MijickCalendarView, MijickPopups for UI components
+- **Architecture:** MVVM-inspired with `@Observable` stores, service layer for business logic, HTTPClient for REST APIs, ConvexClient for real-time subscriptions.
+- **Platforms:** iOS 16.1+ (ActivityKit), iOS 17+ (Observation), WidgetKit Live Activities; Bun-compatible server environments.
+- **Package Manager:** Swift Package Manager via Xcode; Bun for server.
 
 ## 3. Architectural Patterns
 
-- **Overall Architecture:** Multi-target SwiftUI application organized around MVVM-inspired "stores" and networking controllers, supplemented by ActivityKit widgets; companion Bun/Convex server providing placeholder backend APIs.
-- **Directory Structure Philosophy:**
-  - `/Client/Sources`: Primary Swift code separated into `Controllers/`, `Stores/`, `Services/`, `Networking/`, `Screens/`, `Views/`, `Validators/`, `Models/`, `Extensions/`, `Navigation/`, `Utility/`, `Custom Errors/`, and `Preview Content/` folders mirroring logical concerns.
-  - `/Client/Shared`: Cross-target models shared with the Widget extension (e.g., `TrainActivityAttributes`).
-  - `/Client/Widget`: WidgetKit target for Live Activities and Dynamic Island UI.
-  - `/Client/Shared`, `/Client/Widget`: Compiled as additional targets referenced by Xcode project `kreta.xcodeproj`.
-  - `/Server`: Bun/TypeScript Convex backend with `index.ts`, `convex/_generated` artifacts, and sample data.
-  - `buildServer.json`: Xcode build server metadata (BSP) for Swift development tooling.
-- **Module Organization:** Swift code is grouped by feature role—network controllers wrap REST endpoints, stores act as `@Observable` state containers, screens/views compose UI, and services encapsulate integrations. Shared structs live in `Models/` or `Shared/`, and navigation uses dedicated router abstractions.
+- **Overall Architecture:** Multi-target SwiftUI application organized around MVVM-inspired stores and services, with ActivityKit widgets for Live Activities. Bun/Convex server provides real-time backend.
+- **Directory Structure:**
+  - `/Client/Sources`: Swift code organized by role
+    - `Stores/`: `@Observable` state management (`TrainMapStore`, `ProductStore`, `CartStore`, `OrderStore`, `FeedbackStore`, `UserStore`)
+    - `Services/`: Business logic (train tracking, stations, caching, telemetry, push)
+    - `View Models/`: Feature-specific logic (`AddTrainViewModel`)
+    - `Screens/`: Full-screen views (HomeScreen, LoginScreen, CartScreen, etc.)
+    - `Views/`: Reusable components and feature views (`TrainMapView`, `AddTrainView`, etc.)
+    - `Controllers/`: Authentication, Payment orchestration
+    - `Networking/`: HTTPClient abstraction
+    - `Models/`: DTOs and domain models
+    - `Navigation/`: Router, deep linking, navigation containers
+    - `Utility/`: Constants, Dependencies, Keychain, helpers
+    - `Extensions/`: Type extensions
+    - `Custom Errors/`: Domain error types
+  - `/Client/Shared`: Cross-target code (`TrainActivityAttributes`, colors, view extensions)
+  - `/Client/Widget`: WidgetKit Live Activities extension
+  - `/Server/convex/`: Convex functions (queries, mutations, actions)
+- **Module Organization:** Stores manage state; services handle business logic; view models contain UI-specific logic; screens compose flows; views handle presentation.
 
 ## 4. Coding Conventions & Style Guide
 
@@ -61,37 +75,57 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 
 ## 5. Key Files & Entrypoints
 
-- **Main Entrypoint:** `Client/Sources/App.swift` declares `HelloMarketClientApp` as the `@main` SwiftUI app, injecting a `ConvexClient` and root `MainTabNavigator`.
+- **Main Entrypoint:** `Client/Sources/App.swift` declares `KretaApp` as the `@main` SwiftUI app with `ConvexClient` and `MainTabNavigator`.
 - **Configuration:**
-  - `Client/Sources/Utility/Constants.swift` centralizes REST endpoints and Convex deployment URL (controlled via `CONVEX_URL`).
-  - `buildServer.json` configures the Xcode build server (BSP) for Swift toolchains.
-  - No Nim configuration files exist; set environment keys via Xcode schemes.
-- **CI/CD Pipeline:** No CI configurations are present; establish workflows in `.github/workflows/` if needed.
+  - `Client/Sources/Utility/Constants.swift`: API endpoints, Convex URL, PostHog, Sentry keys (via environment vars).
+  - `Client/Sources/Utility/Dependencies.swift`: Shared singletons (`ConvexClient`, `Telemetry`).
+  - `Client/Sources/Utility/KeychainWrapper.swift`: Secure token storage.
+  - `Server/convex/schema.ts`: Database schema.
+  - `buildServer.json`: Xcode build server metadata.
+- **Core Services:**
+  - `TrainMapStore`: Map state, stations, routes, projection.
+  - `JourneyService`: Journey fetching from Convex.
+  - `TrainLiveActivityService`: ActivityKit management.
+  - `TrainMapCacheService`: On-device caching.
+- **CI/CD Pipeline:** None configured; create `.github/workflows/` if needed.
 
 ## 6. Development & Testing Workflow
 
-- **Local Development Environment:**
-
-  1. Open `Client/kreta.xcodeproj` in Xcode 15 or newer (iOS 17 SDK recommended for `Observation`).
-  2. Provide required environment variables (e.g., `STRIPE_PUBLISHABLE_KEY`, `CONVEX_URL`, API base URLs) via the run scheme or shell before launching.
-  3. Ensure backend endpoints at `http://localhost:8080` are available (either by running the Bun/Convex server or a separate API service).
-  4. For command-line builds use `xcodebuild -project Client/kreta.xcodeproj -scheme kreta -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build` and swap `build` with `test` when tests exist.
-  5. For the server, run `bun install` then `bun run index.ts` or `npm run dev` with `npx convex dev` to start Convex.
-
-- **Quality Expectations:** Cover common user flows with XCTest, drive UI regressions with XCUITest as they are added, exercise performance scenarios, simulate error states, and keep accessibility audits in the workflow.
-- **Task Configuration:** Swift uses standard Xcode schemes; no `.nims` or Nimble tasks. Server relies on Bun scripts defined in `package.json`.
-- **Testing:** XCTest targets are not yet checked in. Mirror source tree under a `Tests/` group when adding tests (e.g., `Stores/ProductStoreTests.swift`), and execute via Xcode or `xcodebuild test`.
-- **CI/CD Process:** Not configured. Future pipelines should run Swift formatters/builds and Bun/Convex linting, then deploy Live Activity entitlements as required.
+- **Local Development:**
+  1. Open `Client/kreta.xcodeproj` in Xcode 15+ (iOS 17+ for Observation).
+  2. Set environment vars in the run scheme: `CONVEX_URL`, `POSTHOG_API_KEY`, `SENTRY_DSN` (optional).
+  3. For the server, run `bun install`, then `bun run dev` or `npx convex dev`.
+  4. Command-line: `xcodebuild -project Client/kreta.xcodeproj -scheme kreta -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build`.
+- **Testing:**
+  - XCTest for unit tests.
+  - Tests in `/Client/kretaTests` and `/Client/Tests`.
+  - Existing: `AddTrainViewModelTests`.
+- **Quality:**
+  - Test user flows, error states, performance, accessibility.
+  - Telemetry reports crashes and analytics.
+  - Use Instruments for profiling.
+- **CI/CD:** None configured. Add `.github/workflows` for builds/tests.
 
 ## 7. Specific Instructions for AI Collaboration
 
-- **Contribution Guidelines:** Maintain the existing folder boundaries (`Controllers`, `Stores`, `Services`, etc.). Extend current types before introducing parallel utilities. Provide screenshots or recordings for visible UI changes, and ensure new networking flows include appropriate error handling and token management.
-- **Security:** Do not commit secrets (Stripe keys, Convex deployment tokens). Keep API endpoints centralized in `Constants`. Validate JWT tokens via `TokenValidator`, encrypt sensitive payloads, enable certificate pinning where feasible, lean on the system Keychain and biometrics for strong authentication, honor App Transport Security requirements, and treat input validation as a first-class concern.
-- **Dependencies:** Add Swift dependencies through Xcode project settings (SPM) and mirror them in both app and widget targets as necessary. For server dependencies, update `package.json` and re-run `bun install`; commit resulting lockfiles (`bun.lock`, `yarn.lock`) consistently.
-- **Commit Messages:** Use imperative, scoped subjects (e.g., `Add cart quantity badge`, `Refine HTTPClient retries`). Separate unrelated refactors from feature commits to preserve review clarity.
-- **Feature Expectations:** Plan for deep linking, push notifications, background processing, localization, resilient error handling, and analytics/logging hooks as part of major feature introductions.
-- **Process & Tooling:** Rely on SwiftUI previews for rapid feedback, follow the team's Git branching and code review practices, keep inline documentation up to date, and pursue continuous integration coverage once pipelines are introduced.
-- **App Store Readiness:** Ensure privacy strings and capability entitlements are declared, audit in-app purchase flows, comply with App Store Review Guidelines, support app thinning where practical, and maintain correct signing assets.
+- **Contributions:**
+  - Respect folder boundaries (e.g., `Stores/`, `Services/`, `Screens/`, `Views/`).
+  - Extend existing types before adding duplicates.
+  - Provide screenshots for UI changes.
+  - Include error handling and token management in networking.
+- **Security:**
+  - Never commit secrets (Convex URLs, PostHog keys, Sentry DSN).
+  - Centralize endpoints in `Constants.swift`.
+  - Use `KeychainWrapper` for sensitive data.
+  - Validate inputs; honor App Transport Security.
+- **Dependencies:**
+  - Add SPM in Xcode settings.
+  - Mirror app and widget targets.
+  - Server: update `package.json`, run `bun install`, commit `bun.lock`.
+- **Commits:** Imperative, scoped subjects (e.g., `Add train journey caching`). Separate refactors from features.
+- **Features:** Plan deep linking, push, background work, localization, error handling, analytics.
+- **Tooling:** Use SwiftUI previews, instruments, and telemetry. Keep docs current.
+- **App Store:** Declare entitlements and privacy strings; follow HIG; audit signing.
 
 ### Store Error Handling Pattern
 

@@ -8,46 +8,55 @@
 import SwiftUI
 
 struct TrainServiceRow: View {
-  let train: ProjectedTrain
-  
+  let item: JourneyService.AvailableTrainItem
+
   var body: some View {
     HStack(alignment: .center, spacing: 16) {
       // Train service details
       VStack(alignment: .leading, spacing: 4) {
-        Text(train.name)
-          .font(.title3).bold()
-        
+        HStack(spacing: 4) {
+          Text(item.name)
+            .font(.title3).bold()
+          Text("(\(item.code))")
+            .font(.title3)
+            .foregroundStyle(.secondary)
+        }
+
         // Route information
         HStack(spacing: 8) {
           // Departure station
           HStack(spacing: 4) {
-            Text(train.fromStation?.code ?? "--")
+            Text(item.fromStationCode ?? "--")
               .font(.subheadline)
               .foregroundStyle(.secondary)
 
-            Text(formatTime(train.segmentDeparture ?? train.journeyDeparture))
-              .font(.subheadline).bold()
+            Text(
+              formatTime(Date(timeIntervalSince1970: TimeInterval(item.segmentDepartureMs) / 1000))
+            )
+            .font(.subheadline).bold()
           }
-          
+
           // Direction arrow
           Image(systemName: "arrow.right")
             .font(.subheadline)
             .foregroundStyle(.primary)
-          
+
           // Arrival station
           HStack(spacing: 4) {
-            Text(train.toStation?.code ?? "--")
+            Text(item.toStationCode ?? "--")
               .font(.subheadline)
               .foregroundStyle(.secondary)
 
-            Text(formatTime(train.segmentArrival ?? train.journeyArrival))
-              .font(.subheadline).bold()
+            Text(
+              formatTime(Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000))
+            )
+            .font(.subheadline).bold()
           }
         }
       }
-      
+
       Spacer()
-      
+
       // Chevron indicator
       ZStack {
         Circle()
@@ -80,24 +89,23 @@ struct TrainServiceRow: View {
       city: nil
     ),
   ]
-  
-  let train = ProjectedTrain(
-    id: "T1-0",
+
+  let item = JourneyService.AvailableTrainItem(
+    id: "T1",
+    trainId: "T1",
     code: "T1",
     name: "Sample Express",
-    position: Position(latitude: -6.1950, longitude: 106.8500),
-    moving: true,
-    bearing: 45,
-    routeIdentifier: "L1",
-    speedKph: 60,
-    fromStation: stations[0],
-    toStation: stations[1],
-    segmentDeparture: Date().addingTimeInterval(-15 * 60),
-    segmentArrival: Date().addingTimeInterval(15 * 60),
-    progress: 0.5,
-    journeyDeparture: Date().addingTimeInterval(-60 * 60),
-    journeyArrival: Date().addingTimeInterval(2 * 60 * 60)
+    fromStationId: "GMR",
+    toStationId: "JNG",
+    segmentDepartureMs: Int64(Date().addingTimeInterval(-15 * 60).timeIntervalSince1970 * 1000),
+    segmentArrivalMs: Int64(Date().addingTimeInterval(15 * 60).timeIntervalSince1970 * 1000),
+    routeId: "L1",
+    fromStationName: stations[0].name,
+    toStationName: stations[1].name,
+    fromStationCode: stations[0].code,
+    toStationCode: stations[1].code,
+    durationMinutes: 30
   )
-  
-  TrainServiceRow(train: train)
+
+  TrainServiceRow(item: item)
 }

@@ -4,17 +4,22 @@ import SwiftUI
 // MARK: - Main Map Screen
 
 struct HomeScreen: View {
-  @State private var trainMapStore = TrainMapStore(
-    service: TrainMapService(httpClient: .development))
+  @State private var trainMapStore = TrainMapStore()
 
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false
   @State private var selectedTrains: [ProjectedTrain] = []
+  @State private var journeyDataMap: [String: TrainJourneyData] = [:]
+  @State private var liveTrainPositions: [String: ProjectedTrain] = [:]
 
   var body: some View {
     Group {
       ZStack(alignment: .topTrailing) {
-        TrainMapView()
+        TrainMapView(
+          selectedTrains: selectedTrains,
+          journeyDataMap: journeyDataMap,
+          liveTrainPositions: $liveTrainPositions
+        )
 
         MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
           .padding(.trailing)
@@ -59,8 +64,10 @@ struct HomeScreen: View {
           } else {
             VStack(spacing: 12) {
               ForEach(selectedTrains) { train in
+                // Use live projected train if available, otherwise use original
+                let displayTrain = liveTrainPositions[train.id] ?? train
                 TrainCard(
-                  train: train,
+                  train: displayTrain,
                   onDelete: {
                     deleteTrain(train)
                   })
@@ -76,9 +83,11 @@ struct HomeScreen: View {
         .padding(.top, 23)
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
-            onTrainSelected: { train in
+            onTrainSelected: { train, journeyData in
               selectedTrains.append(train)
-              trainMapStore.selectTrain(train: train)
+              if let journeyData = journeyData {
+                journeyDataMap[train.id] = journeyData
+              }
               showAddSheet = false
             }
           )
@@ -97,6 +106,7 @@ struct HomeScreen: View {
   private func deleteTrain(_ train: ProjectedTrain) {
     withAnimation(.spring(response: 0.3)) {
       selectedTrains.removeAll { $0.id == train.id }
+      journeyDataMap.removeValue(forKey: train.id)
     }
   }
 }

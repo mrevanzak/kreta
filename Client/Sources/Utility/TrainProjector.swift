@@ -5,6 +5,31 @@ enum TrainProjector {
   private static let dayInMilliseconds: Double = 86_400_000
   private static let defaultBearingSampleCm: Double = 2_000
 
+  // MARK: - Journey leg extraction helpers
+
+  /// Extract leg indices for a journey from departure to arrival stations
+  /// Returns (startIndex, endIndex) if a contiguous leg exists, nil otherwise
+  static func legIndices(
+    in journey: TrainJourney,
+    from dep: String,
+    to arr: String
+  ) -> (Int, Int)? {
+    guard let startIndex = journey.segments.firstIndex(where: { $0.fromStationId == dep }) else {
+      return nil
+    }
+
+    var endIndex: Int?
+    for i in startIndex..<journey.segments.count {
+      if journey.segments[i].toStationId == arr {
+        endIndex = i
+        break
+      }
+    }
+
+    guard let endIndex else { return nil }
+    return (startIndex, endIndex)
+  }
+
   // MARK: - Normalization helpers
 
   private static func positiveModulo(_ value: Double, modulus: Double) -> Double {
@@ -80,18 +105,12 @@ enum TrainProjector {
 
   // MARK: - Data helpers
 
-  private static func pickActiveStep(timeMs: Double, steps: [RawGapekaPath]) -> RawGapekaPath? {
-    steps.first { step in
-      isWithin(timeMs, startMs: step.startMs, endMs: step.departMs)
+  private static func pickActiveSegment(timeMs: Double, segments: [JourneySegment])
+    -> JourneySegment?
+  {
+    segments.first { seg in
+      isWithin(timeMs, startMs: seg.departureTimeMs, endMs: seg.arrivalTimeMs)
     }
-  }
-
-  private static func route(
-    for path: RawGapekaPath,
-    routesByIdentifier: [String: Route],
-  ) -> Route? {
-    guard let routeId = path.routeId else { return nil }
-    return routesByIdentifier[String(routeId)]
   }
 
   private static func resolveJourneyDates(
@@ -114,21 +133,18 @@ enum TrainProjector {
   }
 
   private static func resolveSegmentDates(
-    step: RawGapekaPath,
+    seg: JourneySegment,
     nowMs: Double,
     timeMs: Double,
     cycle: Double
   ) -> (start: Date, arrival: Date, departure: Date) {
     let base = nowMs - timeMs
-    let startAbs = base + step.startMs
-    var arrivalAbs = base + step.arrivMs
+    let startAbs = base + seg.departureTimeMs
+    var arrivalAbs = base + seg.arrivalTimeMs
     if arrivalAbs < startAbs {
       arrivalAbs += cycle
     }
-    var departureAbs = base + step.departMs
-    if departureAbs < arrivalAbs {
-      departureAbs += cycle
-    }
+    let departureAbs = startAbs
 
     return (
       Date(timeIntervalSince1970: startAbs / 1_000),
@@ -141,41 +157,26 @@ enum TrainProjector {
 
   static func projectTrain(
     now: Date,
-    train: RawGapekaTrain,
-    stations: [Station],
-    routes: [Route]
-  ) -> ProjectedTrain? {
-    let stationLookup = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
-    let routeLookupByIdentifier = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
-
-    return projectTrain(
-      now: now,
-      train: train,
-      stationsByCode: stationLookup,
-      routesByIdentifier: routeLookupByIdentifier,
-    )
-  }
-
-  static func projectTrain(
-    now: Date,
-    train: RawGapekaTrain,
-    stationsByCode: [String: Station],
-    routesByIdentifier: [String: Route],
+    journey: TrainJourney,
+    stationsById: [String: Station],
+    routesById: [String: Route]
   ) -> ProjectedTrain? {
     let nowMs = now.timeIntervalSince1970 * 1_000
+    guard let first = journey.segments.first, let last = journey.segments.last else { return nil }
+
     let journeyWindow = normalizeTimeWindow(
       timestamp: nowMs,
-      startMs: train.departMs,
-      endMs: train.arrivMs
+      startMs: first.departureTimeMs,
+      endMs: last.arrivalTimeMs
     )
     let timeMs = journeyWindow.timeMs
 
-    guard let step = pickActiveStep(timeMs: timeMs, steps: train.paths) else {
+    guard let seg = pickActiveSegment(timeMs: timeMs, segments: journey.segments) else {
       return nil
     }
 
     let segmentDates = resolveSegmentDates(
-      step: step,
+      seg: seg,
       nowMs: nowMs,
       timeMs: timeMs,
       cycle: journeyWindow.cycle
@@ -188,9 +189,9 @@ enum TrainProjector {
       cycle: journeyWindow.cycle
     )
 
-    let fromStation = stationsByCode[step.orgStCd]
-    let toStation = stationsByCode[step.stCd] ?? fromStation
-    let isStopped = isWithin(timeMs, startMs: step.arrivMs, endMs: step.departMs)
+    let fromStation = stationsById[seg.fromStationId]
+    let toStation = stationsById[seg.toStationId] ?? fromStation
+    let isStopped = isWithin(timeMs, startMs: seg.arrivalTimeMs, endMs: seg.arrivalTimeMs)
 
     let position: Position
     let moving: Bool
@@ -199,25 +200,24 @@ enum TrainProjector {
     let progress: Double?
 
     if isStopped {
-      guard let station = toStation ?? fromStation else {
-        return nil
-      }
+      guard let station = toStation ?? fromStation else { return nil }
       let coord = station.coordinate
       position = Position(latitude: coord.latitude, longitude: coord.longitude)
       moving = false
       speedKph = nil
       progress = 0
-
+      let rbearing: Double?
       if let origin = fromStation?.coordinate, let destination = toStation?.coordinate {
-        resolvedBearing = bearing(from: origin, to: destination)
+        rbearing = bearing(from: origin, to: destination)
       } else {
-        resolvedBearing = nil
+        rbearing = nil
       }
+      resolvedBearing = rbearing
 
       return ProjectedTrain(
-        id: String(train.trId),
-        code: train.trCd,
-        name: train.trName,
+        id: journey.id,
+        code: journey.code,
+        name: journey.name,
         position: position,
         moving: moving,
         bearing: resolvedBearing,
@@ -232,20 +232,64 @@ enum TrainProjector {
         journeyArrival: journeyDates.arrival
       )
     } else {
-      guard
-        let route = route(
-          for: step,
-          routesByIdentifier: routesByIdentifier,
+      let route = seg.routeId.flatMap { routesById[$0] }
+      if let route {
+        let movementWindow = normalizeTimeWindow(
+          timestamp: timeMs,
+          startMs: seg.departureTimeMs,
+          endMs: seg.arrivalTimeMs
         )
-      else {
-        // Fallback to straight-line interpolation between stations
+        let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
+        let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
+        let clampedProgress = max(0, min(1, elapsed / duration))
+        let distanceForward = (route.totalLengthCm / duration) * elapsed
+        let routedDistance = min(route.totalLengthCm, max(0, distanceForward))
+
+        guard let coordinate = coordinateOnRoute(distanceCm: routedDistance, route: route) else {
+          return nil
+        }
+        let delta = min(defaultBearingSampleCm, route.totalLengthCm)
+        let neighborDistance = min(route.totalLengthCm, routedDistance + delta)
+        let neighborCoordinate = coordinateOnRoute(distanceCm: neighborDistance, route: route)
+        let heading = neighborCoordinate.flatMap { bearing(from: coordinate, to: $0) }
+
+        let distanceKm = route.totalLengthCm / 100_000
+        let segmentDurationSeconds = max(
+          segmentDates.arrival.timeIntervalSince(segmentDates.start), 1)
+        let speed = segmentDurationSeconds > 0 ? distanceKm / (segmentDurationSeconds / 3_600) : nil
+
+        position = Position(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        moving = true
+        progress = clampedProgress
+        resolvedBearing = heading
+        speedKph = speed
+
+        return ProjectedTrain(
+          id: journey.id,
+          code: journey.code,
+          name: journey.name,
+          position: position,
+          moving: moving,
+          bearing: resolvedBearing,
+          routeIdentifier: route.id,
+          speedKph: speedKph,
+          fromStation: fromStation,
+          toStation: toStation,
+          segmentDeparture: segmentDates.start,
+          segmentArrival: segmentDates.arrival,
+          progress: progress,
+          journeyDeparture: journeyDates.departure,
+          journeyArrival: journeyDates.arrival
+        )
+      } else {
+        // Straight line fallback
         guard let origin = fromStation?.coordinate, let destination = toStation?.coordinate else {
           return nil
         }
         let movementWindow = normalizeTimeWindow(
           timestamp: timeMs,
-          startMs: step.startMs,
-          endMs: step.arrivMs
+          startMs: seg.departureTimeMs,
+          endMs: seg.arrivalTimeMs
         )
         let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
         let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
@@ -264,9 +308,9 @@ enum TrainProjector {
         resolvedBearing = bearing(from: origin, to: destination)
 
         return ProjectedTrain(
-          id: String(train.trId),
-          code: train.trCd,
-          name: train.trName,
+          id: journey.id,
+          code: journey.code,
+          name: journey.name,
           position: position,
           moving: moving,
           bearing: resolvedBearing,
@@ -281,62 +325,6 @@ enum TrainProjector {
           journeyArrival: journeyDates.arrival
         )
       }
-
-      let movementWindow = normalizeTimeWindow(
-        timestamp: timeMs,
-        startMs: step.startMs,
-        endMs: step.arrivMs
-      )
-      let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
-      let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
-      let clampedProgress = max(0, min(1, elapsed / duration))
-
-      let distanceForward = (route.totalLengthCm / duration) * elapsed
-      let routedDistance =
-        step.invRoute
-        ? max(0, route.totalLengthCm - distanceForward)
-        : min(route.totalLengthCm, distanceForward)
-
-      guard let coordinate = coordinateOnRoute(distanceCm: routedDistance, route: route) else {
-        return nil
-      }
-
-      let delta = min(defaultBearingSampleCm, route.totalLengthCm)
-      let neighborDistance =
-        step.invRoute
-        ? max(0, routedDistance - delta)
-        : min(route.totalLengthCm, routedDistance + delta)
-      let neighborCoordinate = coordinateOnRoute(distanceCm: neighborDistance, route: route)
-      let heading = neighborCoordinate.flatMap { bearing(from: coordinate, to: $0) }
-
-      let distanceKm = route.totalLengthCm / 100_000
-      let segmentDurationSeconds = max(
-        segmentDates.arrival.timeIntervalSince(segmentDates.start), 1)
-      let speed = segmentDurationSeconds > 0 ? distanceKm / (segmentDurationSeconds / 3_600) : nil
-
-      position = Position(latitude: coordinate.latitude, longitude: coordinate.longitude)
-      moving = true
-      progress = clampedProgress
-      resolvedBearing = heading
-      speedKph = speed
-
-      return ProjectedTrain(
-        id: String(train.trId),
-        code: train.trCd,
-        name: train.trName,
-        position: position,
-        moving: moving,
-        bearing: resolvedBearing,
-        routeIdentifier: route.id,
-        speedKph: speedKph,
-        fromStation: fromStation,
-        toStation: toStation,
-        segmentDeparture: segmentDates.start,
-        segmentArrival: segmentDates.arrival,
-        progress: progress,
-        journeyDeparture: journeyDates.departure,
-        journeyArrival: journeyDates.arrival
-      )
     }
   }
 }
