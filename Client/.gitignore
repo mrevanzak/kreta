@@ -61,6 +61,8 @@ playground.xcworkspace
 # Environment Files
 .env
 .env.*
+Debug.xcconfig
+Release.xcconfig
 
 !info.plist
 .sentryclirc
