@@ -21,7 +21,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     trainName: String,
     from: TrainStation,
     destination: TrainStation,
-    nextStation: TrainStation,
     seatClass: SeatClass,
     seatNumber: String,
   ) async throws -> Activity<TrainActivityAttributes> {
@@ -33,7 +32,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       seatNumber: seatNumber,
     )
     let contentState = TrainActivityAttributes.ContentState(
-      previousStation: from, nextStation: nextStation
+      journeyState: .beforeBoarding
     )
     let content = ActivityContent(state: contentState, staleDate: nil)
     let activity = try Activity<TrainActivityAttributes>.request(
@@ -50,65 +49,33 @@ final class TrainLiveActivityService: @unchecked Sendable {
   @MainActor
   func update(
     activityId: String,
-    previousStation: TrainStation,
-    nextStation: TrainStation,
     journeyState: JourneyState? = nil
   ) async {
-    // Get current state to preserve journeyState if not provided
-    var contentState = TrainActivityAttributes.ContentState(
-      previousStation: previousStation,
-      nextStation: nextStation
-    )
-
-    // If journeyState is provided, use it; otherwise preserve existing state
-    if let newJourneyState = journeyState {
-      contentState = TrainActivityAttributes.ContentState(
-        previousStation: previousStation,
-        nextStation: nextStation,
-        journeyState: newJourneyState
-      )
-    } else {
-      // Find the activity to preserve current journeyState
-      for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-        contentState = TrainActivityAttributes.ContentState(
-          previousStation: previousStation,
-          nextStation: nextStation,
-          journeyState: activity.content.state.journeyState
-        )
-        break
-      }
-    }
-
     for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-      await activity.update(ActivityContent(state: contentState, staleDate: nil))
+      let contentState = activity.content.state
+      let newContentState = TrainActivityAttributes.ContentState(
+        journeyState: journeyState ?? contentState.journeyState
+      )
+      await activity.update(ActivityContent(state: newContentState, staleDate: nil))
     }
   }
 
-  @MainActor
-  func updateJourneyState(activityId: String, newState: JourneyState) async {
-    for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-      let currentState = activity.content.state
-      let contentState = TrainActivityAttributes.ContentState(
-        previousStation: currentState.stations.previous,
-        nextStation: currentState.stations.next,
-        journeyState: newState
-      )
-      await activity.update(ActivityContent(state: contentState, staleDate: nil))
-    }
+  func getActiveLiveActivities() -> [Activity<TrainActivityAttributes>] {
+    return Activity<TrainActivityAttributes>.activities
   }
 
   @MainActor
   func transitionToOnBoard(activityId: String) async {
-    await updateJourneyState(activityId: activityId, newState: .onBoard)
+    await update(activityId: activityId, journeyState: .onBoard)
   }
 
   @MainActor
   func transitionToPrepareToDropOff(activityId: String) async {
-    await updateJourneyState(activityId: activityId, newState: .prepareToDropOff)
+    await update(activityId: activityId, journeyState: .prepareToDropOff)
   }
 
   @MainActor
-  private func startAutomaticTransitions(for activity: Activity<TrainActivityAttributes>) async {
+  func startAutomaticTransitions(for activity: Activity<TrainActivityAttributes>) async {
     let activityId = activity.id
 
     // Cancel any existing timer for this activity
@@ -119,7 +86,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       defer { transitionTimers.removeValue(forKey: activityId) }
 
       // Transition to .onBoard when departure time arrives
-      if let departureTime = activity.attributes.from.estimatedDeparture {
+      if let departureTime = activity.attributes.from.estimatedTime {
         let delay = max(0, departureTime.timeIntervalSinceNow)
         if delay > 0 {
           try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
@@ -127,9 +94,9 @@ final class TrainLiveActivityService: @unchecked Sendable {
         }
       }
 
-      // Transition to .arrived when arrival time arrives
-      if let arrivalTime = activity.attributes.destination.estimatedArrival {
-        let delay = max(0, arrivalTime.timeIntervalSinceNow)
+      // Transition to .prepareToDropOff when 10 minutes before arrival time
+      if let arrivalTime = activity.attributes.destination.estimatedTime {
+        let delay = max(0, arrivalTime.timeIntervalSinceNow - 10 * 60)
         if delay > 0 {
           try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
           await transitionToPrepareToDropOff(activityId: activityId)

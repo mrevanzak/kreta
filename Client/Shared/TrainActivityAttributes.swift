@@ -10,21 +10,18 @@ public enum JourneyState: String, Codable, Hashable, Sendable {
 public struct TrainStation: Codable, Hashable, Sendable {
   public var name: String
   public var code: String
-  public var estimatedArrival: Date?
-  public var estimatedDeparture: Date?
+  public var estimatedTime: Date?
 
-  enum CodingKeys: String, CodingKey {
+  private enum CodingKeys: String, CodingKey {
     case name
     case code
-    case estimatedArrival
-    case estimatedDeparture
+    case estimatedTime
   }
 
-  public init(name: String, code: String, estimatedArrival: Date?, estimatedDeparture: Date?) {
+  public init(name: String, code: String, estimatedTime: Date? = nil) {
     self.name = name
     self.code = code
-    self.estimatedArrival = estimatedArrival
-    self.estimatedDeparture = estimatedDeparture
+    self.estimatedTime = estimatedTime
   }
 
   public init(from decoder: Decoder) throws {
@@ -33,16 +30,10 @@ public struct TrainStation: Codable, Hashable, Sendable {
     code = try container.decode(String.self, forKey: .code)
 
     // Decode Unix timestamps (seconds since 1970) as Dates
-    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedArrival) {
-      estimatedArrival = Date(timeIntervalSince1970: timestamp)
+    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedTime) {
+      estimatedTime = Date(timeIntervalSince1970: timestamp)
     } else {
-      estimatedArrival = nil
-    }
-
-    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedDeparture) {
-      estimatedDeparture = Date(timeIntervalSince1970: timestamp)
-    } else {
-      estimatedDeparture = nil
+      estimatedTime = nil
     }
   }
 
@@ -52,36 +43,22 @@ public struct TrainStation: Codable, Hashable, Sendable {
     try container.encode(code, forKey: .code)
 
     // Encode Dates as Unix timestamps (seconds since 1970)
-    if let arrival = estimatedArrival {
-      try container.encode(arrival.timeIntervalSince1970, forKey: .estimatedArrival)
+    if let time = estimatedTime {
+      try container.encode(time.timeIntervalSince1970, forKey: .estimatedTime)
     } else {
-      try container.encodeNil(forKey: .estimatedArrival)
-    }
-
-    if let departure = estimatedDeparture {
-      try container.encode(departure.timeIntervalSince1970, forKey: .estimatedDeparture)
-    } else {
-      try container.encodeNil(forKey: .estimatedDeparture)
+      try container.encodeNil(forKey: .estimatedTime)
     }
   }
-}
-
-public struct AdjacentStations: Codable, Hashable, Sendable {
-  public var previous: TrainStation
-  public var next: TrainStation
 }
 
 @available(iOS 16.1, *)
 public struct TrainActivityAttributes: ActivityAttributes, Sendable {
   public struct ContentState: Codable, Hashable, Sendable {
-    public var stations: AdjacentStations
     public var journeyState: JourneyState
 
     public init(
-      previousStation: TrainStation, nextStation: TrainStation,
       journeyState: JourneyState = .beforeBoarding
     ) {
-      self.stations = AdjacentStations(previous: previousStation, next: nextStation)
       self.journeyState = journeyState
     }
   }
