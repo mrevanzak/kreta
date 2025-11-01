@@ -27,9 +27,7 @@ final class TrainMapStore {
   }
   var lastUpdatedAt: String?
 
-  var projectedTrain: ProjectedTrain? {
-    didSet { projectTrains() }
-  }
+  var projectedTrain: ProjectedTrain?
   var journey: TrainJourney? {
     didSet { projectTrains() }
   }
@@ -173,7 +171,9 @@ extension TrainMapStore {
     stopProjectionUpdates()
     let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
       guard let self else { return }
-      self.projectTrains()
+      Task { @MainActor in
+        self.projectTrains()
+      }
     }
     projectionTimer = timer
     RunLoop.main.add(timer, forMode: .common)
