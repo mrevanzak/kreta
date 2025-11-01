@@ -12,7 +12,15 @@ const apnProvider = new apn.Provider({
     keyId: process.env.APNS_KEY_ID ?? "",
     teamId: process.env.APNS_TEAM_ID ?? "",
   },
-  production: Boolean(process.env.APNS_PRODUCTION),
+  production: process.env.APNS_PRODUCTION === "true",
+});
+
+const contentState = v.object({
+  journeyState: v.union(
+    v.literal("beforeBoarding"),
+    v.literal("onBoard"),
+    v.literal("prepareToDropOff")
+  ),
 });
 
 // Trigger a standard APNs alert push to a specific device token
@@ -78,14 +86,12 @@ export const startLiveActivity = action({
       from: v.object({
         name: v.string(),
         code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
+        estimatedTime: v.union(v.number(), v.null()),
       }),
       destination: v.object({
         name: v.string(),
         code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
+        estimatedTime: v.union(v.number(), v.null()),
       }),
       seatClass: v.object({
         kind: v.union(
@@ -98,28 +104,12 @@ export const startLiveActivity = action({
       seatNumber: v.string(),
     }),
     // Content state matching TrainActivityAttributes.ContentState
-    contentState: v.object({
-      previousStation: v.object({
-        name: v.string(),
-        code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
-      }),
-      nextStation: v.object({
-        name: v.string(),
-        code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
-      }),
-      journeyState: v.union(
-        v.literal("beforeBoarding"),
-        v.literal("onBoard"),
-        v.literal("prepareToDropOff")
-      ),
+    contentState,
+    alert: v.object({
+      title: v.string(),
+      subtitle: v.optional(v.string()),
+      body: v.string(),
     }),
-    // Optional alert to show when starting the activity
-    alertTitle: v.optional(v.string()),
-    alertBody: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const bundleId = process.env.BUNDLE_ID ?? "";
@@ -153,12 +143,7 @@ export const startLiveActivity = action({
       seatNumber: args.attributes.seatNumber,
     } as const;
 
-    const contentState = {
-      stations: {
-        previous: args.contentState.previousStation,
-        next: args.contentState.nextStation,
-      },
-    } as const;
+    const contentState = args.contentState;
 
     const note = new apn.Notification();
     note.topic = `${bundleId}.push-type.liveactivity`;
@@ -171,10 +156,7 @@ export const startLiveActivity = action({
     // Inform ActivityKit of the attributes type and initial values
     note.aps["attributes-type"] = "TrainActivityAttributes";
     note.aps.attributes = attributes;
-    note.alert = {
-      title: args.alertTitle,
-      body: args.alertBody ?? "",
-    };
+    note.alert = args.alert;
 
     try {
       const response = await apnProvider.send(note, args.startToken);
@@ -205,25 +187,7 @@ export const updateLiveActivity = action({
   args: {
     activityToken: v.string(),
     // Content state matching TrainActivityAttributes.ContentState
-    contentState: v.object({
-      previousStation: v.object({
-        name: v.string(),
-        code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
-      }),
-      nextStation: v.object({
-        name: v.string(),
-        code: v.string(),
-        estimatedArrival: v.union(v.number(), v.null()),
-        estimatedDeparture: v.union(v.number(), v.null()),
-      }),
-      journeyState: v.union(
-        v.literal("beforeBoarding"),
-        v.literal("onBoard"),
-        v.literal("prepareToDropOff")
-      ),
-    }),
+    contentState,
   },
   handler: async (ctx, args) => {
     const bundleId = process.env.BUNDLE_ID ?? "";
@@ -234,13 +198,7 @@ export const updateLiveActivity = action({
       return { success: false, error: "Missing APNs token env vars" } as const;
     }
 
-    const contentState = {
-      stations: {
-        previous: args.contentState.previousStation,
-        next: args.contentState.nextStation,
-      },
-      journeyState: args.contentState.journeyState,
-    } as const;
+    const contentState = args.contentState;
 
     const note = new apn.Notification();
     note.topic = `${bundleId}.push-type.liveactivity`;

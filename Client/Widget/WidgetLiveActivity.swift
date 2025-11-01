@@ -61,11 +61,11 @@ struct BeforeBoardingView: View {
           .font(.footnote)
           .foregroundStyle(.secondary)
 
-        if let departureTime = context.attributes.from.estimatedDeparture {
-          Text(departureTime, format: .biggestUnitRelative(units: 2))
+        if let departureTime = context.attributes.from.estimatedTime {
+          Text(timerInterval: Date()...departureTime, showsHours: true)
             .font(.body)
             .bold()
-            .monospacedDigit()
+            .multilineTextAlignment(.trailing)
         }
       }
     }
@@ -89,10 +89,11 @@ struct PrepareToDropOffView: View {
         Label("Segera Turun!", systemImage: "figure.walk.circle.fill")
           .labelReservedIconWidth(24)
           .font(.body)
+          .bold()
           .foregroundColor(.kretaPrimary)
 
         Label {
-          Text(context.state.stations.next.name)
+          Text(context.attributes.destination.name)
         } icon: {
           EmptyView()
         }
@@ -167,11 +168,13 @@ struct BeforeBoardingSmallView: View {
         .monospacedDigit()
         .foregroundStyle(.secondary)
 
-        if let departureTime = context.attributes.from.estimatedDeparture {
-          Text(departureTime, format: .biggestUnitRelative(units: 2))
+        if let departureTime = context.attributes.from.estimatedTime {
+          Text(timerInterval: Date()...departureTime, showsHours: true)
             .font(.body)
             .bold()
-            .monospacedDigit()
+            .multilineTextAlignment(.trailing)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
         }
       }
     }
@@ -191,7 +194,7 @@ struct PrepareToDropOffSmallView: View {
           .foregroundColor(.kretaPrimary)
           .lineLimit(1)
 
-        Text(context.state.stations.next.name)
+        Text(context.attributes.destination.name)
           .font(.caption)
           .bold()
           .foregroundColor(.secondary)
@@ -218,36 +221,33 @@ struct ActivitySmallView: View {
     case .beforeBoarding:
       BeforeBoardingSmallView(context: context)
     case .onBoard:
-      if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
-        HStack {
-          VStack {
-            HStack {
-              Text(
-                destinationEstimatedArrival,
-                format: .biggestUnitRelative(units: 2)
-              )
-              .font(.body)
-              .foregroundColor(.kretaPrimary)
-              Spacer()
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
+        VStack(spacing: 0) {
+          Spacer()
+          Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
+            .font(.title3)
+            .bold()
+            .foregroundColor(.kretaPrimary)
+
+          ProgressView(
+            timerInterval: Date()...destinationEstimatedArrival,
+            countsDown: false,
+            label: { EmptyView() },
+            currentValueLabel: {
             }
+          )
+          .tint(.kretaPrimary)
+          .progressViewStyle(.linear)
+          .padding(.bottom, 8)
 
-            ProgressView(
-              timerInterval: Date()...destinationEstimatedArrival,
-              countsDown: false,
-              label: { EmptyView() },
-              currentValueLabel: {
-              }
-            ).progressViewStyle(.linear)
+          HStack {
+            Text(
+              "Tujuan \(context.attributes.destination.name) (\(context.attributes.destination.code))"
+            )
+            .font(.caption2)
+            .foregroundStyle(.foreground)
 
-            HStack {
-              Text(
-                "Tujuan \(context.attributes.destination.name) (\(context.attributes.destination.code))"
-              )
-              .font(.caption2)
-              .foregroundStyle(.foreground)
-
-              Spacer()
-            }
+            Spacer()
           }
         }
         .padding(.all)
@@ -280,7 +280,7 @@ struct ActivityProgressView: View {
 
   var body: some View {
     if let destinationEstimatedArrival = context.attributes.destination
-      .estimatedArrival
+      .estimatedTime
     {
       ProgressView(
         timerInterval: Date()...destinationEstimatedArrival,
@@ -294,6 +294,7 @@ struct ActivityProgressView: View {
             .foregroundColor(.kretaPrimary)
         }
       )
+      .tint(.kretaPrimary)
       .progressViewStyle(.circular)
       .frame(width: 24, height: 24)
     }
@@ -306,14 +307,14 @@ struct TrainExpandedBottomView: View {
 
   var body: some View {
     VStack {
-      if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
         Spacer()
 
         VStack(spacing: 0) {
           HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
-              Text(context.state.stations.previous.code).font(.body).bold()
-              Text(context.state.stations.previous.name)
+              Text(context.attributes.from.code).font(.body).bold()
+              Text(context.attributes.from.name)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -336,8 +337,8 @@ struct TrainExpandedBottomView: View {
             }
 
             VStack(alignment: .trailing, spacing: 4) {
-              Text(context.state.stations.next.code).font(.body).bold()
-              Text(context.state.stations.next.name)
+              Text(context.attributes.destination.code).font(.body).bold()
+              Text(context.attributes.destination.name)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -354,6 +355,7 @@ struct TrainExpandedBottomView: View {
             label: { EmptyView() },
             currentValueLabel: { EmptyView() }
           )
+          .tint(.kretaPrimary)
           .progressViewStyle(.linear)
         }
 
@@ -369,12 +371,13 @@ struct TrainExpandedBottomView: View {
 
           HStack(alignment: .center) {
             Text(
-              destinationEstimatedArrival,
-              format: .biggestUnitRelative(units: 2)
+              timerInterval: Date()...destinationEstimatedArrival,
+              showsHours: true
             )
             .font(.callout)
             .bold()
             .foregroundColor(.kretaPrimary)
+            .multilineTextAlignment(.center)
           }
         }
       }
@@ -441,20 +444,20 @@ struct WidgetLiveActivity: Widget {
       } compactTrailing: {
         switch context.state.journeyState {
         case .beforeBoarding:
-          if let departureTime = context.attributes.from.estimatedDeparture {
-            Text(departureTime, format: .biggestUnitRelative(units: 2))
+          if let departureTime = context.attributes.from.estimatedTime {
+            Text(timerInterval: Date()...departureTime, showsHours: true)
               .foregroundColor(.kretaPrimary)
-              .monospacedDigit()
+              .multilineTextAlignment(.trailing)
+              .frame(width: 64)
           }
         case .onBoard:
           if let destinationEstimatedArrival = context.attributes.destination
-            .estimatedArrival
+            .estimatedTime
           {
-            Text(
-              destinationEstimatedArrival,
-              format: .biggestUnitRelative(units: 2)
-            )
-            .foregroundColor(.kretaPrimary)
+            Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
+              .foregroundColor(.kretaPrimary)
+              .multilineTextAlignment(.trailing)
+              .frame(width: 64)
           }
         case .prepareToDropOff:
           Text("Turun")
@@ -486,18 +489,12 @@ extension TrainActivityAttributes {
       from: TrainStation(
         name: "Malang",
         code: "ML",
-        estimatedArrival: nil,
-        // set today at 13:45
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 13, minute: 45, second: 0, of: Date())
+        estimatedTime: Date().addingTimeInterval(60 * 60 * 24)
       ),
       destination: TrainStation(
         name: "Pasar Senen",
         code: "PSE",
-        // set tomorrow at 01:58
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 1, minute: 58, second: 0, of: Date().addingTimeInterval(60 * 60 * 24)),
-        estimatedDeparture: nil
+        estimatedTime: Date().addingTimeInterval(60 * 60 * 24)
       ),
       seatClass: SeatClass.economy(number: 9),
       seatNumber: "20C"
@@ -508,64 +505,18 @@ extension TrainActivityAttributes {
 extension TrainActivityAttributes.ContentState {
   fileprivate static var beforeBoarding: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      previousStation: TrainStation(
-        name: "Malang",
-        code: "ML",
-        estimatedArrival: nil,
-        // set tomorrow at 13:45
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 13, minute: 45, second: 0, of: Date().addingTimeInterval(60 * 60 * 24))
-      ),
-      nextStation: TrainStation(
-        name: "Blitar",
-        code: "BL",
-        estimatedArrival: nil,
-        estimatedDeparture: nil
-      ),
       journeyState: .beforeBoarding
     )
   }
 
   fileprivate static var onBoard: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      previousStation: TrainStation(
-        name: "Surabayagubeng",
-        code: "SGU",
-        // set today at 15:39
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 15, minute: 39, second: 0, of: Date()),
-        // set today at 15:43
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 15, minute: 43, second: 0, of: Date())
-      ),
-      nextStation: TrainStation(
-        name: "Surabaya Pasarturi",
-        code: "SBI",
-        // set today at 15:55
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 15, minute: 55, second: 0, of: Date()),
-        // set today at 16:07
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 16, minute: 07, second: 0, of: Date())
-      ),
       journeyState: .onBoard
     )
   }
 
   fileprivate static var prepareToDropOff: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      previousStation: TrainStation(
-        name: "Gambir",
-        code: "GMR",
-        estimatedArrival: nil,
-        estimatedDeparture: nil
-      ),
-      nextStation: TrainStation(
-        name: "Pasar Senen",
-        code: "PSE",
-        estimatedArrival: nil,
-        estimatedDeparture: nil
-      ),
       journeyState: .prepareToDropOff
     )
   }
