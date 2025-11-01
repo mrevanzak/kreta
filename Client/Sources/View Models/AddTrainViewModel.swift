@@ -123,10 +123,18 @@ extension AddTrainView {
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
         
+        print("🚂 Fetched \(segments.count) segments for train \(item.code)")
+        
         // Convert to JourneySegment model
         for (index, segment) in segments.enumerated() {
           if index < segments.count - 1 {
             let nextSegment = segments[index + 1]
+            
+            if index == 0 {
+              print("📍 First segment: departure=\(segment.departureTime), arrival=\(nextSegment.arrivalTime)")
+              print("📅 As dates: \(Date(timeIntervalSince1970: segment.departureTime / 1000)) -> \(Date(timeIntervalSince1970: nextSegment.arrivalTime / 1000))")
+            }
+            
             journeySegments.append(
               JourneySegment(
                 fromStationId: segment.stationId,
@@ -168,11 +176,11 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: TimeInterval(item.segmentDepartureMs) / 1000),
-        segmentArrival: Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000),
+        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+        segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         progress: nil,
-        journeyDeparture: nil,
-        journeyArrival: nil
+        journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+        journeyArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
       )
 
       return projected

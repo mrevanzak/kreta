@@ -134,7 +134,7 @@ struct Route: Codable, Identifiable {
   }
 }
 
-struct ProjectedTrain: Codable, Identifiable {
+struct ProjectedTrain: Codable, Identifiable, Equatable {
   let id: String
   let code: String
   let name: String
@@ -155,6 +155,13 @@ struct ProjectedTrain: Codable, Identifiable {
 
   var coordinate: CLLocationCoordinate2D {
     CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
+  }
+  
+  static func == (lhs: ProjectedTrain, rhs: ProjectedTrain) -> Bool {
+    lhs.id == rhs.id && 
+    lhs.position.latitude == rhs.position.latitude && 
+    lhs.position.longitude == rhs.position.longitude &&
+    lhs.moving == rhs.moving
   }
 }
 

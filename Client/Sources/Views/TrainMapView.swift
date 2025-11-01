@@ -7,10 +7,18 @@ struct TrainMapView: View {
 
   let selectedTrains: [ProjectedTrain]
   let journeyDataMap: [String: TrainJourneyData]
+  @Binding var liveTrainPositions: [String: ProjectedTrain]
+  
+  @State private var projectionTimer: Timer?
 
-  init(selectedTrains: [ProjectedTrain] = [], journeyDataMap: [String: TrainJourneyData] = [:]) {
+  init(
+    selectedTrains: [ProjectedTrain] = [],
+    journeyDataMap: [String: TrainJourneyData] = [:],
+    liveTrainPositions: Binding<[String: ProjectedTrain]>
+  ) {
     self.selectedTrains = selectedTrains
     self.journeyDataMap = journeyDataMap
+    self._liveTrainPositions = liveTrainPositions
   }
 
   var body: some View {
@@ -56,6 +64,15 @@ struct TrainMapView: View {
           showToast(errorMessage)
         }
       }
+    }
+    .onChange(of: selectedTrains) { _, _ in
+      startProjectingTrains()
+    }
+    .onAppear {
+      startProjectingTrains()
+    }
+    .onDisappear {
+      stopProjectingTrains()
     }
   }
 
@@ -107,17 +124,10 @@ struct TrainMapView: View {
       return []
     }
 
-    let selectedTrainIds = Set(selectedTrains.map { $0.id })
-    print(mapStore.projectedTrain)
-    
-    // Check if the currently projected train matches any selected train
-    if let projectedTrain = mapStore.projectedTrain,
-       selectedTrainIds.contains(projectedTrain.id) {
-      return [projectedTrain]
+    // Return live projected positions for all selected trains
+    return selectedTrains.compactMap { train in
+      liveTrainPositions[train.id]
     }
-    
-
-    return []
   }
 
   // MARK: - Map Style Computation
@@ -129,5 +139,80 @@ struct TrainMapView: View {
     case .hybrid:
       return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
     }
+  }
+  
+  // MARK: - Train Projection
+  
+  private func startProjectingTrains() {
+    stopProjectingTrains()
+    
+    // Project immediately
+    projectAllTrains()
+    
+    // Set up timer for continuous updates
+    let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
+      Task { @MainActor in
+        self.projectAllTrains()
+      }
+    }
+    projectionTimer = timer
+    RunLoop.main.add(timer, forMode: .common)
+  }
+  
+  private func stopProjectingTrains() {
+    projectionTimer?.invalidate()
+    projectionTimer = nil
+  }
+  
+  private func projectAllTrains() {
+    let stationsById = Dictionary(uniqueKeysWithValues: mapStore.stations.map { ($0.id ?? $0.code, $0) })
+    let routesById = Dictionary(uniqueKeysWithValues: mapStore.routes.map { ($0.id, $0) })
+    let now = Date()
+    let nowMs = now.timeIntervalSince1970 * 1000
+    
+    print("🚂 Projecting \(selectedTrains.count) trains at \(now)")
+    print("⏰ Current time: \(nowMs) ms")
+    
+    var newPositions: [String: ProjectedTrain] = [:]
+    
+    for train in selectedTrains {
+      // Get journey data for this train
+      guard let journeyData = journeyDataMap[train.id] else {
+        print("⚠️ No journey data for train \(train.id)")
+        continue
+      }
+      
+      print("📍 Train \(train.code): \(journeyData.segments.count) segments, \(journeyData.allStations.count) stations")
+      
+      if let firstSeg = journeyData.segments.first, let lastSeg = journeyData.segments.last {
+        print("⏱️  Journey window: \(firstSeg.departureTimeMs) -> \(lastSeg.arrivalTimeMs)")
+        print("📅 As dates: \(Date(timeIntervalSince1970: firstSeg.departureTimeMs / 1000)) -> \(Date(timeIntervalSince1970: lastSeg.arrivalTimeMs / 1000))")
+      }
+      
+      // Convert to TrainJourney model
+      let trainJourney = TrainJourney(
+        id: train.id,
+        trainId: train.id,
+        code: train.code,
+        name: train.name,
+        segments: journeyData.segments
+      )
+      
+      // Project the train position
+      if let projected = TrainProjector.projectTrain(
+        now: now,
+        journey: trainJourney,
+        stationsById: stationsById,
+        routesById: routesById
+      ) {
+        print("✅ Projected \(train.code) at (\(projected.position.latitude), \(projected.position.longitude)), moving: \(projected.moving)")
+        newPositions[train.id] = projected
+      } else {
+        print("❌ Failed to project train \(train.code) - likely outside active time window")
+      }
+    }
+    
+    print("🎯 Updated positions for \(newPositions.count) trains")
+    liveTrainPositions = newPositions
   }
 }
