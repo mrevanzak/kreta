@@ -7,12 +7,18 @@
 
 import Foundation
 
+enum FeedbackStatus: String, Codable, CaseIterable {
+  case pending = "pending"
+  case accepted = "accepted"
+  case rejected = "rejected"
+  case done = "done"
+}
+
 struct FeedbackItem: Codable, Identifiable {
   let _id: String
   let title: String
   let description: String
-  let email: String?
-  let status: String  // "pending", "accepted", "finished"
+  let status: FeedbackStatus
   let createdAt: Int
   let voteCount: Int
 
@@ -20,13 +26,13 @@ struct FeedbackItem: Codable, Identifiable {
 
   var statusColor: String {
     switch status {
-    case "pending":
+    case .pending:
       return "#FF9500"  // orange
-    case "accepted":
+    case .accepted:
       return "#34C759"  // green
-    case "finished":
+    case .rejected:
       return "#007AFF"  // blue
-    default:
+    case .done:
       return "#808080"  // gray
     }
   }
@@ -99,4 +105,3 @@ enum SortOrder: String, CaseIterable {
     }
   }
 }
-

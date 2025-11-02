@@ -18,7 +18,6 @@ export const list = query({
           _id: item._id.toString(),
           title: item.title,
           description: item.description,
-          email: item.email,
           status: item.status,
           createdAt: item.createdAt,
           voteCount: votes.length,
@@ -82,4 +81,3 @@ export const toggleVote = mutation({
     }
   },
 });
-
