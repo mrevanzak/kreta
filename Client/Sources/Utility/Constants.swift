@@ -9,14 +9,20 @@ import Foundation
 
 struct Constants {
   struct Convex {
-    // Point this to your Convex deployment; consider swapping via build configs
+    // Point this to your Convex deployment; values come from .xcconfig files
     static let deploymentUrl: String = {
+      // First try environment variable (for runtime overrides)
       if let url = ProcessInfo.processInfo.environment["CONVEX_URL"], !url.isEmpty {
+        return url
+      }
+      // Then try Info.plist (populated from .xcconfig files at build time)
+      if let url = Bundle.main.infoDictionary?["CONVEX_URL"] as? String, !url.isEmpty {
         return url
       }
       #if DEBUG
         print(
-          "⚠️ [kreta] CONVEX_URL not set. Configure it in the Xcode scheme or shell environment.")
+          "⚠️ [kreta] CONVEX_URL not set. Configure it in Client/Config/Debug.xcconfig or Release.xcconfig"
+        )
       #endif
       return "https://convex.invalid"
     }()
@@ -24,12 +30,17 @@ struct Constants {
 
   struct PostHog {
     static let apiKey: String = {
+      // First try environment variable (for runtime overrides)
       if let key = ProcessInfo.processInfo.environment["POSTHOG_API_KEY"], !key.isEmpty {
+        return key
+      }
+      // Then try Info.plist (populated from .xcconfig files at build time)
+      if let key = Bundle.main.infoDictionary?["POSTHOG_API_KEY"] as? String, !key.isEmpty {
         return key
       }
       #if DEBUG
         print(
-          "⚠️ [kreta] POSTHOG_API_KEY not set. Configure it in the Xcode scheme or shell environment."
+          "⚠️ [kreta] POSTHOG_API_KEY not set. Configure it in Client/Config/Debug.xcconfig or Release.xcconfig"
         )
       #endif
       return "invalid-api-key"
@@ -39,11 +50,18 @@ struct Constants {
 
   struct Sentry {
     static let dsn: String? = {
-      let value = ProcessInfo.processInfo.environment["SENTRY_DSN"]
-      if let value, !value.isEmpty { return value }
+      // First try environment variable (for runtime overrides)
+      if let value = ProcessInfo.processInfo.environment["SENTRY_DSN"], !value.isEmpty {
+        return value
+      }
+      // Then try Info.plist (populated from .xcconfig files at build time)
+      if let value = Bundle.main.infoDictionary?["SENTRY_DSN"] as? String, !value.isEmpty {
+        return value
+      }
       #if DEBUG
         print(
-          "⚠️ [kreta] SENTRY_DSN not set. Configure it in the Xcode scheme or shell environment.")
+          "⚠️ [kreta] SENTRY_DSN not set. Configure it in Client/Config/Debug.xcconfig or Release.xcconfig"
+        )
       #endif
       return nil
     }()
