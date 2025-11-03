@@ -150,10 +150,16 @@ enum TrainProjector {
     cycle: Double
   ) -> (departure: Date, arrival: Date) {
     let base = nowMs - timeMs
-    let departureMs = base + startMs
+    var departureMs = base + startMs
     var arrivalMs = base + endMs
-    if arrivalMs < departureMs {
-      arrivalMs += cycle
+    // Ensure arrival is after departure within the same cycle
+    if arrivalMs < departureMs { arrivalMs += cycle }
+    // If the computed departure is already in the past relative to now,
+    // roll both departure and arrival forward by one cycle (next day)
+    if departureMs < nowMs {
+      departureMs += cycle
+      // Keep arrival after (potentially updated) departure
+      if arrivalMs < departureMs { arrivalMs += cycle }
     }
     return (
       Date(timeIntervalSince1970: departureMs / 1_000),
@@ -168,10 +174,15 @@ enum TrainProjector {
     cycle: Double
   ) -> (start: Date, arrival: Date, departure: Date) {
     let base = nowMs - timeMs
-    let startAbs = base + seg.departureTimeMs
+    var startAbs = base + seg.departureTimeMs
     var arrivalAbs = base + seg.arrivalTimeMs
-    if arrivalAbs < startAbs {
-      arrivalAbs += cycle
+    // Ensure arrival is after start within the same cycle
+    if arrivalAbs < startAbs { arrivalAbs += cycle }
+    // If the computed start (departure) is already in the past relative to now,
+    // roll both start and arrival forward by one cycle (next day)
+    if startAbs < nowMs {
+      startAbs += cycle
+      if arrivalAbs < startAbs { arrivalAbs += cycle }
     }
     let departureAbs = startAbs
 

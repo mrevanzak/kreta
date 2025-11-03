@@ -23,6 +23,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     notificationCenter.delegate = self
+    // Register notification categories
+    let tripStart = UNNotificationCategory(
+      identifier: "TRIP_START_FALLBACK",
+      actions: [],
+      intentIdentifiers: [],
+      options: [.customDismissAction]
+    )
+    notificationCenter.setNotificationCategories([tripStart])
 
     // Configure telemetry SDKs early
     SentryErrorReporter.configure(

@@ -12,6 +12,7 @@ export const queueLiveActivityStart = mutation({
   args: {
     deviceToken: v.string(),
     scheduledStartTime: v.number(),
+    trainId: v.string(),
     trainName: v.string(),
     fromStation: v.object({
       name: v.string(),
@@ -40,6 +41,7 @@ export const queueLiveActivityStart = mutation({
       deviceToken: args.deviceToken,
       startToken: startTokenRecord.token,
       scheduledStartTime: args.scheduledStartTime,
+      trainId: args.trainId,
       trainName: args.trainName,
       fromStation: args.fromStation,
       destinationStation: args.destinationStation,
@@ -56,6 +58,24 @@ export const queueLiveActivityStart = mutation({
         { activityId }
       );
     }
+
+    // Send immediate fallback alert with deep link to open the app
+    await ctx.scheduler.runAfter(
+      0,
+      internal.scheduledActivities.sendImmediateFallback,
+      {
+        deviceToken: args.deviceToken,
+        trainId: args.trainId,
+      }
+    );
+
+    // Schedule a reminder fallback in 5 minutes if not started yet
+    const reminderDelayMs = 5 * 60 * 1000;
+    await ctx.scheduler.runAfter(
+      reminderDelayMs,
+      internal.scheduledActivities.maybeSendStartReminder,
+      { activityId, deviceToken: args.deviceToken, trainId: args.trainId }
+    );
 
     return "ok";
   },
@@ -120,6 +140,43 @@ export const executeScheduledStart = internalAction({
     } catch (error) {
       await ctx.runMutation(internal.scheduledActivities.markAsFailed, {
         activityId: args.activityId,
+      });
+    }
+  },
+});
+
+// Internal action to send the immediate fallback alert
+export const sendImmediateFallback = internalAction({
+  args: { deviceToken: v.string(), trainId: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.runAction(api.push.sendTripStartFallbackPush, {
+      deviceToken: args.deviceToken,
+      trainId: args.trainId,
+    });
+  },
+});
+
+// Internal action to send a reminder alert only if activity hasn't started
+export const maybeSendStartReminder = internalAction({
+  args: {
+    activityId: v.id("scheduledLiveActivities"),
+    deviceToken: v.string(),
+    trainId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const activity = await ctx.runQuery(
+      internal.scheduledActivities.getActivity,
+      {
+        activityId: args.activityId,
+      }
+    );
+    if (!activity) return;
+    if (activity.status !== "started") {
+      await ctx.runAction(api.push.sendTripStartFallbackPush, {
+        deviceToken: args.deviceToken,
+        trainId: args.trainId,
+        title: "Pengingat perjalanan",
+        body: "Buka aplikasi untuk memulai Aktivitas Langsung dan menjadwalkan alarm kedatangan.",
       });
     }
   },

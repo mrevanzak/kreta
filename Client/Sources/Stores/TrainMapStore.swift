@@ -138,6 +138,84 @@ final class TrainMapStore {
 
 // MARK: - Data loading helpers
 extension TrainMapStore {
+  /// Start Live Activity from deep link parameters by resolving journey segments
+  /// and constructing the required `ProjectedTrain` and `TrainJourneyData`.
+  func startFromDeepLink(trainId: String, journeyId: String?) async throws {
+    // Ensure stations and routes are loaded (attempt to load from cache if empty)
+    if stations.isEmpty || routes.isEmpty {
+      _ = try? loadCachedDataIfAvailable()
+    }
+
+    let journeyService = JourneyService()
+
+    // Fetch segments for the provided train id
+    let rows = try await journeyService.fetchSegmentsForTrain(trainId: trainId)
+
+    guard !rows.isEmpty else {
+      logger.error("No journey segments found for trainId: \(trainId)")
+      return
+    }
+
+    // Build JourneySegments and collect stations along the full journey
+    let stationsById = Dictionary(uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+    var journeySegments: [JourneySegment] = []
+    var allStationsInJourney: [Station] = []
+
+    for (index, segment) in rows.enumerated() {
+      if let st = stationsById[segment.stationId] {
+        allStationsInJourney.append(st)
+      }
+
+      if index < rows.count - 1 {
+        let next = rows[index + 1]
+        journeySegments.append(
+          JourneySegment(
+            fromStationId: segment.stationId,
+            toStationId: next.stationId,
+            departureTimeMs: segment.departureTime,
+            arrivalTimeMs: next.arrivalTime,
+            routeId: next.routeId
+          )
+        )
+      }
+    }
+
+    // Derive front-facing info for ProjectedTrain
+    let first = rows.first!
+    let last = rows.last!
+    let fromStation = stationsById[first.stationId]
+    let toStation = stationsById[last.stationId]
+
+    let projected = ProjectedTrain(
+      id: trainId,
+      code: first.trainCode,
+      name: first.trainName,
+      position: Position(
+        latitude: fromStation?.position.latitude ?? 0,
+        longitude: fromStation?.position.longitude ?? 0
+      ),
+      moving: false,
+      bearing: nil,
+      routeIdentifier: last.routeId,
+      speedKph: nil,
+      fromStation: fromStation,
+      toStation: toStation,
+      segmentDeparture: Date(timeIntervalSince1970: first.departureTime / 1000.0),
+      segmentArrival: Date(timeIntervalSince1970: last.arrivalTime / 1000.0),
+      progress: nil,
+      journeyDeparture: Date(timeIntervalSince1970: first.departureTime / 1000.0),
+      journeyArrival: Date(timeIntervalSince1970: last.arrivalTime / 1000.0)
+    )
+
+    let journeyData = TrainJourneyData(
+      trainId: trainId,
+      segments: journeySegments,
+      allStations: allStationsInJourney
+    )
+
+    // Persist and start
+    try await selectTrain(projected, journeyData: journeyData)
+  }
   fileprivate func loadCachedData() throws {
     stations = try cacheService.loadCachedStations()
     let routePolylines = try cacheService.loadCachedRoutes()
@@ -261,6 +339,7 @@ extension TrainMapStore {
       with: [
         "deviceToken": deviceToken as ConvexEncodable,
         "scheduledStartTime": (scheduledStartTime.timeIntervalSince1970 * 1000) as ConvexEncodable,  // Convert seconds to milliseconds
+        "trainId": train.id as ConvexEncodable,
         "trainName": train.name as ConvexEncodable,
         "fromStation": [
           "name": fromStation.name as ConvexEncodable,

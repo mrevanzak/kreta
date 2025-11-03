@@ -130,6 +130,7 @@ export default defineSchema({
     deviceToken: v.string(),
     startToken: v.string(),
     scheduledStartTime: v.number(),
+    trainId: v.string(),
     trainName: v.string(),
     fromStation: v.object({
       name: v.string(),

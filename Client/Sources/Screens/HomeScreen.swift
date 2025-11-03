@@ -99,6 +99,25 @@ struct HomeScreen: View {
       }
     }
     .environment(trainMapStore)
+    .onOpenURL { url in
+      let components = url.fullComponents
+      if components == ["trip", "start"],
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+      {
+        let journeyId = items.first(where: { $0.name == "journeyId" })?.value
+        let trainId = items.first(where: { $0.name == "trainId" })?.value
+
+        if let trainId {
+          Task {
+            do {
+              try await trainMapStore.startFromDeepLink(trainId: trainId, journeyId: journeyId)
+            } catch {
+              print("Failed to start from deeplink: \(error)")
+            }
+          }
+        }
+      }
+    }
     .task {
       try? await trainMapStore.loadSelectedTrainFromCache()
     }

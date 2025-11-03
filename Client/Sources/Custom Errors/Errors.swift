@@ -58,7 +58,6 @@ enum TrainMapError: LocalizedError {
   case networkUnavailable
   case invalidDataFormat(String)
   case missingDeviceToken
-  case missingStartToken
 
   var errorDescription: String? {
     switch self {
@@ -77,9 +76,7 @@ enum TrainMapError: LocalizedError {
     case .invalidDataFormat(let details):
       return "Invalid data format received: \(details)"
     case .missingDeviceToken:
-      return "Device token not available"
-    case .missingStartToken:
-      return "Live Activity start token not available"
+      return "Internal error: Device token not available"
     }
   }
 
@@ -94,6 +91,8 @@ enum TrainMapError: LocalizedError {
       return "The data format has changed. Please update the app to the latest version."
     case .networkUnavailable:
       return "Please check your internet connection and try again."
+    case .missingDeviceToken:
+      return nil
     }
   }
 
@@ -113,6 +112,8 @@ enum TrainMapError: LocalizedError {
       return "NetworkError"
     case .invalidDataFormat:
       return "DataFormatError"
+    case .missingDeviceToken:
+      return "DeviceTokenError"
     }
   }
 }
