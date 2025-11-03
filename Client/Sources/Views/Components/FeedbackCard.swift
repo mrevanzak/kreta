@@ -70,7 +70,7 @@ struct FeedbackCard: View {
   }
 
   private var statusTag: some View {
-    Text(item.status.capitalized)
+    Text(item.status.rawValue.capitalized)
       .font(.caption2)
       .fontWeight(.semibold)
       .foregroundStyle(.white)
@@ -231,8 +231,7 @@ extension Color {
     title: "Add dark mode support",
     description:
       "It would be great to have a dark mode option for users who prefer darker interfaces.",
-    email: "user@example.com",
-    status: "pending",
+    status: .pending,
     createdAt: Int(Date().timeIntervalSince1970 - 3600) * 1000,
     voteCount: 42
   )
