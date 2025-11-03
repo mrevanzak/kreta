@@ -123,25 +123,19 @@ extension AddTrainView {
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
         
-        print("🚂 Fetched \(segments.count) segments for train \(item.code)")
-        
         // Convert to JourneySegment model
         for (index, segment) in segments.enumerated() {
           if index < segments.count - 1 {
             let nextSegment = segments[index + 1]
             
-            if index == 0 {
-              print("📍 First segment: departure=\(segment.departureTime), arrival=\(nextSegment.arrivalTime)")
-              print("📅 As dates: \(Date(timeIntervalSince1970: segment.departureTime / 1000)) -> \(Date(timeIntervalSince1970: nextSegment.arrivalTime / 1000))")
-            }
-            
+            // Use nextSegment.routeId because the route connects TO the next station
             journeySegments.append(
               JourneySegment(
                 fromStationId: segment.stationId,
                 toStationId: nextSegment.stationId,
                 departureTimeMs: segment.departureTime,
                 arrivalTimeMs: nextSegment.arrivalTime,
-                routeId: segment.routeId
+                routeId: nextSegment.routeId
               )
             )
           }
