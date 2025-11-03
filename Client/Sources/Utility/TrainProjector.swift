@@ -105,12 +105,41 @@ enum TrainProjector {
 
   // MARK: - Data helpers
 
+  /// Pick the active segment, or if between segments (stopped at station), return the next segment
   private static func pickActiveSegment(timeMs: Double, segments: [JourneySegment])
     -> JourneySegment?
   {
-    segments.first { seg in
+    // First try to find a segment where train is actively moving
+    if let activeSegment = segments.first(where: { seg in
       isWithin(timeMs, startMs: seg.departureTimeMs, endMs: seg.arrivalTimeMs)
+    }) {
+      return activeSegment
     }
+    
+    // If no active segment, train is stopped at a station between segments
+    // Find the next segment that will depart after current time
+    for i in 0..<segments.count {
+      let seg = segments[i]
+      
+      // Check if we're after this segment's arrival but before next segment's departure
+      if i < segments.count - 1 {
+        let nextSeg = segments[i + 1]
+        
+        // Normalize the time window between this segment's arrival and next segment's departure
+        let waitWindow = normalizeTimeWindow(
+          timestamp: timeMs,
+          startMs: seg.arrivalTimeMs,
+          endMs: nextSeg.departureTimeMs
+        )
+        
+        // If we're in the waiting period, return the next segment (but we'll show stopped state)
+        if waitWindow.startMs <= waitWindow.timeMs && waitWindow.timeMs < waitWindow.endMs {
+          return nextSeg
+        }
+      }
+    }
+    
+    return nil
   }
 
   private static func resolveJourneyDates(
@@ -191,7 +220,13 @@ enum TrainProjector {
 
     let fromStation = stationsById[seg.fromStationId]
     let toStation = stationsById[seg.toStationId] ?? fromStation
-    let isStopped = isWithin(timeMs, startMs: seg.arrivalTimeMs, endMs: seg.arrivalTimeMs)
+    
+    // Check if train is stopped at station:
+    // 1. Before segment departure time (waiting at departure station)
+    // 2. At exact arrival time (just arrived at destination station)
+    let isBeforeDeparture = timeMs < seg.departureTimeMs || 
+                            !isWithin(timeMs, startMs: seg.departureTimeMs, endMs: seg.arrivalTimeMs)
+    let isStopped = isBeforeDeparture
 
     let position: Position
     let moving: Bool
@@ -200,7 +235,9 @@ enum TrainProjector {
     let progress: Double?
 
     if isStopped {
-      guard let station = toStation ?? fromStation else { return nil }
+      // Train is stopped at station waiting for departure
+      // Show train at the departure station (fromStation) of this segment
+      guard let station = fromStation else { return nil }
       let coord = station.coordinate
       position = Position(latitude: coord.latitude, longitude: coord.longitude)
       moving = false
