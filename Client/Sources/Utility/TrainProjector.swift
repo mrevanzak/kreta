@@ -225,8 +225,8 @@ enum TrainProjector {
         speedKph: speedKph,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: segmentDates.arrival,
-        segmentArrival: segmentDates.departure,
+        segmentDeparture: segmentDates.departure,
+        segmentArrival: segmentDates.arrival,
         progress: progress,
         journeyDeparture: journeyDates.departure,
         journeyArrival: journeyDates.arrival
@@ -234,6 +234,25 @@ enum TrainProjector {
     } else {
       let route = seg.routeId.flatMap { routesById[$0] }
       if let route {
+        // Check if route needs to be reversed based on station proximity
+        var isRouteReversed = false
+        if let firstCoord = route.path.first,
+           let _ = route.path.last,
+           let fromCoord = fromStation?.coordinate,
+           let toCoord = toStation?.coordinate {
+          
+          // Calculate distances from route endpoints to segment stations
+          let distanceFromStartToFrom = CLLocation(latitude: firstCoord.latitude, longitude: firstCoord.longitude)
+            .distance(from: CLLocation(latitude: fromCoord.latitude, longitude: fromCoord.longitude))
+          let distanceFromStartToTo = CLLocation(latitude: firstCoord.latitude, longitude: firstCoord.longitude)
+            .distance(from: CLLocation(latitude: toCoord.latitude, longitude: toCoord.longitude))
+          
+          // If route start is closer to the destination station, the route is reversed
+          if distanceFromStartToTo < distanceFromStartToFrom {
+            isRouteReversed = true
+          }
+        }
+        
         let movementWindow = normalizeTimeWindow(
           timestamp: timeMs,
           startMs: seg.departureTimeMs,
@@ -242,16 +261,44 @@ enum TrainProjector {
         let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
         let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
         let clampedProgress = max(0, min(1, elapsed / duration))
+        
+        // Calculate distance along route, reversing if needed
         let distanceForward = (route.totalLengthCm / duration) * elapsed
-        let routedDistance = min(route.totalLengthCm, max(0, distanceForward))
+        let routedDistance: Double
+        if isRouteReversed {
+          // If route is reversed, travel from END to START (reverse direction)
+          routedDistance = route.totalLengthCm - min(route.totalLengthCm, max(0, distanceForward))
+        } else {
+          // Normal: travel from START to END
+          routedDistance = min(route.totalLengthCm, max(0, distanceForward))
+        }
 
         guard let coordinate = coordinateOnRoute(distanceCm: routedDistance, route: route) else {
           return nil
         }
+        
+        // Calculate neighbor point for bearing (also respect reverse direction)
         let delta = min(defaultBearingSampleCm, route.totalLengthCm)
-        let neighborDistance = min(route.totalLengthCm, routedDistance + delta)
+        let neighborDistance: Double
+        if isRouteReversed {
+          // Moving backward along route, so neighbor is BEFORE current position
+          neighborDistance = max(0, routedDistance - delta)
+        } else {
+          // Moving forward along route, so neighbor is AFTER current position
+          neighborDistance = min(route.totalLengthCm, routedDistance + delta)
+        }
         let neighborCoordinate = coordinateOnRoute(distanceCm: neighborDistance, route: route)
-        let heading = neighborCoordinate.flatMap { bearing(from: coordinate, to: $0) }
+        
+        // Calculate bearing based on direction of travel
+        let heading = neighborCoordinate.flatMap { neighbor in
+          if isRouteReversed {
+            // Moving backward: bearing from current to neighbor (which is behind us)
+            bearing(from: coordinate, to: neighbor)
+          } else {
+            // Moving forward: bearing from current to neighbor (which is ahead)
+            bearing(from: coordinate, to: neighbor)
+          }
+        }
 
         let distanceKm = route.totalLengthCm / 100_000
         let segmentDurationSeconds = max(
@@ -294,6 +341,7 @@ enum TrainProjector {
         let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
         let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
         let clampedProgress = max(0, min(1, elapsed / duration))
+        
         let coordinate = lerp(origin, destination, t: clampedProgress)
         let distanceMeters = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
           .distance(
