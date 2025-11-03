@@ -97,8 +97,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
     trainName: String
   ) async {
     let activityId = activity.id
-    let alarmEnabled = AlarmPreferences.shared.alarmEnabled(for: activityId)
-    let alarmOffsetMinutes = AlarmPreferences.shared.alarmOffsetMinutes(for: activityId)
+    let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
+    let alarmOffsetMinutes = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
     logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
     logger.debug("Activity ID: \(activityId, privacy: .public)")
@@ -114,11 +114,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
       logger.info("Scheduling alarm for activity \(activityId, privacy: .public)")
       await scheduleAlarmIfEnabled(
         activityId: activityId,
-        contentState: TrainActivityAttributes.ContentState(
-          journeyState: .beforeBoarding,
-          alarmEnabled: alarmEnabled,
-          alarmOffsetMinutes: alarmOffsetMinutes
-        ),
+        alarmEnabled: alarmEnabled,
+        alarmOffsetMinutes: alarmOffsetMinutes,
         arrivalTime: destination.estimatedTime,
         trainName: trainName,
         destinationName: destination.name,
@@ -138,8 +135,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let contentState = activity.content.state
     let newContentState = TrainActivityAttributes.ContentState(
       journeyState: journeyState ?? contentState.journeyState,
-      alarmEnabled: contentState.alarmEnabled,
-      alarmOffsetMinutes: contentState.alarmOffsetMinutes
     )
     await activity.update(ActivityContent(state: newContentState, staleDate: nil))
   }
@@ -203,7 +198,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   private func scheduleAlarmIfEnabled(
     activityId: String,
-    contentState: TrainActivityAttributes.ContentState,
+    alarmEnabled: Bool,
+    alarmOffsetMinutes: Int,
     arrivalTime: Date?,
     trainName: String,
     destinationName: String,
@@ -211,10 +207,10 @@ final class TrainLiveActivityService: @unchecked Sendable {
   ) async {
     logger.debug("scheduleAlarmIfEnabled called for activity \(activityId, privacy: .public)")
     logger.debug(
-      "Alarm enabled: \(contentState.alarmEnabled), offset: \(contentState.alarmOffsetMinutes) minutes"
+      "Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes"
     )
 
-    guard contentState.alarmEnabled else {
+    guard alarmEnabled else {
       logger.info(
         "Alarm disabled for activity \(activityId, privacy: .public), skipping alarm scheduling")
       return
@@ -236,7 +232,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       try await TrainAlarmService.shared.scheduleArrivalAlarm(
         activityId: activityId,
         arrivalTime: arrivalTime,
-        offsetMinutes: contentState.alarmOffsetMinutes,
+        offsetMinutes: alarmOffsetMinutes,
         trainName: trainName,
         destinationName: destinationName,
         destinationCode: destinationCode
@@ -254,9 +250,13 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func scheduleAlarmIfEnabled(for activity: Activity<TrainActivityAttributes>) async {
+    let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
+    let alarmOffsetMinutes = AlarmPreferences.shared.defaultAlarmOffsetMinutes
+
     await scheduleAlarmIfEnabled(
       activityId: activity.id,
-      contentState: activity.content.state,
+      alarmEnabled: alarmEnabled,
+      alarmOffsetMinutes: alarmOffsetMinutes,
       arrivalTime: activity.attributes.destination.estimatedTime,
       trainName: activity.attributes.trainName,
       destinationName: activity.attributes.destination.name,
@@ -329,8 +329,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func rescheduleAlarmIfNeeded(for activity: Activity<TrainActivityAttributes>) async {
-    let contentState = activity.content.state
-    guard contentState.alarmEnabled else { return }
+    let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
+    guard alarmEnabled else { return }
     guard activity.attributes.destination.estimatedTime != nil else { return }
 
     let hasAlarm = TrainAlarmService.shared.hasScheduledAlarm(activityId: activity.id)
