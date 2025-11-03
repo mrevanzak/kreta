@@ -23,6 +23,12 @@ struct TrainJourneyData: Codable, Equatable {
   let trainId: String
   let segments: [JourneySegment]
   let allStations: [Station]
+  
+  // User-selected journey leg (subset of full route)
+  let userSelectedFromStation: Station
+  let userSelectedToStation: Station
+  let userSelectedDepartureTime: Date
+  let userSelectedArrivalTime: Date
 }
 
 // MARK: - AddTrainView Extension
@@ -150,11 +156,17 @@ extension AddTrainView {
         trainJourneyData[item.trainId] = TrainJourneyData(
           trainId: item.trainId,
           segments: journeySegments,
-          allStations: allStationsInJourney
+          allStations: allStationsInJourney,
+          userSelectedFromStation: fromStation!,
+          userSelectedToStation: toStation!,
+          userSelectedDepartureTime: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+          userSelectedArrivalTime: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
         )
       } catch {
         print("Failed to fetch journey segments: \(error)")
       }
+    
+      print("time duration : \(Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000).formatted(.dateTime.hour().minute()))")
 
       let projected = ProjectedTrain(
         id: item.id,
@@ -170,7 +182,7 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
+        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         progress: nil,
         journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
