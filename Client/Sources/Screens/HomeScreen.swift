@@ -8,18 +8,11 @@ struct HomeScreen: View {
 
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false
-  @State private var selectedTrains: [ProjectedTrain] = []
-  @State private var journeyDataMap: [String: TrainJourneyData] = [:]
-  @State private var liveTrainPositions: [String: ProjectedTrain] = [:]
 
   var body: some View {
     Group {
       ZStack(alignment: .topTrailing) {
-        TrainMapView(
-          selectedTrains: selectedTrains,
-          journeyDataMap: journeyDataMap,
-          liveTrainPositions: $liveTrainPositions
-        )
+        TrainMapView()
 
         MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
           .padding(.trailing)
@@ -43,8 +36,16 @@ struct HomeScreen: View {
             }
           }
 
-          // Show trains if available, otherwise show add button
-          if selectedTrains.isEmpty {
+          // Show train if available, otherwise show add button
+          if let train = trainMapStore.selectedTrain {
+            // Use live projected train if available, otherwise use original
+            let displayTrain = trainMapStore.liveTrainPosition ?? train
+            TrainCard(
+              train: displayTrain,
+              onDelete: {
+                deleteTrain()
+              })
+          } else {
             Button {
               showAddSheet = true
             } label: {
@@ -61,18 +62,6 @@ struct HomeScreen: View {
                 )
             }
             .buttonStyle(.plain)
-          } else {
-            VStack(spacing: 12) {
-              ForEach(selectedTrains) { train in
-                // Use live projected train if available, otherwise use original
-                let displayTrain = liveTrainPositions[train.id] ?? train
-                TrainCard(
-                  train: displayTrain,
-                  onDelete: {
-                    deleteTrain(train)
-                  })
-              }
-            }
           }
         }
         .presentationBackgroundInteraction(.enabled)
@@ -84,9 +73,8 @@ struct HomeScreen: View {
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train, journeyData in
-              selectedTrains.append(train)
               if let journeyData = journeyData {
-                journeyDataMap[train.id] = journeyData
+                trainMapStore.selectTrain(train, journeyData: journeyData)
               }
               showAddSheet = false
             }
@@ -100,13 +88,16 @@ struct HomeScreen: View {
             .presentationBackground(.ultraThinMaterial)
         }
       }
-    }.environment(trainMapStore)
+    }
+    .environment(trainMapStore)
+    .task {
+      try? await trainMapStore.loadSelectedTrainFromCache()
+    }
   }
 
-  private func deleteTrain(_ train: ProjectedTrain) {
+  private func deleteTrain() {
     withAnimation(.spring(response: 0.3)) {
-      selectedTrains.removeAll { $0.id == train.id }
-      journeyDataMap.removeValue(forKey: train.id)
+      trainMapStore.clearSelectedTrain()
     }
   }
 }

@@ -2,7 +2,7 @@ import ConvexMobile
 import CoreLocation
 import Foundation
 
-struct Position: Codable {
+struct Position: Codable, Equatable {
   let latitude: Double
   let longitude: Double
 
@@ -11,7 +11,7 @@ struct Position: Codable {
   }
 }
 
-struct Station: Codable, Identifiable {
+struct Station: Codable, Identifiable, Equatable {
   let id: String?
   let code: String
   let name: String
@@ -156,12 +156,10 @@ struct ProjectedTrain: Codable, Identifiable, Equatable {
   var coordinate: CLLocationCoordinate2D {
     CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
   }
-  
+
   static func == (lhs: ProjectedTrain, rhs: ProjectedTrain) -> Bool {
-    lhs.id == rhs.id && 
-    lhs.position.latitude == rhs.position.latitude && 
-    lhs.position.longitude == rhs.position.longitude &&
-    lhs.moving == rhs.moving
+    lhs.id == rhs.id && lhs.position.latitude == rhs.position.latitude
+      && lhs.position.longitude == rhs.position.longitude && lhs.moving == rhs.moving
   }
 }
 
@@ -173,7 +171,7 @@ struct RoutePolyline: Codable, Identifiable, Sendable {
   let path: [Position]
 }
 
-struct JourneySegment: Codable, Sendable {
+struct JourneySegment: Codable, Sendable, Equatable {
   let fromStationId: String
   let toStationId: String
   let departureTimeMs: Double

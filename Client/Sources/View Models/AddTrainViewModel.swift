@@ -19,7 +19,7 @@ enum SelectionStep {
 
 // MARK: - Journey Data
 
-struct TrainJourneyData {
+struct TrainJourneyData: Codable, Equatable {
   let trainId: String
   let segments: [JourneySegment]
   let allStations: [Station]
@@ -37,7 +37,7 @@ extension AddTrainView {
     var connectedStations: [Station] = []
     var availableTrains: [JourneyService.AvailableTrainItem] = []
     var filteredTrains: [JourneyService.AvailableTrainItem] = []
-    
+
     // Store journey data separately from ProjectedTrain
     var trainJourneyData: [String: TrainJourneyData] = [:]
 
@@ -119,15 +119,15 @@ extension AddTrainView {
       // Fetch journey segments for the complete route
       var journeySegments: [JourneySegment] = []
       var allStationsInJourney: [Station] = []
-      
+
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
-        
+
         // Convert to JourneySegment model
         for (index, segment) in segments.enumerated() {
           if index < segments.count - 1 {
             let nextSegment = segments[index + 1]
-            
+
             // Use nextSegment.routeId because the route connects TO the next station
             journeySegments.append(
               JourneySegment(
@@ -139,13 +139,13 @@ extension AddTrainView {
               )
             )
           }
-          
+
           // Collect all stations
           if let station = stationsById[segment.stationId] {
             allStationsInJourney.append(station)
           }
         }
-        
+
         // Store journey data separately
         trainJourneyData[item.trainId] = TrainJourneyData(
           trainId: item.trainId,

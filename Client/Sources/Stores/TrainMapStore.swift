@@ -13,23 +13,28 @@ final class TrainMapStore {
   var selectedMapStyle: MapStyleOption = .hybrid
   var selectedTrain: ProjectedTrain? {
     didSet {
-      if let selectedTrain {
-        projectTrains()
-      }
+      Task { await persistSelectedTrain() }
     }
   }
 
-  var stations: [Station] = [] {
-    didSet { projectTrains() }
-  }
-  var routes: [Route] = [] {
-    didSet { projectTrains() }
-  }
+  var stations: [Station] = []
+  var routes: [Route] = []
   var lastUpdatedAt: String?
 
-  var projectedTrain: ProjectedTrain?
-  var journey: TrainJourney? {
-    didSet { projectTrains() }
+  var selectedJourneyData: TrainJourneyData? {
+    didSet {
+      Task { await persistJourneyData() }
+    }
+  }
+
+  // Timestamp for triggering live position updates (must be observable)
+  private var projectionTimestamp: Date = Date()
+
+  var liveTrainPosition: ProjectedTrain? {
+    guard selectedTrain != nil, selectedJourneyData != nil else { return nil }
+    // Access projectionTimestamp to establish dependency for observation
+    _ = projectionTimestamp
+    return projectSelectedTrain(now: Date())
   }
 
   @ObservationIgnored private var projectionTimer: Timer?
@@ -78,7 +83,6 @@ final class TrainMapStore {
       let hasCompleteCache =
         cacheService.hasCachedStations()
         && cacheService.hasCachedRoutes()
-        && cacheService.hasCachedJourney()
 
       let needsUpdate = cachedTimestamp != timestamp || !hasCompleteCache
 
@@ -136,12 +140,10 @@ extension TrainMapStore {
     stations = try cacheService.loadCachedStations()
     let routePolylines = try cacheService.loadCachedRoutes()
     routes = routePolylines.map { Route(id: $0.id, name: $0.name, path: $0.path) }
-    journey = try cacheService.loadCachedJourney()
   }
 
   fileprivate func loadCachedDataIfAvailable() throws -> Bool {
-    guard cacheService.hasCachedStations(), cacheService.hasCachedRoutes(),
-      cacheService.hasCachedJourney()
+    guard cacheService.hasCachedStations(), cacheService.hasCachedRoutes()
     else { return false }
 
     try loadCachedData()
@@ -151,28 +153,13 @@ extension TrainMapStore {
 
 // MARK: - Projection management
 extension TrainMapStore {
-  func projectTrains(now: Date = Date()) {
-    guard let journey else {
-      return
-    }
-
-    let stationLookup = Dictionary(uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
-    let routeLookupByIdentifier = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
-
-    let projected = TrainProjector.projectTrain(
-      now: now, journey: journey, stationsById: stationLookup, routesById: routeLookupByIdentifier
-    )
-
-    projectedTrain = projected
-
-  }
-
   func startProjectionUpdates(interval: TimeInterval = 1.0) {
     stopProjectionUpdates()
     let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
       guard let self else { return }
       Task { @MainActor in
-        self.projectTrains()
+        // Update timestamp to trigger liveTrainPosition recalculation
+        self.projectionTimestamp = Date()
       }
     }
     projectionTimer = timer
@@ -187,12 +174,59 @@ extension TrainMapStore {
 
 // MARK: - Selected train management
 extension TrainMapStore {
-  func selectTrain(train: ProjectedTrain) {
+  func selectTrain(_ train: ProjectedTrain, journeyData: TrainJourneyData) {
     selectedTrain = train
+    selectedJourneyData = journeyData
+    startProjectionUpdates()
   }
 
-  func removeSelectedTrain() {
+  func clearSelectedTrain() {
     selectedTrain = nil
+    selectedJourneyData = nil
+  }
+
+  func loadSelectedTrainFromCache() async throws {
+    selectedTrain = try cacheService.loadSelectedTrain()
+    selectedJourneyData = try cacheService.loadJourneyData()
+  }
+
+  private func persistSelectedTrain() async {
+    do {
+      try cacheService.saveSelectedTrain(selectedTrain)
+    } catch {
+      logger.error("Failed to save selected train: \(error)")
+    }
+  }
+
+  private func persistJourneyData() async {
+    do {
+      try cacheService.saveJourneyData(selectedJourneyData)
+    } catch {
+      logger.error("Failed to save journey data: \(error)")
+    }
+  }
+
+  private func projectSelectedTrain(now: Date = Date()) -> ProjectedTrain? {
+    guard let selectedTrain, let selectedJourneyData else { return nil }
+
+    let stationsById = Dictionary(
+      uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+    let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
+
+    let trainJourney = TrainJourney(
+      id: selectedTrain.id,
+      trainId: selectedTrain.id,
+      code: selectedTrain.code,
+      name: selectedTrain.name,
+      segments: selectedJourneyData.segments
+    )
+
+    return TrainProjector.projectTrain(
+      now: now,
+      journey: trainJourney,
+      stationsById: stationsById,
+      routesById: routesById
+    )
   }
 }
 
