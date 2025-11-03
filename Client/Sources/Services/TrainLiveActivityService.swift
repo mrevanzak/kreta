@@ -105,11 +105,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     logger.debug("Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes")
 
     Task {
-      logger.info("Starting push token monitoring for activity \(activityId, privacy: .public)")
-      await monitorPushTokens(for: activity)
-    }
-
-    Task {
       logger.info("Starting automatic transitions for activity \(activityId, privacy: .public)")
       await startAutomaticTransitions(for: activity)
       logger.info("Automatic transitions started for activity \(activityId, privacy: .public)")
@@ -312,10 +307,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     for await tokenData in activity.pushTokenUpdates {
       let token = tokenData.hexEncodedString()
       await registerLiveActivityToken(activityId: activity.id, token: token)
-    }
-
-    Task {
-      await monitorPushToStartTokens()
     }
   }
 
