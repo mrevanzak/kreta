@@ -1,19 +1,47 @@
 import ActivityKit
+import AlarmKit
 import ConvexMobile
 import Foundation
+import OSLog
+
+// MARK: - TrainLiveActivityService
 
 final class TrainLiveActivityService: @unchecked Sendable {
   static let shared = TrainLiveActivityService()
 
+  // MARK: - Constants
+
+  private enum Constants {
+    static let maxRetryAttempts = 3
+    static let baseRetryDelay: Double = 0.5
+    static let nanosecondsPerSecond: UInt64 = 1_000_000_000
+  }
+
+  // MARK: - Properties
+
   private let convexClient: ConvexClient
-  private var hasStartedGlobalMonitoring = false
-  private var transitionTimers: [String: Task<Void, Never>] = [:]
+  private let lockQueue = DispatchQueue(label: "com.kreta.liveActivityService.queue")
+  private let logger = Logger(subsystem: "kreta", category: "TrainLiveActivityService")
+  private var _hasStartedGlobalMonitoring = false
+  private var _transitionTimers: [String: Task<Void, Never>] = [:]
+
+  private var hasStartedGlobalMonitoring: Bool {
+    get { lockQueue.sync { _hasStartedGlobalMonitoring } }
+    set { lockQueue.sync { _hasStartedGlobalMonitoring = newValue } }
+  }
+
+  private var transitionTimers: [String: Task<Void, Never>] {
+    get { lockQueue.sync { _transitionTimers } }
+    set { lockQueue.sync { _transitionTimers = newValue } }
+  }
 
   private init(
     convexClient: ConvexClient = Dependencies.shared.convexClient
   ) {
     self.convexClient = convexClient
   }
+
+  // MARK: - Activity Lifecycle
 
   @discardableResult
   @MainActor
@@ -24,26 +52,85 @@ final class TrainLiveActivityService: @unchecked Sendable {
     seatClass: SeatClass,
     seatNumber: String,
   ) async throws -> Activity<TrainActivityAttributes> {
+    let activity = try await createActivity(
+      trainName: trainName,
+      from: from,
+      destination: destination,
+      seatClass: seatClass,
+      seatNumber: seatNumber
+    )
+
+    await setupActivityMonitoring(for: activity, destination: destination, trainName: trainName)
+
+    return activity
+  }
+
+  @MainActor
+  private func createActivity(
+    trainName: String,
+    from: TrainStation,
+    destination: TrainStation,
+    seatClass: SeatClass,
+    seatNumber: String
+  ) async throws -> Activity<TrainActivityAttributes> {
     let attributes = TrainActivityAttributes(
       trainName: trainName,
       from: from,
       destination: destination,
       seatClass: seatClass,
-      seatNumber: seatNumber,
+      seatNumber: seatNumber
     )
-    let contentState = TrainActivityAttributes.ContentState(
-      journeyState: .beforeBoarding
-    )
+
+    let contentState = TrainActivityAttributes.ContentState(journeyState: .beforeBoarding)
     let content = ActivityContent(state: contentState, staleDate: nil)
-    let activity = try Activity<TrainActivityAttributes>.request(
+
+    return try Activity<TrainActivityAttributes>.request(
       attributes: attributes,
       content: content
     )
+  }
+
+  @MainActor
+  private func setupActivityMonitoring(
+    for activity: Activity<TrainActivityAttributes>,
+    destination: TrainStation,
+    trainName: String
+  ) async {
+    let activityId = activity.id
+    let alarmEnabled = AlarmPreferences.shared.alarmEnabled(for: activityId)
+    let alarmOffsetMinutes = AlarmPreferences.shared.alarmOffsetMinutes(for: activityId)
+
+    logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
+    logger.debug("Activity ID: \(activityId, privacy: .public)")
+    logger.debug("Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes")
+
     Task {
+      logger.info("Starting push token monitoring for activity \(activityId, privacy: .public)")
       await monitorPushTokens(for: activity)
-      await startAutomaticTransitions(for: activity)
     }
-    return activity
+
+    Task {
+      logger.info("Starting automatic transitions for activity \(activityId, privacy: .public)")
+      await startAutomaticTransitions(for: activity)
+      logger.info("Automatic transitions started for activity \(activityId, privacy: .public)")
+    }
+
+    Task {
+      logger.info("Scheduling alarm for activity \(activityId, privacy: .public)")
+      await scheduleAlarmIfEnabled(
+        activityId: activityId,
+        contentState: TrainActivityAttributes.ContentState(
+          journeyState: .beforeBoarding,
+          alarmEnabled: alarmEnabled,
+          alarmOffsetMinutes: alarmOffsetMinutes
+        ),
+        arrivalTime: destination.estimatedTime,
+        trainName: trainName,
+        destinationName: destination.name,
+        destinationCode: destination.code
+      )
+      logger.info("Alarm scheduling complete for activity \(activityId, privacy: .public)")
+    }
   }
 
   @MainActor
@@ -51,17 +138,23 @@ final class TrainLiveActivityService: @unchecked Sendable {
     activityId: String,
     journeyState: JourneyState? = nil
   ) async {
-    for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-      let contentState = activity.content.state
-      let newContentState = TrainActivityAttributes.ContentState(
-        journeyState: journeyState ?? contentState.journeyState
-      )
-      await activity.update(ActivityContent(state: newContentState, staleDate: nil))
-    }
+    guard let activity = findActivity(with: activityId) else { return }
+
+    let contentState = activity.content.state
+    let newContentState = TrainActivityAttributes.ContentState(
+      journeyState: journeyState ?? contentState.journeyState,
+      alarmEnabled: contentState.alarmEnabled,
+      alarmOffsetMinutes: contentState.alarmOffsetMinutes
+    )
+    await activity.update(ActivityContent(state: newContentState, staleDate: nil))
   }
 
   func getActiveLiveActivities() -> [Activity<TrainActivityAttributes>] {
-    return Activity<TrainActivityAttributes>.activities
+    Activity<TrainActivityAttributes>.activities
+  }
+
+  private func findActivity(with activityId: String) -> Activity<TrainActivityAttributes>? {
+    Activity<TrainActivityAttributes>.activities.first { $0.id == activityId }
   }
 
   @MainActor
@@ -74,37 +167,106 @@ final class TrainLiveActivityService: @unchecked Sendable {
     await update(activityId: activityId, journeyState: .prepareToDropOff)
   }
 
+  // MARK: - State Transitions
+
   @MainActor
   func startAutomaticTransitions(for activity: Activity<TrainActivityAttributes>) async {
     let activityId = activity.id
 
-    // Cancel any existing timer for this activity
-    transitionTimers[activityId]?.cancel()
-
-    // Create a new timer task
-    let timerTask = Task<Void, Never> {
-      defer { transitionTimers.removeValue(forKey: activityId) }
-
-      // Transition to .onBoard when departure time arrives
-      if let departureTime = activity.attributes.from.estimatedTime {
-        let delay = max(0, departureTime.timeIntervalSinceNow)
-        if delay > 0 {
-          try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-          await transitionToOnBoard(activityId: activityId)
-        }
-      }
-
-      // Transition to .prepareToDropOff when 10 minutes before arrival time
-      if let arrivalTime = activity.attributes.destination.estimatedTime {
-        let delay = max(0, arrivalTime.timeIntervalSinceNow - 10 * 60)
-        if delay > 0 {
-          try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-          await transitionToPrepareToDropOff(activityId: activityId)
-        }
-      }
+    lockQueue.sync {
+      _transitionTimers[activityId]?.cancel()
     }
 
-    transitionTimers[activityId] = timerTask
+    let timerTask = Task<Void, Never> { @MainActor in
+      defer {
+        _ = lockQueue.sync { _transitionTimers.removeValue(forKey: activityId) }
+      }
+
+      await scheduleDepartureTransition(for: activity)
+    }
+
+    lockQueue.sync {
+      _transitionTimers[activityId] = timerTask
+    }
+  }
+
+  @MainActor
+  private func scheduleDepartureTransition(
+    for activity: Activity<TrainActivityAttributes>
+  ) async {
+    guard let departureTime = activity.attributes.from.estimatedTime else { return }
+
+    let delay = max(0, departureTime.timeIntervalSinceNow)
+    guard delay > 0 else { return }
+
+    let delayNanoseconds = UInt64(delay * Double(Constants.nanosecondsPerSecond))
+    try? await Task.sleep(nanoseconds: delayNanoseconds)
+    await transitionToOnBoard(activityId: activity.id)
+  }
+
+  // MARK: - Alarm Management
+
+  private func scheduleAlarmIfEnabled(
+    activityId: String,
+    contentState: TrainActivityAttributes.ContentState,
+    arrivalTime: Date?,
+    trainName: String,
+    destinationName: String,
+    destinationCode: String
+  ) async {
+    logger.debug("scheduleAlarmIfEnabled called for activity \(activityId, privacy: .public)")
+    logger.debug(
+      "Alarm enabled: \(contentState.alarmEnabled), offset: \(contentState.alarmOffsetMinutes) minutes"
+    )
+
+    guard contentState.alarmEnabled else {
+      logger.info(
+        "Alarm disabled for activity \(activityId, privacy: .public), skipping alarm scheduling")
+      return
+    }
+
+    guard let arrivalTime = arrivalTime else {
+      logger.warning(
+        "No arrival time for activity \(activityId, privacy: .public), skipping alarm scheduling")
+      return
+    }
+
+    logger.info("Scheduling alarm for activity \(activityId, privacy: .public)")
+    logger.debug(
+      "Train: \(trainName, privacy: .public), Destination: \(destinationName, privacy: .public) (\(destinationCode, privacy: .public))"
+    )
+    logger.debug("Arrival time: \(arrivalTime, privacy: .public)")
+
+    do {
+      try await TrainAlarmService.shared.scheduleArrivalAlarm(
+        activityId: activityId,
+        arrivalTime: arrivalTime,
+        offsetMinutes: contentState.alarmOffsetMinutes,
+        trainName: trainName,
+        destinationName: destinationName,
+        destinationCode: destinationCode
+      )
+      logger.info("Successfully scheduled alarm for activity \(activityId, privacy: .public)")
+    } catch {
+      logger.error(
+        "Failed to schedule alarm for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+      )
+      if let alarmError = error as? TrainAlarmError {
+        logger.debug(
+          "AlarmKit error: \(alarmError.errorDescription ?? "Unknown", privacy: .public)")
+      }
+    }
+  }
+
+  private func scheduleAlarmIfEnabled(for activity: Activity<TrainActivityAttributes>) async {
+    await scheduleAlarmIfEnabled(
+      activityId: activity.id,
+      contentState: activity.content.state,
+      arrivalTime: activity.attributes.destination.estimatedTime,
+      trainName: activity.attributes.trainName,
+      destinationName: activity.attributes.destination.name,
+      destinationCode: activity.attributes.destination.code
+    )
   }
 
   @MainActor
@@ -112,27 +274,39 @@ final class TrainLiveActivityService: @unchecked Sendable {
     activityId: String,
     dismissalPolicy: ActivityUIDismissalPolicy = .immediate
   ) async {
-    // Cancel any running timers for this activity
-    transitionTimers[activityId]?.cancel()
-    transitionTimers.removeValue(forKey: activityId)
+    cancelTimer(for: activityId)
+    await TrainAlarmService.shared.cancelArrivalAlarm(activityId: activityId)
 
-    for activity in Activity<TrainActivityAttributes>.activities where activity.id == activityId {
-      await activity.end(nil, dismissalPolicy: dismissalPolicy)
-    }
+    guard let activity = findActivity(with: activityId) else { return }
+    await activity.end(nil, dismissalPolicy: dismissalPolicy)
   }
 
   @MainActor
   func endAllImmediately() async {
-    // Cancel all running timers
-    for timer in transitionTimers.values {
-      timer.cancel()
-    }
-    transitionTimers.removeAll()
+    cancelAllTimers()
+    await TrainAlarmService.shared.cancelAllAlarms()
 
     for activity in Activity<TrainActivityAttributes>.activities {
       await activity.end(nil, dismissalPolicy: .immediate)
     }
   }
+
+  private func cancelTimer(for activityId: String) {
+    lockQueue.sync {
+      _transitionTimers[activityId]?.cancel()
+      _transitionTimers.removeValue(forKey: activityId)
+    }
+  }
+
+  private func cancelAllTimers() {
+    let timers = lockQueue.sync { Array(_transitionTimers.values) }
+    timers.forEach { $0.cancel() }
+    lockQueue.sync {
+      _transitionTimers.removeAll()
+    }
+  }
+
+  // MARK: - Monitoring
 
   private func monitorPushTokens(for activity: Activity<TrainActivityAttributes>) async {
     for await tokenData in activity.pushTokenUpdates {
@@ -150,23 +324,28 @@ final class TrainLiveActivityService: @unchecked Sendable {
     guard !hasStartedGlobalMonitoring else { return }
     hasStartedGlobalMonitoring = true
 
-    Task {
-      await monitorExistingActivities()
-    }
-
-    Task {
-      await monitorActivityUpdates()
-    }
-
-    Task {
-      await monitorPushToStartTokens()
-    }
+    Task { await monitorExistingActivities() }
+    Task { await monitorActivityUpdates() }
+    Task { await monitorPushToStartTokens() }
+    Task { await monitorAlarmUpdates() }
   }
 
   private func monitorExistingActivities() async {
     for activity in Activity<TrainActivityAttributes>.activities {
       await monitorPushTokens(for: activity)
+      await rescheduleAlarmIfNeeded(for: activity)
     }
+  }
+
+  private func rescheduleAlarmIfNeeded(for activity: Activity<TrainActivityAttributes>) async {
+    let contentState = activity.content.state
+    guard contentState.alarmEnabled else { return }
+    guard activity.attributes.destination.estimatedTime != nil else { return }
+
+    let hasAlarm = TrainAlarmService.shared.hasScheduledAlarm(activityId: activity.id)
+    guard !hasAlarm else { return }
+
+    await scheduleAlarmIfEnabled(for: activity)
   }
 
   private func monitorActivityUpdates() async {
@@ -175,31 +354,23 @@ final class TrainLiveActivityService: @unchecked Sendable {
     }
   }
 
-  private func registerLiveActivityToken(activityId: String, token: String) async {
-    var attempt = 0
-    let maxAttempts = 3
+  // MARK: - Token Registration
 
-    while attempt < maxAttempts {
-      do {
-        // deviceToken required by server registrations.registerLiveActivityToken
-        guard let deviceToken = PushRegistrationService.shared.currentToken() else { return }
-        let _: String = try await convexClient.mutation(
-          "registrations:registerLiveActivityToken",
-          with: [
-            "activityId": activityId,
-            "token": token,
-            "deviceToken": deviceToken,
-          ],
-          captureTelemetry: true)
-        return
-      } catch {
-        attempt += 1
-        if attempt >= maxAttempts {
-          return
-        }
-        let delay = UInt64(pow(2.0, Double(attempt)) * 0.5 * 1_000_000_000)
-        try? await Task.sleep(nanoseconds: delay)
+  private func registerLiveActivityToken(activityId: String, token: String) async {
+    await performWithRetry {
+      guard let deviceToken = PushRegistrationService.shared.currentToken() else {
+        throw TokenRegistrationError.missingDeviceToken
       }
+
+      let _: String = try await self.convexClient.mutation(
+        "registrations:registerLiveActivityToken",
+        with: [
+          "activityId": activityId,
+          "token": token,
+          "deviceToken": deviceToken,
+        ],
+        captureTelemetry: true
+      )
     }
   }
 
@@ -211,30 +382,72 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func registerLiveActivityStartToken(token: String) async {
-    var attempt = 0
-    let maxAttempts = 3
+    await performWithRetry {
+      guard let deviceToken = PushRegistrationService.shared.currentToken() else {
+        throw TokenRegistrationError.missingDeviceToken
+      }
 
-    while attempt < maxAttempts {
+      let _: String = try await self.convexClient.mutation(
+        "registrations:registerLiveActivityStartToken",
+        with: [
+          "deviceToken": deviceToken,
+          "token": token,
+          "userId": nil,
+        ],
+        captureTelemetry: true
+      )
+    }
+  }
+
+  private func performWithRetry(_ operation: @escaping () async throws -> Void) async {
+    for attempt in 1...Constants.maxRetryAttempts {
       do {
-        // deviceToken required by server registrations.registerLiveActivityStartToken
-        guard let deviceToken = PushRegistrationService.shared.currentToken() else { return }
-        let _: String = try await convexClient.mutation(
-          "registrations:registerLiveActivityStartToken",
-          with: [
-            "deviceToken": deviceToken,
-            "token": token,
-            "userId": nil,
-          ],
-          captureTelemetry: true)
+        try await operation()
         return
       } catch {
-        attempt += 1
-        if attempt >= maxAttempts {
-          return
-        }
-        let delay = UInt64(pow(2.0, Double(attempt)) * 0.5 * 1_000_000_000)
-        try? await Task.sleep(nanoseconds: delay)
+        guard attempt < Constants.maxRetryAttempts else { return }
+
+        let delayNanoseconds = calculateRetryDelay(for: attempt)
+        try? await Task.sleep(nanoseconds: delayNanoseconds)
       }
     }
   }
+
+  private func calculateRetryDelay(for attempt: Int) -> UInt64 {
+    let exponentialDelay = pow(2.0, Double(attempt)) * Constants.baseRetryDelay
+    return UInt64(exponentialDelay * Double(Constants.nanosecondsPerSecond))
+  }
+
+  private func monitorAlarmUpdates() async {
+    for await alarms in AlarmManager.shared.alarmUpdates {
+      for alarm in alarms {
+        guard alarm.state == .alerting else { continue }
+        guard let activityId = TrainAlarmService.shared.activityId(for: alarm.id) else {
+          continue
+        }
+
+        await handleAlarmTriggered(for: activityId)
+      }
+    }
+  }
+
+  @MainActor
+  private func handleAlarmTriggered(for activityId: String) async {
+    guard findActivity(with: activityId) != nil else {
+      logger.warning(
+        "Activity \(activityId, privacy: .public) no longer exists, skipping transition")
+      return
+    }
+
+    await transitionToPrepareToDropOff(activityId: activityId)
+    logger.info(
+      "Automatically transitioned activity \(activityId, privacy: .public) to .prepareToDropOff due to alarm"
+    )
+  }
+}
+
+// MARK: - Errors
+
+private enum TokenRegistrationError: Error {
+  case missingDeviceToken
 }
