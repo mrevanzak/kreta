@@ -55,11 +55,17 @@ public struct TrainStation: Codable, Hashable, Sendable {
 public struct TrainActivityAttributes: ActivityAttributes, Sendable {
   public struct ContentState: Codable, Hashable, Sendable {
     public var journeyState: JourneyState
+    public var alarmEnabled: Bool
+    public var alarmOffsetMinutes: Int
 
     public init(
-      journeyState: JourneyState = .beforeBoarding
+      journeyState: JourneyState = .beforeBoarding,
+      alarmEnabled: Bool = true,
+      alarmOffsetMinutes: Int = 10
     ) {
       self.journeyState = journeyState
+      self.alarmEnabled = alarmEnabled
+      self.alarmOffsetMinutes = alarmOffsetMinutes
     }
   }
 

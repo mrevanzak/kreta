@@ -505,19 +505,25 @@ extension TrainActivityAttributes {
 extension TrainActivityAttributes.ContentState {
   fileprivate static var beforeBoarding: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .beforeBoarding
+      journeyState: .beforeBoarding,
+      alarmEnabled: true,
+      alarmOffsetMinutes: 10
     )
   }
 
   fileprivate static var onBoard: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .onBoard
+      journeyState: .onBoard,
+      alarmEnabled: true,
+      alarmOffsetMinutes: 10
     )
   }
 
   fileprivate static var prepareToDropOff: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .prepareToDropOff
+      journeyState: .prepareToDropOff,
+      alarmEnabled: true,
+      alarmOffsetMinutes: 10
     )
   }
 }
