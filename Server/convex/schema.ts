@@ -107,7 +107,12 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     email: v.union(v.string(), v.null()),
-    status: v.string(), // "pending", "accepted", "finished"
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("done")
+    ),
     createdAt: v.number(),
   })
     .index("by_createdAt", ["createdAt"])
