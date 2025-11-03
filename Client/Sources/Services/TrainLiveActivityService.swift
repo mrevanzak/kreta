@@ -142,7 +142,9 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     let contentState = activity.content.state
     let newContentState = TrainActivityAttributes.ContentState(
-      journeyState: journeyState ?? contentState.journeyState
+      journeyState: journeyState ?? contentState.journeyState,
+      alarmEnabled: contentState.alarmEnabled,
+      alarmOffsetMinutes: contentState.alarmOffsetMinutes
     )
     await activity.update(ActivityContent(state: newContentState, staleDate: nil))
   }
