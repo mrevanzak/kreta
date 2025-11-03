@@ -207,10 +207,23 @@ extension TrainMapStore {
       journeyArrival: Date(timeIntervalSince1970: last.arrivalTime / 1000.0)
     )
 
+    // Resolve required user-selected leg details for the new TrainJourneyData
+    guard let resolvedFromStation = fromStation, let resolvedToStation = toStation else {
+      logger.error("Missing station mapping for user-selected leg in TrainJourneyData")
+      return
+    }
+
+    let userSelectedDepartureTime = Date(timeIntervalSince1970: first.departureTime / 1000.0)
+    let userSelectedArrivalTime = Date(timeIntervalSince1970: last.arrivalTime / 1000.0)
+
     let journeyData = TrainJourneyData(
       trainId: trainId,
       segments: journeySegments,
-      allStations: allStationsInJourney
+      allStations: allStationsInJourney,
+      userSelectedFromStation: resolvedFromStation,
+      userSelectedToStation: resolvedToStation,
+      userSelectedDepartureTime: userSelectedDepartureTime,
+      userSelectedArrivalTime: userSelectedArrivalTime
     )
 
     // Persist and start
