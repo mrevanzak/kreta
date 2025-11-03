@@ -130,17 +130,32 @@ struct TrainCard: View {
       return "Waktu tidak tersedia"
     }
 
-    print(arrival)
-    let now = Date()
-    let interval = arrival.timeIntervalSince(now)
+    // Format both times as strings
+    let arrivalString = arrival.formatted(.dateTime.hour().minute())
+    let nowString = Date().formatted(.dateTime.hour().minute())
     
-    // If already arrived
-    if interval < 0 {
+    // Parse time strings to calculate interval
+    guard let arrivalComponents = parseTimeString(arrivalString),
+          let nowComponents = parseTimeString(nowString) else {
+      return "Waktu tidak tersedia"
+    }
+    
+    let arrivalMinutes = arrivalComponents.hour * 60 + arrivalComponents.minute
+    let nowMinutes = nowComponents.hour * 60 + nowComponents.minute
+    
+    // Calculate difference (handle day rollover)
+    var intervalMinutes = arrivalMinutes - nowMinutes
+    if intervalMinutes < 0 {
+      intervalMinutes += 24 * 60 // Add 24 hours if negative (crossed midnight)
+    }
+    
+    // If already arrived (more than 12 hours means it's in the past)
+    if intervalMinutes > 12 * 60 {
       return "Sudah Tiba"
     }
     
-    let hours = Int(interval) / 3600
-    let minutes = (Int(interval) % 3600) / 60
+    let hours = intervalMinutes / 60
+    let minutes = intervalMinutes % 60
 
     if hours > 0 && minutes > 0 {
       return "Tiba Dalam \(hours)Jam \(minutes)Menit"
@@ -151,6 +166,17 @@ struct TrainCard: View {
     } else {
       return "Tiba Sebentar Lagi"
     }
+  }
+  
+  private func parseTimeString(_ timeString: String) -> (hour: Int, minute: Int)? {
+    // Expected format: "HH:mm" or "H:mm"
+    let components = timeString.split(separator: ".")
+    guard components.count == 2,
+          let hour = Int(components[0]),
+          let minute = Int(components[1]) else {
+      return nil
+    }
+    return (hour, minute)
   }
 
   private func formatTime(_ date: Date?) -> String {
