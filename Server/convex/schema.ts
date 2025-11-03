@@ -125,4 +125,31 @@ export default defineSchema({
   })
     .index("by_feedbackId", ["feedbackId"])
     .index("by_feedback_device", ["feedbackId", "deviceToken"]),
+
+  scheduledLiveActivities: defineTable({
+    deviceToken: v.string(),
+    startToken: v.string(),
+    scheduledStartTime: v.number(),
+    trainName: v.string(),
+    fromStation: v.object({
+      name: v.string(),
+      code: v.string(),
+      estimatedTime: v.union(v.number(), v.null()),
+    }),
+    destinationStation: v.object({
+      name: v.string(),
+      code: v.string(),
+      estimatedTime: v.union(v.number(), v.null()),
+    }),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("started"),
+      v.literal("failed"),
+      v.literal("cancelled")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_scheduledStartTime", ["scheduledStartTime"])
+    .index("by_status", ["status"])
+    .index("by_deviceToken", ["deviceToken"]),
 });

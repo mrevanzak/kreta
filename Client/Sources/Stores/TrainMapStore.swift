@@ -1,4 +1,5 @@
 import Combine
+import ConvexMobile
 import Foundation
 import OSLog
 import Observation
@@ -6,8 +7,9 @@ import Observation
 @MainActor
 @Observable
 final class TrainMapStore {
-  private let convexClient = Dependencies.shared.convexClient
+  private nonisolated(unsafe) let convexClient = Dependencies.shared.convexClient
   private let cacheService = TrainMapCacheService()
+  private let liveActivityService = TrainLiveActivityService.shared
 
   var isLoading: Bool = false
   var selectedMapStyle: MapStyleOption = .hybrid
@@ -174,13 +176,124 @@ extension TrainMapStore {
 
 // MARK: - Selected train management
 extension TrainMapStore {
-  func selectTrain(_ train: ProjectedTrain, journeyData: TrainJourneyData) {
+  func selectTrain(_ train: ProjectedTrain, journeyData: TrainJourneyData) async throws {
     selectedTrain = train
     selectedJourneyData = journeyData
     startProjectionUpdates()
+
+    // Start Live Activity
+    try await startLiveActivityForTrain(train: train, journeyData: journeyData)
   }
 
-  func clearSelectedTrain() {
+  private func startLiveActivityForTrain(train: ProjectedTrain, journeyData: TrainJourneyData)
+    async throws
+  {
+    guard let fromStation = train.fromStation,
+      let toStation = train.toStation,
+      let departureTime = train.segmentDeparture
+    else {
+      logger.error("Missing required data for Live Activity")
+      return
+    }
+
+    let timeUntilDeparture = departureTime.timeIntervalSinceNow
+    let thirtyMinutes: TimeInterval = 30 * 60
+
+    if timeUntilDeparture <= thirtyMinutes {
+      // Start immediately on device
+      logger.info(
+        "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
+
+      // TODO: Replace hardcoded seat class with actual user data
+      try await liveActivityService.start(
+        trainName: train.name,
+        from: TrainStation(
+          name: fromStation.name,
+          code: fromStation.code,
+          estimatedTime: departureTime
+        ),
+        destination: TrainStation(
+          name: toStation.name,
+          code: toStation.code,
+          estimatedTime: train.segmentArrival
+        ),
+        seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
+        seatNumber: "1A"  // TODO: Replace with actual seat number
+      )
+    } else {
+      // Queue on server to start 30 minutes before departure
+      logger.info(
+        "Queuing Live Activity on server (departure in \(timeUntilDeparture / 60) minutes)")
+
+      let scheduledStartTime = departureTime.addingTimeInterval(-thirtyMinutes)
+      try await queueLiveActivityOnServer(
+        train: train,
+        fromStation: fromStation,
+        toStation: toStation,
+        scheduledStartTime: scheduledStartTime
+      )
+    }
+  }
+
+  private func queueLiveActivityOnServer(
+    train: ProjectedTrain,
+    fromStation: Station,
+    toStation: Station,
+    scheduledStartTime: Date
+  ) async throws {
+    guard let deviceToken = PushRegistrationService.shared.currentToken() else {
+      logger.error("No device token available for queuing Live Activity")
+      throw TrainMapError.missingDeviceToken
+    }
+
+    var fromEstimatedTime: Double? = nil
+    if let departureTime = train.segmentDeparture {
+      fromEstimatedTime = departureTime.timeIntervalSince1970 * 1000
+    }
+
+    var destinationEstimatedTime: Double? = nil
+    if let arrivalTime = train.segmentArrival {
+      destinationEstimatedTime = arrivalTime.timeIntervalSince1970 * 1000
+    }
+
+    let _: String = try await convexClient.mutation(
+      "scheduledActivities:queueLiveActivityStart",
+      with: [
+        "deviceToken": deviceToken as ConvexEncodable,
+        "scheduledStartTime": (scheduledStartTime.timeIntervalSince1970 * 1000) as ConvexEncodable,  // Convert seconds to milliseconds
+        "trainName": train.name as ConvexEncodable,
+        "fromStation": [
+          "name": fromStation.name as ConvexEncodable,
+          "code": fromStation.code as ConvexEncodable,
+          "estimatedTime": fromEstimatedTime as ConvexEncodable?,
+        ] as ConvexEncodable,
+        "destinationStation": [
+          "name": toStation.name as ConvexEncodable,
+          "code": toStation.code as ConvexEncodable,
+          "estimatedTime": destinationEstimatedTime as ConvexEncodable?,
+        ] as ConvexEncodable,
+      ],
+      captureTelemetry: true
+    )
+
+    logger.info("Successfully queued Live Activity to start at \(scheduledStartTime)")
+  }
+
+  func clearSelectedTrain() async {
+    // Cancel any pending scheduled activities on server
+    if let deviceToken = PushRegistrationService.shared.currentToken() {
+      do {
+        let _: String = try await convexClient.mutation(
+          "scheduledActivities:cancelScheduledActivity",
+          with: ["deviceToken": deviceToken],
+          captureTelemetry: true
+        )
+        logger.info("Cancelled scheduled Live Activity")
+      } catch {
+        logger.error("Failed to cancel scheduled activity: \(error)")
+      }
+    }
+
     selectedTrain = nil
     selectedJourneyData = nil
   }

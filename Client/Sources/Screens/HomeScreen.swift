@@ -74,9 +74,18 @@ struct HomeScreen: View {
           AddTrainView(
             onTrainSelected: { train, journeyData in
               if let journeyData = journeyData {
-                trainMapStore.selectTrain(train, journeyData: journeyData)
+                Task {
+                  do {
+                    try await trainMapStore.selectTrain(train, journeyData: journeyData)
+                    showAddSheet = false
+                  } catch {
+                    // Handle error - could show alert
+                    print("Failed to select train: \(error)")
+                  }
+                }
+              } else {
+                showAddSheet = false
               }
-              showAddSheet = false
             }
           )
           .presentationDragIndicator(.visible)
@@ -96,8 +105,8 @@ struct HomeScreen: View {
   }
 
   private func deleteTrain() {
-    withAnimation(.spring(response: 0.3)) {
-      trainMapStore.clearSelectedTrain()
+    Task {
+      await trainMapStore.clearSelectedTrain()
     }
   }
 }
