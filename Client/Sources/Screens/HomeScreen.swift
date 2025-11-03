@@ -42,6 +42,7 @@ struct HomeScreen: View {
             let displayTrain = trainMapStore.liveTrainPosition ?? train
             TrainCard(
               train: displayTrain,
+              journeyData: trainMapStore.selectedJourneyData,
               onDelete: {
                 deleteTrain()
               })
