@@ -69,9 +69,17 @@ export default defineSchema({
 
     routeId: v.union(v.string(), v.null()),
   })
-    .index("by_trainId", ["trainId"])
-    .index("by_stationId", ["stationId"])
-    .index("by_routeId", ["routeId"]),
+    .index("by_trainId", ["trainId"]) // legacy/simple lookup
+    .index("by_stationId", ["stationId"]) // legacy/simple lookup
+    .index("by_routeId", ["routeId"]) // legacy/simple lookup
+    // New selective composite indexes for bounded range queries
+    .index("by_trainId_departure", ["trainId", "departureTime"])
+    .index("by_station_departure", ["stationId", "departureTime"])
+    .index("by_trainId_station_departure", [
+      "trainId",
+      "stationId",
+      "departureTime",
+    ]),
 
   stationConnections: defineTable({
     stationId: v.string(),
@@ -99,7 +107,12 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     email: v.union(v.string(), v.null()),
-    status: v.string(), // "pending", "accepted", "finished"
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("done")
+    ),
     createdAt: v.number(),
   })
     .index("by_createdAt", ["createdAt"])

@@ -1,35 +1,35 @@
 //
-//  TrainPickerView.swift
-//  tututut
+//  AddTrainView.swift
+//  kreta
 //
 //  Created by Gilang Banyu Biru Erassunu on 22/10/25.
 //
 
 import SwiftUI
 
-@MainActor
 struct AddTrainView: View {
   @Environment(TrainMapStore.self) private var store
   @Environment(\.dismiss) private var dismiss
 
   @State private var viewModel: ViewModel = ViewModel()
 
-  let onTrainSelected: (ProjectedTrain) -> Void
+  let onTrainSelected: (ProjectedTrain, TrainJourneyData?) -> Void
 
   var body: some View {
     VStack(spacing: 0) {
-      headerView(viewModel: viewModel)
-      contentView(viewModel: viewModel)
+      headerView()
+      contentView()
     }
     .padding(.top)
     .task {
-      viewModel.bootstrap(availableTrains: store.trains, allStations: store.stations)
+      viewModel.bootstrap(allStations: store.stations)
     }
   }
 
-  private func headerView(viewModel: ViewModel) -> some View {
+  // MARK: - Private Views
+
+  private func headerView() -> some View {
     VStack(alignment: .leading, spacing: 8) {
-      // Title bar
       HStack {
         // Back button when calendar is shown (only in date step)
         if viewModel.showCalendar && viewModel.currentStep == .date {
@@ -90,22 +90,22 @@ struct AddTrainView: View {
   }
 
   @ViewBuilder
-  private func contentView(viewModel: ViewModel) -> some View {
+  private func contentView() -> some View {
     switch viewModel.currentStep {
     case .departure, .arrival:
-      stationListView(viewModel: viewModel)
+      stationListView()
     case .date:
       if viewModel.showCalendar {
-        calendarView(viewModel: viewModel)
+        calendarView()
       } else {
-        datePickerView(viewModel: viewModel)
+        datePickerView()
       }
     case .results:
-      trainResultsView(viewModel: viewModel)
+      trainResultsView()
     }
   }
 
-  private func stationListView(viewModel: ViewModel) -> some View {
+  private func stationListView() -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(viewModel.filteredStations) { station in
@@ -120,14 +120,18 @@ struct AddTrainView: View {
       }
     }
     .overlay {
-      if viewModel.filteredStations.isEmpty {
+      if viewModel.isLoadingConnections {
+        ProgressView()
+          .controlSize(.large)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(.ultraThinMaterial)
+      } else if viewModel.filteredStations.isEmpty {
         ContentUnavailableView.search(text: viewModel.searchText)
       }
-
     }
   }
 
-  private func datePickerView(viewModel: ViewModel) -> some View {
+  private func datePickerView() -> some View {
     VStack(spacing: 16) {
       DateOptionRow(
         icon: "calendar.badge.clock",
@@ -168,7 +172,7 @@ struct AddTrainView: View {
     .padding()
   }
 
-  private func calendarView(viewModel: ViewModel) -> some View {
+  private func calendarView() -> some View {
     CalendarView(
       selectedDate: Binding(
         get: { viewModel.selectedDate ?? Date() },
@@ -180,14 +184,17 @@ struct AddTrainView: View {
     )
   }
 
-  private func trainResultsView(viewModel: ViewModel) -> some View {
+  private func trainResultsView() -> some View {
     ScrollView {
       LazyVStack(spacing: 0) {
-        ForEach(viewModel.availableTrains) { train in
-          TrainServiceRow(train: train)
+        ForEach(viewModel.filteredTrains) { item in
+          TrainServiceRow(item: item)
             .contentShape(Rectangle())
             .onTapGesture {
-              onTrainSelected(train)
+              Task {
+                let projected = await viewModel.didSelect(item)
+                handleTrainSelection(projected)
+              }
             }
 
           Divider()
@@ -195,9 +202,30 @@ struct AddTrainView: View {
         }
       }
     }
+    .overlay {
+      if viewModel.isLoadingTrains {
+        ProgressView()
+          .controlSize(.large)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(.ultraThinMaterial)
+      } else if viewModel.filteredTrains.isEmpty {
+        ContentUnavailableView(
+          "Tidak ada kereta tersedia",
+          systemImage: "train.side.front.car",
+          description: Text("Tidak ada layanan kereta untuk rute ini pada tanggal yang dipilih")
+        )
+      }
+    }
+  }
+
+  private func handleTrainSelection(_ train: ProjectedTrain) {
+    let journeyData = viewModel.trainJourneyData[train.id]
+    onTrainSelected(train, journeyData)
   }
 }
 
+// MARK: - Preview
+
 #Preview {
-  AddTrainView(onTrainSelected: { _ in })
+  AddTrainView(onTrainSelected: { _, _ in })
 }

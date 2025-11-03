@@ -95,11 +95,18 @@ struct TrainCard: View {
 
   // Helper function to format duration
   private func formattedDuration() -> String {
-    guard let departure = train.journeyDeparture, let arrival = train.journeyArrival else {
+    guard let _ = train.journeyDeparture, let arrival = train.journeyArrival else {
       return "Waktu tidak tersedia"
     }
 
-    let interval = arrival.timeIntervalSince(departure)
+    let now = Date()
+    let interval = arrival.timeIntervalSince(now)
+    
+    // If already arrived
+    if interval < 0 {
+      return "Sudah Tiba"
+    }
+    
     let hours = Int(interval) / 3600
     let minutes = (Int(interval) % 3600) / 60
 
@@ -107,8 +114,10 @@ struct TrainCard: View {
       return "Tiba Dalam \(hours)Jam \(minutes)Menit"
     } else if hours > 0 {
       return "Tiba Dalam \(hours)Jam"
-    } else {
+    } else if minutes > 0 {
       return "Tiba Dalam \(minutes)Menit"
+    } else {
+      return "Tiba Sebentar Lagi"
     }
   }
 

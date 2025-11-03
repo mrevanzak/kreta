@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 4E428AD02EAEF22D008DC212 /* MijickCalendarView */; };
+		7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
 		8D0FC8B32C90E03100767285 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */ = {isa = PBXBuildFile; productRef = 8D20503E2CACC09C0088CFAF /* JWTDecode */; };
 		8D3EE22F2C92698B004E4B6D /* (null) in Sources */ = {isa = PBXBuildFile; };
@@ -28,6 +29,14 @@
 		C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */ = {isa = PBXBuildFile; productRef = C51929E22EAB3AC30036AE74 /* MijickPopups */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
+		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		C5AB85292EB3770D009E242A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
+		C5BC0C512EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
+		C5BC0C522EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
+		C5BC0C542EB62F5F00C508B1 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */; };
+		C5BC0C552EB62F5F00C508B1 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */; };
+		C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC973F2EB3C0BE00E46229 /* Disk */; };
+		C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC99BC2EB446F600E46229 /* PostHog */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +46,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = C501C1762E9616DF00CC2B4E;
 			remoteInfo = WidgetExtension;
+		};
+		C5BC0C5E2EB6323300C508B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8DDE5FA92C8A7D9300A0DBE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DDE5FB02C8A7D9300A0DBE0;
+			remoteInfo = kreta;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -59,6 +75,9 @@
 		C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C501C1792E9616DF00CC2B4E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		C5BC0C5A2EB6323300C508B1 /* kretaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kretaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5F65E5C2EA7427100F57118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,6 +95,7 @@
 		C501C1412E9609FB00CC2B4E /* Sources */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Sources; sourceTree = "<group>"; };
 		C501C17D2E9616DF00CC2B4E /* Widget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C501C18A2E9616E100CC2B4E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Widget; sourceTree = "<group>"; };
 		C59654262E961EDC002C45F3 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
+		C5BC0C5B2EB6323300C508B1 /* kretaTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = kretaTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */,
 				4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */,
 				8D8021892CFCF28E006C709C /* StripePayments in Frameworks */,
 				8D8021872CFCF28E006C709C /* StripePaymentSheet in Frameworks */,
@@ -94,9 +115,12 @@
 				C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */,
 				8D8021852CFCF28E006C709C /* StripeIdentity in Frameworks */,
 				8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */,
+				C5AB85292EB3770D009E242A /* Sentry in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
 				8D80218B2CFCF28F006C709C /* StripePaymentsUI in Frameworks */,
+				C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */,
 				8D80217D2CFCF28E006C709C /* Stripe in Frameworks */,
+				C5AB85282EB3770D009E242A /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +130,14 @@
 			files = (
 				C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */,
 				C501C17A2E9616DF00CC2B4E /* WidgetKit.framework in Frameworks */,
+				7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5BC0C572EB6323300C508B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,8 +151,11 @@
 				C59654262E961EDC002C45F3 /* Shared */,
 				C501C1412E9609FB00CC2B4E /* Sources */,
 				C501C17D2E9616DF00CC2B4E /* Widget */,
+				C5BC0C5B2EB6323300C508B1 /* kretaTests */,
 				C501C1782E9616DF00CC2B4E /* Frameworks */,
 				8DDE5FB22C8A7D9300A0DBE0 /* Products */,
+				C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */,
+				C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -129,6 +164,7 @@
 			children = (
 				8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */,
 				C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */,
+				C5BC0C5A2EB6323300C508B1 /* kretaTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -153,6 +189,7 @@
 				8DDE5FAE2C8A7D9300A0DBE0 /* Frameworks */,
 				8DDE5FAF2C8A7D9300A0DBE0 /* Resources */,
 				C501C18E2E9616E100CC2B4E /* Embed Foundation Extensions */,
+				0C7F4D1ED04F40FAB03143FA /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
 			);
@@ -179,6 +216,9 @@
 				C5892C972EA8CB370043E6B9 /* DebugSwift */,
 				C51929E22EAB3AC30036AE74 /* MijickPopups */,
 				4E428AD02EAEF22D008DC212 /* MijickCalendarView */,
+				661BA6F9401C4744B476177E /* Sentry */,
+				C5CC973F2EB3C0BE00E46229 /* Disk */,
+				C5CC99BC2EB446F600E46229 /* PostHog */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -207,6 +247,29 @@
 			productReference = C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		C5BC0C592EB6323300C508B1 /* kretaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5BC0C602EB6323300C508B1 /* Build configuration list for PBXNativeTarget "kretaTests" */;
+			buildPhases = (
+				C5BC0C562EB6323300C508B1 /* Sources */,
+				C5BC0C572EB6323300C508B1 /* Frameworks */,
+				C5BC0C582EB6323300C508B1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C5BC0C5F2EB6323300C508B1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C5BC0C5B2EB6323300C508B1 /* kretaTests */,
+			);
+			name = kretaTests;
+			packageProductDependencies = (
+			);
+			productName = kretaTests;
+			productReference = C5BC0C5A2EB6323300C508B1 /* kretaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -222,6 +285,10 @@
 					};
 					C501C1762E9616DF00CC2B4E = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					C5BC0C592EB6323300C508B1 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 8DDE5FB02C8A7D9300A0DBE0;
 					};
 				};
 			};
@@ -241,6 +308,9 @@
 				C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */,
 				C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */,
 				4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */,
+				5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
+				C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -248,6 +318,7 @@
 			targets = (
 				8DDE5FB02C8A7D9300A0DBE0 /* kreta */,
 				C501C1762E9616DF00CC2B4E /* WidgetExtension */,
+				C5BC0C592EB6323300C508B1 /* kretaTests */,
 			);
 		};
 /* End PBXProject section */
@@ -257,6 +328,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5BC0C552EB62F5F00C508B1 /* Release.xcconfig in Resources */,
+				C5BC0C522EB62F5700C508B1 /* Debug.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,10 +337,37 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5BC0C542EB62F5F00C508B1 /* Release.xcconfig in Resources */,
+				C5BC0C512EB62F5700C508B1 /* Debug.xcconfig in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5BC0C582EB6323300C508B1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0C7F4D1ED04F40FAB03143FA /* Upload Debug Symbols to Sentry */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+			);
+			name = "Upload Debug Symbols to Sentry";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.\nif which sentry-cli >/dev/null; then\n  export SENTRY_ORG=kreta\n  export SENTRY_PROJECT=apple-ios\n  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n  if [ ! $? -eq 0 ]; then\n    echo \"warning: sentry-cli - $ERROR\"\n  fi\nelse\n  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DDE5FAD2C8A7D9300A0DBE0 /* Sources */ = {
@@ -288,6 +388,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C5BC0C562EB6323300C508B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -295,6 +402,11 @@
 			isa = PBXTargetDependency;
 			target = C501C1762E9616DF00CC2B4E /* WidgetExtension */;
 			targetProxy = C501C1872E9616E100CC2B4E /* PBXContainerItemProxy */;
+		};
+		C5BC0C5F2EB6323300C508B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8DDE5FB02C8A7D9300A0DBE0 /* kreta */;
+			targetProxy = C5BC0C5E2EB6323300C508B1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -424,6 +536,7 @@
 		};
 		8DDE5FC02C8A7D9400A0DBE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
 			buildSettings = {
 				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -433,9 +546,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
@@ -456,7 +571,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -471,6 +586,7 @@
 		};
 		8DDE5FC12C8A7D9400A0DBE0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
 			buildSettings = {
 				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -480,9 +596,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Kreta;
@@ -503,7 +621,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -523,7 +641,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -536,7 +654,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1.Widget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.Widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -559,7 +677,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -572,7 +690,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta1.Widget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.Widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -585,6 +703,58 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C5BC0C612EB6323300C508B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kretaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kreta.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/kreta";
+			};
+			name = Debug;
+		};
+		C5BC0C622EB6323300C508B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kretaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kreta.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/kreta";
 			};
 			name = Release;
 		};
@@ -618,6 +788,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C5BC0C602EB6323300C508B1 /* Build configuration list for PBXNativeTarget "kretaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5BC0C612EB6323300C508B1 /* Debug */,
+				C5BC0C622EB6323300C508B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -627,6 +806,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.1.1;
+			};
+		};
+		5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
 			};
 		};
 		8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */ = {
@@ -669,6 +856,22 @@
 				minimumVersion = 1.7.20;
 			};
 		};
+		C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/saoudrizwan/Disk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.4;
+			};
+		};
+		C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.34.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -676,6 +879,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */;
 			productName = MijickCalendarView;
+		};
+		661BA6F9401C4744B476177E /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		8D20503E2CACC09C0088CFAF /* JWTDecode */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -741,6 +949,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */;
 			productName = DebugSwift;
+		};
+		C5CC973F2EB3C0BE00E46229 /* Disk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */;
+			productName = Disk;
+		};
+		C5CC99BC2EB446F600E46229 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

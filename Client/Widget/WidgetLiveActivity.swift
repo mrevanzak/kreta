@@ -9,6 +9,110 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
+// MARK: - Journey State Specific Views
+
+struct BeforeBoardingView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(systemName: "tram.circle.fill")
+        .resizable()
+        .scaledToFit()
+        .frame(width: 56, height: 56)
+        .foregroundColor(.kretaPrimary)
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(context.attributes.trainName)
+          .font(.title2)
+          .bold()
+          .foregroundColor(.kretaPrimary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
+
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+          HStack(spacing: 4) {
+            Image(systemName: "train.side.middle.car")
+              .resizable()
+              .scaledToFit()
+              .frame(width: 12, height: 12)
+            Text("\(context.attributes.seatClass.number) \(context.attributes.seatClass.name)")
+          }
+
+          HStack(spacing: 4) {
+            Image(systemName: "chair.lounge.fill")
+              .resizable()
+              .scaledToFit()
+              .frame(width: 12, height: 12)
+            Text(context.attributes.seatNumber)
+          }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .font(.caption2)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      VStack(alignment: .trailing, spacing: 4) {
+        Text("Berangkat Dalam")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+
+        if let departureTime = context.attributes.from.estimatedTime {
+          Text(timerInterval: Date()...departureTime, showsHours: true)
+            .font(.body)
+            .bold()
+            .multilineTextAlignment(.trailing)
+        }
+      }
+    }
+  }
+}
+
+struct OnBoardView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    TrainExpandedBottomView(context: context)
+  }
+}
+
+struct PrepareToDropOffView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    HStack(spacing: 12) {
+      VStack(alignment: .leading) {
+        Label("Segera Turun!", systemImage: "figure.walk.circle.fill")
+          .labelReservedIconWidth(24)
+          .font(.body)
+          .bold()
+          .foregroundColor(.kretaPrimary)
+
+        Label {
+          Text(context.attributes.destination.name)
+        } icon: {
+          EmptyView()
+        }
+        .labelReservedIconWidth(24)
+        .font(.body)
+        .foregroundColor(.secondary)
+      }
+
+      Spacer()
+
+      Image(systemName: "checkmark.circle.fill")
+        .resizable()
+        .scaledToFit()
+        .frame(width: 56, height: 56)
+        .foregroundColor(.kretaPrimary)
+    }
+  }
+}
+
 struct ActivityView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
 
@@ -17,9 +121,16 @@ struct ActivityView: View {
       HStack {
         TrainExpandedLeadingView(context: context)
         Spacer()
-        TrainExpandedTrailingView(context: context)
       }
-      TrainExpandedBottomView(context: context)
+
+      switch context.state.journeyState {
+      case .beforeBoarding:
+        BeforeBoardingView(context: context)
+      case .onBoard:
+        OnBoardView(context: context)
+      case .prepareToDropOff:
+        PrepareToDropOffView(context: context)
+      }
     }
     .padding()
     // .activityBackgroundTint(Color(uiColor: .systemBackground))
@@ -27,22 +138,96 @@ struct ActivityView: View {
   }
 }
 
+struct BeforeBoardingSmallView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 6) {
+        Text(context.attributes.trainName)
+          .font(.body)
+          .bold()
+          .foregroundColor(.kretaPrimary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
+
+        Text("Berangkat")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      VStack(alignment: .trailing, spacing: 4) {
+        Text(
+          "\(context.attributes.seatClass.number) \(context.attributes.seatClass.name) | \(context.attributes.seatNumber)"
+        )
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .font(.footnote)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+
+        if let departureTime = context.attributes.from.estimatedTime {
+          Text(timerInterval: Date()...departureTime, showsHours: true)
+            .font(.body)
+            .bold()
+            .multilineTextAlignment(.trailing)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+      }
+    }
+    .padding(.horizontal)
+  }
+}
+
+struct PrepareToDropOffSmallView: View {
+  let context: ActivityViewContext<TrainActivityAttributes>
+
+  var body: some View {
+    HStack(spacing: 12) {
+      VStack(alignment: .leading) {
+        Text("Segera Turun!")
+          .font(.footnote)
+          .bold()
+          .foregroundColor(.kretaPrimary)
+          .lineLimit(1)
+
+        Text(context.attributes.destination.name)
+          .font(.caption)
+          .bold()
+          .foregroundColor(.secondary)
+      }
+
+      Spacer(minLength: 2)
+
+      Image(systemName: "figure.walk.circle.fill")
+        .resizable()
+        .scaledToFit()
+        .frame(width: 36, height: 36)
+        .foregroundColor(.kretaPrimary)
+
+    }
+    .padding(.horizontal)
+  }
+}
+
 struct ActivitySmallView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
 
   var body: some View {
-    if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
-      HStack {
-        VStack {
-          HStack {
-            Text(
-              destinationEstimatedArrival,
-              format: .biggestUnitRelative(units: 2)
-            )
-            .font(.body)
+    switch context.state.journeyState {
+    case .beforeBoarding:
+      BeforeBoardingSmallView(context: context)
+    case .onBoard:
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
+        VStack(spacing: 0) {
+          Spacer()
+          Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
+            .font(.title3)
+            .bold()
             .foregroundColor(.kretaPrimary)
-            Spacer()
-          }
 
           ProgressView(
             timerInterval: Date()...destinationEstimatedArrival,
@@ -50,7 +235,10 @@ struct ActivitySmallView: View {
             label: { EmptyView() },
             currentValueLabel: {
             }
-          ).progressViewStyle(.linear)
+          )
+          .tint(.kretaPrimary)
+          .progressViewStyle(.linear)
+          .padding(.bottom, 8)
 
           HStack {
             Text(
@@ -62,8 +250,10 @@ struct ActivitySmallView: View {
             Spacer()
           }
         }
+        .padding(.all)
       }
-      .padding(.all)
+    case .prepareToDropOff:
+      PrepareToDropOffSmallView(context: context)
     }
   }
 }
@@ -90,7 +280,7 @@ struct ActivityProgressView: View {
 
   var body: some View {
     if let destinationEstimatedArrival = context.attributes.destination
-      .estimatedArrival
+      .estimatedTime
     {
       ProgressView(
         timerInterval: Date()...destinationEstimatedArrival,
@@ -104,6 +294,7 @@ struct ActivityProgressView: View {
             .foregroundColor(.kretaPrimary)
         }
       )
+      .tint(.kretaPrimary)
       .progressViewStyle(.circular)
       .frame(width: 24, height: 24)
     }
@@ -116,14 +307,14 @@ struct TrainExpandedBottomView: View {
 
   var body: some View {
     VStack {
-      if let destinationEstimatedArrival = context.attributes.destination.estimatedArrival {
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
         Spacer()
 
         VStack(spacing: 0) {
           HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
-              Text(context.state.stations.previous.code).font(.body).bold()
-              Text(context.state.stations.previous.name)
+              Text(context.attributes.from.code).font(.body).bold()
+              Text(context.attributes.from.name)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -146,8 +337,8 @@ struct TrainExpandedBottomView: View {
             }
 
             VStack(alignment: .trailing, spacing: 4) {
-              Text(context.state.stations.next.code).font(.body).bold()
-              Text(context.state.stations.next.name)
+              Text(context.attributes.destination.code).font(.body).bold()
+              Text(context.attributes.destination.name)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -164,6 +355,7 @@ struct TrainExpandedBottomView: View {
             label: { EmptyView() },
             currentValueLabel: { EmptyView() }
           )
+          .tint(.kretaPrimary)
           .progressViewStyle(.linear)
         }
 
@@ -179,12 +371,13 @@ struct TrainExpandedBottomView: View {
 
           HStack(alignment: .center) {
             Text(
-              destinationEstimatedArrival,
-              format: .biggestUnitRelative(units: 2)
+              timerInterval: Date()...destinationEstimatedArrival,
+              showsHours: true
             )
             .font(.callout)
             .bold()
             .foregroundColor(.kretaPrimary)
+            .multilineTextAlignment(.center)
           }
         }
       }
@@ -197,37 +390,6 @@ struct TrainExpandedLeadingView: View {
 
   var body: some View {
     Text("KRETA").font(.footnote).foregroundColor(.gray)
-  }
-}
-
-struct TrainExpandedTrailingView: View {
-  let context: ActivityViewContext<TrainActivityAttributes>
-
-  var body: some View {
-    VStack(alignment: .trailing) {
-      HStack(spacing: 4) {
-        Text("\(context.attributes.seatClass.number) \(context.attributes.seatClass.name)")
-        Image(systemName: "chair.lounge.fill")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 12, height: 12)
-      }
-      .lineLimit(1)
-      .minimumScaleFactor(0.8)
-
-      HStack(spacing: 4) {
-        Text(context.attributes.seatNumber)
-        Image(systemName: "train.side.middle.car")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 12, height: 12)
-      }
-      .lineLimit(1)
-      .minimumScaleFactor(0.8)
-    }
-    .font(.caption2)
-    .monospacedDigit()
-    .foregroundStyle(.gray)
   }
 }
 
@@ -244,39 +406,74 @@ struct WidgetLiveActivity: Widget {
         }
 
         DynamicIslandExpandedRegion(.trailing) {
-          TrainExpandedTrailingView(context: context)
-            .padding(.trailing)
         }
 
         DynamicIslandExpandedRegion(.center) {
         }
 
         DynamicIslandExpandedRegion(.bottom) {
-          TrainExpandedBottomView(context: context, withPadding: true)
+          switch context.state.journeyState {
+          case .beforeBoarding:
+            BeforeBoardingView(context: context)
+          case .onBoard:
+            TrainExpandedBottomView(context: context, withPadding: true)
+          case .prepareToDropOff:
+            PrepareToDropOffView(context: context)
+          }
         }
       } compactLeading: {
-        HStack(alignment: .center, spacing: 8) {
-          ActivityProgressView(context: context)
-          Text(context.attributes.destination.code)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.kretaPrimary)
-            .clipShape(Capsule())
-            .foregroundColor(Color(.systemBackground))
+        switch context.state.journeyState {
+        case .beforeBoarding:
+          Image(systemName: "tram.circle.fill")
+            .foregroundColor(.kretaPrimary)
+        case .onBoard:
+          HStack(alignment: .center, spacing: 8) {
+            ActivityProgressView(context: context)
+            Text(context.attributes.destination.code)
+              .padding(.horizontal, 8)
+              .padding(.vertical, 4)
+              .background(Color.kretaPrimary)
+              .clipShape(Capsule())
+              .foregroundColor(Color(.systemBackground))
+          }
+        case .prepareToDropOff:
+          Image(systemName: "figure.walk.circle.fill")
+            .foregroundColor(.kretaPrimary)
         }
 
       } compactTrailing: {
-        if let destinationEstimatedArrival = context.attributes.destination
-          .estimatedArrival
-        {
-          Text(
-            destinationEstimatedArrival,
-            format: .biggestUnitRelative(units: 2)
-          )
-          .foregroundColor(.kretaPrimary)
+        switch context.state.journeyState {
+        case .beforeBoarding:
+          if let departureTime = context.attributes.from.estimatedTime {
+            Text(timerInterval: Date()...departureTime, showsHours: true)
+              .foregroundColor(.kretaPrimary)
+              .multilineTextAlignment(.trailing)
+              .frame(width: 64)
+          }
+        case .onBoard:
+          if let destinationEstimatedArrival = context.attributes.destination
+            .estimatedTime
+          {
+            Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
+              .foregroundColor(.kretaPrimary)
+              .multilineTextAlignment(.trailing)
+              .frame(width: 64)
+          }
+        case .prepareToDropOff:
+          Text("Turun")
+            .foregroundColor(.kretaPrimary)
         }
       } minimal: {
-        ActivityProgressView(context: context)
+        switch context.state.journeyState {
+        case .beforeBoarding:
+          Image(systemName: "tram.circle.fill")
+            .foregroundColor(.kretaPrimary)
+        case .onBoard:
+          ActivityProgressView(context: context)
+        case .prepareToDropOff:
+          Image(systemName: "figure.walk.circle.fill")
+            .foregroundColor(.kretaPrimary)
+        }
       }
       .widgetURL(URL(string: "kreta://train"))
       .keylineTint(Color.red)
@@ -292,18 +489,12 @@ extension TrainActivityAttributes {
       from: TrainStation(
         name: "Malang",
         code: "ML",
-        estimatedArrival: nil,
-        // set today at 13:45
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 13, minute: 45, second: 0, of: Date())
+        estimatedTime: Date().addingTimeInterval(60 * 60 * 24)
       ),
       destination: TrainStation(
         name: "Pasar Senen",
         code: "PSE",
-        // set tomorrow at 01:58
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 1, minute: 58, second: 0, of: Date().addingTimeInterval(60 * 60 * 24)),
-        estimatedDeparture: nil
+        estimatedTime: Date().addingTimeInterval(60 * 60 * 24)
       ),
       seatClass: SeatClass.economy(number: 9),
       seatNumber: "20C"
@@ -312,34 +503,41 @@ extension TrainActivityAttributes {
 }
 
 extension TrainActivityAttributes.ContentState {
-  fileprivate static var sample1: TrainActivityAttributes.ContentState {
+  fileprivate static var beforeBoarding: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      previousStation: TrainStation(
-        name: "Surabayagubeng",
-        code: "SGU",
-        // set today at 15:39
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 15, minute: 39, second: 0, of: Date()),
-        // set today at 15:43
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 15, minute: 43, second: 0, of: Date())
-      ),
-      nextStation: TrainStation(
-        name: "Surabaya Pasarturi",
-        code: "SBI",
-        // set today at 15:55
-        estimatedArrival: Calendar.current.date(
-          bySettingHour: 15, minute: 55, second: 0, of: Date()),
-        // set today at 16:07
-        estimatedDeparture: Calendar.current.date(
-          bySettingHour: 16, minute: 07, second: 0, of: Date())
-      ),
+      journeyState: .beforeBoarding
+    )
+  }
+
+  fileprivate static var onBoard: TrainActivityAttributes.ContentState {
+    TrainActivityAttributes.ContentState(
+      journeyState: .onBoard
+    )
+  }
+
+  fileprivate static var prepareToDropOff: TrainActivityAttributes.ContentState {
+    TrainActivityAttributes.ContentState(
+      journeyState: .prepareToDropOff
     )
   }
 }
 
-#Preview("Train Activity", as: .content, using: TrainActivityAttributes.preview) {
+#Preview("Train Activity - Before Boarding", as: .content, using: TrainActivityAttributes.preview) {
   WidgetLiveActivity()
 } contentStates: {
-  TrainActivityAttributes.ContentState.sample1
+  TrainActivityAttributes.ContentState.beforeBoarding
+}
+
+#Preview("Train Activity - On Board", as: .content, using: TrainActivityAttributes.preview) {
+  WidgetLiveActivity()
+} contentStates: {
+  TrainActivityAttributes.ContentState.onBoard
+}
+
+#Preview(
+  "Train Activity - Prepare to Drop Off", as: .content, using: TrainActivityAttributes.preview
+) {
+  WidgetLiveActivity()
+} contentStates: {
+  TrainActivityAttributes.ContentState.prepareToDropOff
 }

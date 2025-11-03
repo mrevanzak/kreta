@@ -55,6 +55,54 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         ]
       }
 
+      DebugSwift.App.shared.customAction = {
+        [
+          .init(
+            title: "Live Activities Test",
+            actions: [
+              .init(
+                title: "Start Live Activity",
+                action: {
+                  Task {
+                    let _ = try await self.liveActivityService.start(
+                      trainName: "Jayabaya",
+                      from: TrainStation(
+                        name: "Malang", code: "ML",
+                        estimatedTime: Date().addingTimeInterval(30)),
+                      destination: TrainStation(
+                        name: "Pasar Senen", code: "PSE",
+                        estimatedTime: Date().addingTimeInterval(60)),
+                      seatClass: SeatClass.economy(number: 9),
+                      seatNumber: "20C"
+                    )
+                  }
+                }),
+              .init(
+                title: "Update Live Activity to On Board",
+                action: {
+                  let activities = self.liveActivityService.getActiveLiveActivities()
+                  for activity in activities {
+                    Task {
+                      await self.liveActivityService.transitionToOnBoard(activityId: activity.id)
+                    }
+                  }
+                }),
+              .init(
+                title: "Update Live Activity to Prepare to Drop Off",
+                action: {
+                  let activities = self.liveActivityService.getActiveLiveActivities()
+                  for activity in activities {
+                    Task {
+                      await self.liveActivityService.transitionToPrepareToDropOff(
+                        activityId: activity.id)
+                    }
+                  }
+                }),
+            ]
+          )
+        ]
+      }
+
       debugSwift.show()
     #endif
 
