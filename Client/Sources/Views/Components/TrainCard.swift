@@ -95,29 +95,29 @@ struct TrainCard: View {
   }
 
   // MARK: - Computed Properties
-  
+
   /// Use user-selected departure station if available, otherwise use current segment
   private var departureStationCode: String {
     journeyData?.userSelectedFromStation.code ?? train.fromStation?.code ?? "--"
   }
-  
+
   private var departureStationCity: String {
     journeyData?.userSelectedFromStation.city ?? train.fromStation?.city ?? "Unknown"
   }
-  
+
   private var departureTime: Date? {
     journeyData?.userSelectedDepartureTime ?? train.journeyDeparture
   }
-  
+
   /// Use user-selected arrival station if available, otherwise use current segment
   private var arrivalStationCode: String {
     journeyData?.userSelectedToStation.code ?? train.toStation?.code ?? "--"
   }
-  
+
   private var arrivalStationCity: String {
     journeyData?.userSelectedToStation.city ?? train.toStation?.city ?? "Unknown"
   }
-  
+
   private var arrivalTime: Date? {
     journeyData?.userSelectedArrivalTime ?? train.journeyArrival
   }
@@ -130,15 +130,14 @@ struct TrainCard: View {
       return "Waktu tidak tersedia"
     }
 
-    print(arrival)
     let now = Date()
     let interval = arrival.timeIntervalSince(now)
-    
+
     // If already arrived
     if interval < 0 {
       return "Sudah Tiba"
     }
-    
+
     let hours = Int(interval) / 3600
     let minutes = (Int(interval) % 3600) / 60
 
