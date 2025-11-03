@@ -42,6 +42,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
       // Begin monitoring ActivityKit tokens as early as possible
       await liveActivityService.startGlobalMonitoring()
       await requestNotificationAuthorization()
+
+      // Request AlarmKit authorization
+      let authorized = await TrainAlarmService.shared.requestAuthorization()
+      if !authorized {
+        print("Unable to request AlarmKit authorization")
+      }
     }
 
     #if DEBUG
@@ -71,7 +77,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                         estimatedTime: Date().addingTimeInterval(30)),
                       destination: TrainStation(
                         name: "Pasar Senen", code: "PSE",
-                        estimatedTime: Date().addingTimeInterval(60)),
+                        estimatedTime: Date().addingTimeInterval(120)),
                       seatClass: SeatClass.economy(number: 9),
                       seatNumber: "20C"
                     )

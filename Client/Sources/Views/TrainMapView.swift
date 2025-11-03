@@ -5,22 +5,7 @@ struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
   @Environment(\.showToast) private var showToast
 
-  let selectedTrains: [ProjectedTrain]
-  let journeyDataMap: [String: TrainJourneyData]
-  @Binding var liveTrainPositions: [String: ProjectedTrain]
-  
-  @State private var projectionTimer: Timer?
   @State private var cameraPosition: MapCameraPosition = .automatic
-
-  init(
-    selectedTrains: [ProjectedTrain] = [],
-    journeyDataMap: [String: TrainJourneyData] = [:],
-    liveTrainPositions: Binding<[String: ProjectedTrain]>
-  ) {
-    self.selectedTrains = selectedTrains
-    self.journeyDataMap = journeyDataMap
-    self._liveTrainPositions = liveTrainPositions
-  }
 
   var body: some View {
     Map(position: $cameraPosition) {
@@ -66,72 +51,69 @@ struct TrainMapView: View {
         }
       }
     }
-    .onChange(of: selectedTrains) { _, _ in
-      startProjectingTrains()
-    }
-    .onChange(of: liveTrainPositions) { _, newPositions in
-      updateCameraPosition(with: newPositions)
+    .onChange(of: mapStore.liveTrainPosition) { _, newPosition in
+      if let position = newPosition {
+        updateCameraPosition(with: [position])
+      }
     }
     .onAppear {
-      startProjectingTrains()
-    }
-    .onDisappear {
-      stopProjectingTrains()
+      // Ensure data loads on app launch even if subscription hasn't fired yet
+      if let lastUpdatedAt = mapStore.lastUpdatedAt {
+        Task(priority: .high) {
+          do {
+            try await mapStore.loadData(at: lastUpdatedAt)
+          } catch let error as TrainMapError {
+            let errorMessage = "\(error.errorName): \(error.localizedDescription)"
+            print("🚂 TrainMapView: \(errorMessage)")
+            showToast(errorMessage)
+          }
+        }
+      }
     }
   }
 
   // MARK: - Computed Properties
 
-  /// Filter routes based on selected trains - builds complete journey routes from segments
+  /// Filter routes based on selected train - builds complete journey routes from segments
   private var filteredRoutes: [Route] {
-    guard !selectedTrains.isEmpty else {
+    guard let journeyData = mapStore.selectedJourneyData else {
       return mapStore.routes
     }
 
     // Collect all unique route IDs from journey segments
     var routeIds = Set<String>()
-    for train in selectedTrains {
-      if let journeyData = journeyDataMap[train.id] {
-        for segment in journeyData.segments {
-          if let routeId = segment.routeId {
-            routeIds.insert(routeId)
-          }
-        }
+    for segment in journeyData.segments {
+      if let routeId = segment.routeId {
+        routeIds.insert(routeId)
       }
     }
 
     return mapStore.routes.filter { routeIds.contains($0.id) }
   }
 
-  /// Filter stations based on selected trains - shows all stations along journey path
+  /// Filter stations based on selected train - shows all stations along journey path
   private var filteredStations: [Station] {
-    guard !selectedTrains.isEmpty else {
+    guard let journeyData = mapStore.selectedJourneyData else {
       return mapStore.stations
     }
 
-    // Get all unique stations from complete journey paths
+    // Get all unique stations from complete journey path
     var stationCodes = Set<String>()
-    for train in selectedTrains {
-      if let journeyData = journeyDataMap[train.id] {
-        for station in journeyData.allStations {
-          stationCodes.insert(station.code)
-        }
-      }
+    for station in journeyData.allStations {
+      stationCodes.insert(station.code)
     }
 
     return mapStore.stations.filter { stationCodes.contains($0.code) }
   }
 
-  /// Filter trains based on selected trains - shows live projected position if available
+  /// Filter trains based on selected train - shows live projected position if available
   private var filteredTrains: [ProjectedTrain] {
-    guard !selectedTrains.isEmpty else {
+    guard let selectedTrain = mapStore.selectedTrain else {
       return []
     }
 
-    // Return live projected positions for all selected trains
-    return selectedTrains.compactMap { train in
-      liveTrainPositions[train.id]
-    }
+    // Return live projected position if available, otherwise return original train
+    return [mapStore.liveTrainPosition ?? selectedTrain]
   }
 
   // MARK: - Map Style Computation
@@ -144,74 +126,14 @@ struct TrainMapView: View {
       return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
     }
   }
-  
-  // MARK: - Train Projection
-  
-  private func startProjectingTrains() {
-    stopProjectingTrains()
-    
-    // Project immediately
-    projectAllTrains()
-    
-    // Set up timer for continuous updates
-    let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
-      Task { @MainActor in
-        self.projectAllTrains()
-      }
-    }
-    projectionTimer = timer
-    RunLoop.main.add(timer, forMode: .common)
-  }
-  
-  private func stopProjectingTrains() {
-    projectionTimer?.invalidate()
-    projectionTimer = nil
-  }
-  
-  private func projectAllTrains() {
-    let stationsById = Dictionary(uniqueKeysWithValues: mapStore.stations.map { ($0.id ?? $0.code, $0) })
-    let routesById = Dictionary(uniqueKeysWithValues: mapStore.routes.map { ($0.id, $0) })
-    let now = Date()
-    let nowMs = now.timeIntervalSince1970 * 1000
-    
-    var newPositions: [String: ProjectedTrain] = [:]
-    
-    for train in selectedTrains {
-      // Get journey data for this train
-      guard let journeyData = journeyDataMap[train.id] else {
-        print("⚠️ No journey data for train \(train.id)")
-        continue
-      }
-      
-      // Convert to TrainJourney model
-      let trainJourney = TrainJourney(
-        id: train.id,
-        trainId: train.id,
-        code: train.code,
-        name: train.name,
-        segments: journeyData.segments
-      )
-      
-      // Project the train position
-      if let projected = TrainProjector.projectTrain(
-        now: now,
-        journey: trainJourney,
-        stationsById: stationsById,
-        routesById: routesById
-      ) {
-        newPositions[train.id] = projected
-      } else {
-        print("❌ Failed to project train \(train.code) - likely outside active time window")
-      }
-    }
-    liveTrainPositions = newPositions
-  }
-  
-  private func updateCameraPosition(with positions: [String: ProjectedTrain]) {
+
+  // MARK: - Camera Management
+
+  private func updateCameraPosition(with positions: [ProjectedTrain]) {
     guard !positions.isEmpty else { return }
-    
+
     // If single train, follow it with smooth animation
-    if positions.count == 1, let train = positions.values.first {
+    if positions.count == 1, let train = positions.first {
       withAnimation(.easeInOut(duration: 1.0)) {
         cameraPosition = .region(
           MKCoordinateRegion(
@@ -222,36 +144,36 @@ struct TrainMapView: View {
       }
     } else {
       // Multiple trains - show all in view
-      let coordinates = positions.values.map { $0.coordinate }
+      let coordinates = positions.map { $0.coordinate }
       updateCameraToFitCoordinates(coordinates)
     }
   }
-  
+
   private func updateCameraToFitCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
     guard !coordinates.isEmpty else { return }
-    
+
     var minLat = coordinates[0].latitude
     var maxLat = coordinates[0].latitude
     var minLon = coordinates[0].longitude
     var maxLon = coordinates[0].longitude
-    
+
     for coord in coordinates {
       minLat = min(minLat, coord.latitude)
       maxLat = max(maxLat, coord.latitude)
       minLon = min(minLon, coord.longitude)
       maxLon = max(maxLon, coord.longitude)
     }
-    
+
     let center = CLLocationCoordinate2D(
       latitude: (minLat + maxLat) / 2,
       longitude: (minLon + maxLon) / 2
     )
-    
+
     let span = MKCoordinateSpan(
       latitudeDelta: max((maxLat - minLat) * 1.5, 0.05),
       longitudeDelta: max((maxLon - minLon) * 1.5, 0.05)
     )
-    
+
     withAnimation(.easeInOut(duration: 1.0)) {
       cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
     }

@@ -109,7 +109,9 @@ export const projectedForRoute = query({
           toStationId: toRow.stationId,
           segmentDepartureMs: fromRow.departureTime,
           segmentArrivalMs: toRow.arrivalTime,
-          routeId: fromRow.routeId ?? undefined,
+          // Use toRow.routeId because the routeId on a station row represents
+          // the route that connects TO that station (ending at that station)
+          routeId: toRow.routeId ?? undefined,
           fromStationName: fromStation?.name ?? undefined,
           toStationName: toStation?.name ?? undefined,
           fromStationCode: fromStation?.code ?? undefined,

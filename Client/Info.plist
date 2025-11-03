@@ -15,5 +15,7 @@
 	<string>$(POSTHOG_API_KEY)</string>
 	<key>SENTRY_DSN</key>
 	<string>$(SENTRY_DSN)</string>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Kreta uses AlarmKit to alert you 10 minutes before arriving at your destination station</string>
 </dict>
 </plist>
