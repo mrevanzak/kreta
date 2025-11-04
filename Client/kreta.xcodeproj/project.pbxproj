@@ -294,11 +294,10 @@
 			};
 			buildConfigurationList = 8DDE5FAC2C8A7D9300A0DBE0 /* Build configuration list for PBXProject "kreta" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
+			developmentRegion = id;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
-				Base,
+				id,
 			);
 			mainGroup = 8DDE5FA82C8A7D9300A0DBE0;
 			packageReferences = (
@@ -413,6 +412,7 @@
 /* Begin XCBuildConfiguration section */
 		8DDE5FBD2C8A7D9400A0DBE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -478,6 +478,7 @@
 		};
 		8DDE5FBE2C8A7D9400A0DBE0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -636,6 +637,7 @@
 		};
 		C501C18C2E9616E100CC2B4E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -672,6 +674,7 @@
 		};
 		C501C18D2E9616E100CC2B4E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -708,6 +711,7 @@
 		};
 		C5BC0C612EB6323300C508B1 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -734,6 +738,7 @@
 		};
 		C5BC0C622EB6323300C508B1 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;

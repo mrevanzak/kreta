@@ -2,20 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CONVEX_URL</key>
+	<string>https://$(CONVEX_URL)</string>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Kreta uses AlarmKit to alert you 10 minutes before arriving at your destination station</string>
+	<key>POSTHOG_API_KEY</key>
+	<string>$(POSTHOG_API_KEY)</string>
+	<key>SENTRY_DSN</key>
+	<string>https://$(SENTRY_DSN)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<!-- Configuration keys from .xcconfig files -->
-	<!-- Values are set in Client/Config/Debug.xcconfig and Release.xcconfig -->
-	<!-- These build settings are injected into Info.plist at build time -->
-	<key>CONVEX_URL</key>
-	<string>$(CONVEX_URL)</string>
-	<key>POSTHOG_API_KEY</key>
-	<string>$(POSTHOG_API_KEY)</string>
-	<key>SENTRY_DSN</key>
-	<string>$(SENTRY_DSN)</string>
-	<key>NSAlarmKitUsageDescription</key>
-	<string>Kreta uses AlarmKit to alert you 10 minutes before arriving at your destination station</string>
 </dict>
 </plist>
