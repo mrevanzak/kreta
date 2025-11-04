@@ -10,6 +10,7 @@ import SwiftUI
 struct FeedbackBoardScreen: View {
   @Environment(\.dismiss) var dismiss
   @Environment(\.colorScheme) private var colorScheme
+
   @State private var feedbackStore = FeedbackStore()
   @State private var showSubmissionSheet = false
   @State private var sortOption: SortOption = .votes

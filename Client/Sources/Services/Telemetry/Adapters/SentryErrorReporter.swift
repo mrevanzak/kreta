@@ -16,6 +16,11 @@ final class SentryErrorReporter: ErrorReporting {
         $0.sessionSampleRate = Float(profilesSampleRate)
         $0.lifecycle = .trace
       }
+      // Record session replays for 100% of errors and 10% of sessions
+      options.sessionReplay.onErrorSampleRate = 1.0
+      options.sessionReplay.sessionSampleRate = 0.1
+      // Enable logs to be sent to Sentry
+      options.experimental.enableLogs = true
       options.beforeSend = { event in
         let newEvent = event
         newEvent.request?.headers?["Authorization"] = "[REDACTED]"
