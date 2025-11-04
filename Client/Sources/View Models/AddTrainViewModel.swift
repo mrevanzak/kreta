@@ -23,7 +23,7 @@ struct TrainJourneyData: Codable, Equatable {
   let trainId: String
   let segments: [JourneySegment]
   let allStations: [Station]
-  
+
   // User-selected journey leg (subset of full route)
   let userSelectedFromStation: Station
   let userSelectedToStation: Station
@@ -139,8 +139,8 @@ extension AddTrainView {
               JourneySegment(
                 fromStationId: segment.stationId,
                 toStationId: nextSegment.stationId,
-                departureTimeMs: segment.departureTime,
-                arrivalTimeMs: nextSegment.arrivalTime,
+                departure: segment.departure,
+                arrival: nextSegment.arrival,
                 routeId: nextSegment.routeId
               )
             )
@@ -159,13 +159,13 @@ extension AddTrainView {
           allStations: allStationsInJourney,
           userSelectedFromStation: fromStation!,
           userSelectedToStation: toStation!,
-          userSelectedDepartureTime: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-          userSelectedArrivalTime: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+          userSelectedDepartureTime: item.segmentDeparture,
+          userSelectedArrivalTime: item.segmentArrival,
         )
       } catch {
         print("Failed to fetch journey segments: \(error)")
       }
-      
+
       let projected = ProjectedTrain(
         id: item.id,
         code: item.code,
@@ -180,11 +180,11 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-        segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+        segmentDeparture: item.segmentDeparture,
+        segmentArrival: item.segmentArrival,
         progress: nil,
-        journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-        journeyArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
+        journeyDeparture: item.segmentDeparture,
+        journeyArrival: item.segmentArrival
       )
 
       return projected

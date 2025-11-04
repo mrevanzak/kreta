@@ -38,6 +38,19 @@ enum TrainProjector {
     return remainder >= 0 ? remainder : remainder + modulus
   }
 
+  /// Extract hour:minute components from a normalized Date and convert to milliseconds since midnight
+  private static func timeComponents(from date: Date) -> (
+    hour: Int, minute: Int, millisecond: Double
+  ) {
+    let calendar = Calendar.current
+    let components = calendar.dateComponents([.hour, .minute, .second], from: date)
+    let hour = components.hour ?? 0
+    let minute = components.minute ?? 0
+    let second = components.second ?? 0
+    let millisecond = Double(hour * 3_600_000 + minute * 60_000 + second * 1_000)
+    return (hour, minute, millisecond)
+  }
+
   /// Mirrors the React Native implementation: bring `timestamp`, `start`, and `end`
   /// into a comparable window while preserving cycle length.
   static func normalizeTimeWindow(
@@ -105,40 +118,55 @@ enum TrainProjector {
 
   // MARK: - Data helpers
 
+  /// Extract time components from segment dates (compute once per segment)
+  private struct SegmentTimeComponents {
+    let departureMs: Double
+    let arrivalMs: Double
+  }
+
+  private static func extractTimeComponents(from segment: JourneySegment) -> SegmentTimeComponents {
+    let departureMs = timeComponents(from: segment.departure).millisecond
+    let arrivalMs = timeComponents(from: segment.arrival).millisecond
+    return SegmentTimeComponents(departureMs: departureMs, arrivalMs: arrivalMs)
+  }
+
   /// Pick the active segment, or if between segments (stopped at station), return the next segment
   private static func pickActiveSegment(timeMs: Double, segments: [JourneySegment])
     -> JourneySegment?
   {
     // First try to find a segment where train is actively moving
     if let activeSegment = segments.first(where: { seg in
-      isWithin(timeMs, startMs: seg.departureTimeMs, endMs: seg.arrivalTimeMs)
+      let times = extractTimeComponents(from: seg)
+      return isWithin(timeMs, startMs: times.departureMs, endMs: times.arrivalMs)
     }) {
       return activeSegment
     }
-    
+
     // If no active segment, train is stopped at a station between segments
     // Find the next segment that will depart after current time
     for i in 0..<segments.count {
       let seg = segments[i]
-      
+
       // Check if we're after this segment's arrival but before next segment's departure
       if i < segments.count - 1 {
         let nextSeg = segments[i + 1]
-        
+        let segTimes = extractTimeComponents(from: seg)
+        let nextSegTimes = extractTimeComponents(from: nextSeg)
+
         // Normalize the time window between this segment's arrival and next segment's departure
         let waitWindow = normalizeTimeWindow(
           timestamp: timeMs,
-          startMs: seg.arrivalTimeMs,
-          endMs: nextSeg.departureTimeMs
+          startMs: segTimes.arrivalMs,
+          endMs: nextSegTimes.departureMs
         )
-        
+
         // If we're in the waiting period, return the next segment (but we'll show stopped state)
         if waitWindow.startMs <= waitWindow.timeMs && waitWindow.timeMs < waitWindow.endMs {
           return nextSeg
         }
       }
     }
-    
+
     return nil
   }
 
@@ -169,13 +197,14 @@ enum TrainProjector {
 
   private static func resolveSegmentDates(
     seg: JourneySegment,
+    times: SegmentTimeComponents,
     nowMs: Double,
     timeMs: Double,
     cycle: Double
   ) -> (start: Date, arrival: Date, departure: Date) {
     let base = nowMs - timeMs
-    var startAbs = base + seg.departureTimeMs
-    var arrivalAbs = base + seg.arrivalTimeMs
+    var startAbs = base + times.departureMs
+    var arrivalAbs = base + times.arrivalMs
     // Ensure arrival is after start within the same cycle
     if arrivalAbs < startAbs { arrivalAbs += cycle }
     // If the computed start (departure) is already in the past relative to now,
@@ -204,10 +233,13 @@ enum TrainProjector {
     let nowMs = now.timeIntervalSince1970 * 1_000
     guard let first = journey.segments.first, let last = journey.segments.last else { return nil }
 
+    // Extract time components once for journey boundaries
+    let firstTimes = extractTimeComponents(from: first)
+    let lastTimes = extractTimeComponents(from: last)
     let journeyWindow = normalizeTimeWindow(
       timestamp: nowMs,
-      startMs: first.departureTimeMs,
-      endMs: last.arrivalTimeMs
+      startMs: firstTimes.departureMs,
+      endMs: lastTimes.arrivalMs
     )
     let timeMs = journeyWindow.timeMs
 
@@ -215,8 +247,12 @@ enum TrainProjector {
       return nil
     }
 
+    // Extract time components once for the active segment
+    let segTimes = extractTimeComponents(from: seg)
+
     let segmentDates = resolveSegmentDates(
       seg: seg,
+      times: segTimes,
       nowMs: nowMs,
       timeMs: timeMs,
       cycle: journeyWindow.cycle
@@ -231,12 +267,13 @@ enum TrainProjector {
 
     let fromStation = stationsById[seg.fromStationId]
     let toStation = stationsById[seg.toStationId] ?? fromStation
-    
+
     // Check if train is stopped at station:
     // 1. Before segment departure time (waiting at departure station)
     // 2. At exact arrival time (just arrived at destination station)
-    let isBeforeDeparture = timeMs < seg.departureTimeMs || 
-                            !isWithin(timeMs, startMs: seg.departureTimeMs, endMs: seg.arrivalTimeMs)
+    let isBeforeDeparture =
+      timeMs < segTimes.departureMs
+      || !isWithin(timeMs, startMs: segTimes.departureMs, endMs: segTimes.arrivalMs)
     let isStopped = isBeforeDeparture
 
     let position: Position
@@ -285,31 +322,36 @@ enum TrainProjector {
         // Check if route needs to be reversed based on station proximity
         var isRouteReversed = false
         if let firstCoord = route.path.first,
-           let _ = route.path.last,
-           let fromCoord = fromStation?.coordinate,
-           let toCoord = toStation?.coordinate {
-          
+          route.path.last != nil,
+          let fromCoord = fromStation?.coordinate,
+          let toCoord = toStation?.coordinate
+        {
+
           // Calculate distances from route endpoints to segment stations
-          let distanceFromStartToFrom = CLLocation(latitude: firstCoord.latitude, longitude: firstCoord.longitude)
-            .distance(from: CLLocation(latitude: fromCoord.latitude, longitude: fromCoord.longitude))
-          let distanceFromStartToTo = CLLocation(latitude: firstCoord.latitude, longitude: firstCoord.longitude)
-            .distance(from: CLLocation(latitude: toCoord.latitude, longitude: toCoord.longitude))
-          
+          let distanceFromStartToFrom = CLLocation(
+            latitude: firstCoord.latitude, longitude: firstCoord.longitude
+          )
+          .distance(from: CLLocation(latitude: fromCoord.latitude, longitude: fromCoord.longitude))
+          let distanceFromStartToTo = CLLocation(
+            latitude: firstCoord.latitude, longitude: firstCoord.longitude
+          )
+          .distance(from: CLLocation(latitude: toCoord.latitude, longitude: toCoord.longitude))
+
           // If route start is closer to the destination station, the route is reversed
           if distanceFromStartToTo < distanceFromStartToFrom {
             isRouteReversed = true
           }
         }
-        
+
         let movementWindow = normalizeTimeWindow(
           timestamp: timeMs,
-          startMs: seg.departureTimeMs,
-          endMs: seg.arrivalTimeMs
+          startMs: segTimes.departureMs,
+          endMs: segTimes.arrivalMs
         )
         let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
         let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
         let clampedProgress = max(0, min(1, elapsed / duration))
-        
+
         // Calculate distance along route, reversing if needed
         let distanceForward = (route.totalLengthCm / duration) * elapsed
         let routedDistance: Double
@@ -324,7 +366,7 @@ enum TrainProjector {
         guard let coordinate = coordinateOnRoute(distanceCm: routedDistance, route: route) else {
           return nil
         }
-        
+
         // Calculate neighbor point for bearing (also respect reverse direction)
         let delta = min(defaultBearingSampleCm, route.totalLengthCm)
         let neighborDistance: Double
@@ -336,7 +378,7 @@ enum TrainProjector {
           neighborDistance = min(route.totalLengthCm, routedDistance + delta)
         }
         let neighborCoordinate = coordinateOnRoute(distanceCm: neighborDistance, route: route)
-        
+
         // Calculate bearing based on direction of travel
         let heading = neighborCoordinate.flatMap { neighbor in
           if isRouteReversed {
@@ -383,13 +425,13 @@ enum TrainProjector {
         }
         let movementWindow = normalizeTimeWindow(
           timestamp: timeMs,
-          startMs: seg.departureTimeMs,
-          endMs: seg.arrivalTimeMs
+          startMs: segTimes.departureMs,
+          endMs: segTimes.arrivalMs
         )
         let duration = max(movementWindow.endMs - movementWindow.startMs, 1)
         let elapsed = max(0, movementWindow.timeMs - movementWindow.startMs)
         let clampedProgress = max(0, min(1, elapsed / duration))
-        
+
         let coordinate = lerp(origin, destination, t: clampedProgress)
         let distanceMeters = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
           .distance(

@@ -172,8 +172,8 @@ extension TrainMapStore {
           JourneySegment(
             fromStationId: segment.stationId,
             toStationId: next.stationId,
-            departureTimeMs: segment.departureTime,
-            arrivalTimeMs: next.arrivalTime,
+            departure: segment.departure,
+            arrival: next.arrival,
             routeId: next.routeId
           )
         )
@@ -200,11 +200,11 @@ extension TrainMapStore {
       speedKph: nil,
       fromStation: fromStation,
       toStation: toStation,
-      segmentDeparture: Date(timeIntervalSince1970: first.departureTime / 1000.0),
-      segmentArrival: Date(timeIntervalSince1970: last.arrivalTime / 1000.0),
+      segmentDeparture: first.departure,
+      segmentArrival: last.arrival,
       progress: nil,
-      journeyDeparture: Date(timeIntervalSince1970: first.departureTime / 1000.0),
-      journeyArrival: Date(timeIntervalSince1970: last.arrivalTime / 1000.0)
+      journeyDeparture: first.departure,
+      journeyArrival: last.arrival
     )
 
     // Resolve required user-selected leg details for the new TrainJourneyData
@@ -213,8 +213,8 @@ extension TrainMapStore {
       return
     }
 
-    let userSelectedDepartureTime = Date(timeIntervalSince1970: first.departureTime / 1000.0)
-    let userSelectedArrivalTime = Date(timeIntervalSince1970: last.arrivalTime / 1000.0)
+    let userSelectedDepartureTime = first.departure
+    let userSelectedArrivalTime = last.arrival
 
     let journeyData = TrainJourneyData(
       trainId: trainId,
@@ -287,10 +287,22 @@ extension TrainMapStore {
       return
     }
 
+    // Compute interval using only hour & minute from departureTime relative to today
+    // let calendar = Calendar.current
+    // let hm = calendar.dateComponents([.hour, .minute], from: departureTime)
+    // let now = Date()
+    // departureTime =
+    //   calendar.date(
+    //     bySettingHour: hm.hour ?? 0,
+    //     minute: hm.minute ?? 0,
+    //     second: 0,
+    //     of: now
+    //   ) ?? departureTime
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
-    let thirtyMinutes: TimeInterval = 30 * 60
 
-    if timeUntilDeparture <= thirtyMinutes {
+    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
+
+    if timeUntilDeparture <= scheduleOffset {
       // Start immediately on device
       logger.info(
         "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
@@ -316,7 +328,7 @@ extension TrainMapStore {
       logger.info(
         "Queuing Live Activity on server (departure in \(timeUntilDeparture / 60) minutes)")
 
-      let scheduledStartTime = departureTime.addingTimeInterval(-thirtyMinutes)
+      let scheduledStartTime = departureTime.addingTimeInterval(-scheduleOffset)
       try await queueLiveActivityOnServer(
         train: train,
         fromStation: fromStation,

@@ -29,9 +29,17 @@ public struct TrainStation: Codable, Hashable, Sendable {
     name = try container.decode(String.self, forKey: .name)
     code = try container.decode(String.self, forKey: .code)
 
-    // Decode Unix timestamps (seconds since 1970) as Dates
-    if let timestamp = try container.decodeIfPresent(Double.self, forKey: .estimatedTime) {
-      estimatedTime = Date(timeIntervalSince1970: timestamp)
+    // Decode milliseconds since epoch and normalize to local Date with hour:minute
+    if let timestampMs = try container.decodeIfPresent(Double.self, forKey: .estimatedTime) {
+      // Check if it's milliseconds (> threshold) or seconds
+      // Milliseconds since 1970 would be > 1e12, seconds would be < 1e10
+      if timestampMs > 1e12 {
+        // It's milliseconds, normalize to local Date with hour:minute
+        estimatedTime = Date(fromMillisecondsSinceEpoch: timestampMs)
+      } else {
+        // It's seconds, convert to milliseconds first, then normalize
+        estimatedTime = Date(fromMillisecondsSinceEpoch: timestampMs * 1000)
+      }
     } else {
       estimatedTime = nil
     }
@@ -42,9 +50,9 @@ public struct TrainStation: Codable, Hashable, Sendable {
     try container.encode(name, forKey: .name)
     try container.encode(code, forKey: .code)
 
-    // Encode Dates as Unix timestamps (seconds since 1970)
+    // Encode Dates as milliseconds since epoch (Unix timestamp * 1000)
     if let time = estimatedTime {
-      try container.encode(time.timeIntervalSince1970, forKey: .estimatedTime)
+      try container.encode(time.timeIntervalSince1970 * 1000, forKey: .estimatedTime)
     } else {
       try container.encodeNil(forKey: .estimatedTime)
     }

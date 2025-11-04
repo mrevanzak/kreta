@@ -47,40 +47,50 @@ struct AddTrainViewModelTests {
     ),
   ]
 
-  let mockAvailableTrainItems = [
-    JourneyService.AvailableTrainItem(
-      id: "T1",
-      trainId: "train-1",
-      code: "ARGO",
-      name: "Argo Bromo Anggrek",
-      fromStationId: "GMR",
-      toStationId: "BD",
-      segmentDepartureMs: 1_729_872_000_000,  // Sample timestamp
-      segmentArrivalMs: 1_729_879_200_000,
-      routeId: "R1",
-      fromStationName: "Gambir",
-      toStationName: "Bandung",
-      fromStationCode: "GMR",
-      toStationCode: "BD",
-      durationMinutes: 120
-    ),
-    JourneyService.AvailableTrainItem(
-      id: "T2",
-      trainId: "train-2",
-      code: "GAYA",
-      name: "Gaya Baru Malam Selatan",
-      fromStationId: "YK",
-      toStationId: "SGU",
-      segmentDepartureMs: 1_729_872_000_000,
-      segmentArrivalMs: 1_729_882_800_000,
-      routeId: "R1",
-      fromStationName: "Yogyakarta",
-      toStationName: "Surabaya Gubeng",
-      fromStationCode: "YK",
-      toStationCode: "SGU",
-      durationMinutes: 180
-    ),
-  ]
+  // Create mock items by decoding from JSON since AvailableTrainItem has custom Decodable
+  let mockAvailableTrainItems: [JourneyService.AvailableTrainItem] = {
+    let json1: [String: Any] = [
+      "id": "T1",
+      "trainId": "train-1",
+      "code": "ARGO",
+      "name": "Argo Bromo Anggrek",
+      "fromStationId": "GMR",
+      "toStationId": "BD",
+      "segmentDeparture": 1_729_872_000_000,
+      "segmentArrival": 1_729_879_200_000,
+      "routeId": "R1",
+      "fromStationName": "Gambir",
+      "toStationName": "Bandung",
+      "fromStationCode": "GMR",
+      "toStationCode": "BD",
+      "durationMinutes": 120,
+    ]
+
+    let json2: [String: Any] = [
+      "id": "T2",
+      "trainId": "train-2",
+      "code": "GAYA",
+      "name": "Gaya Baru Malam Selatan",
+      "fromStationId": "YK",
+      "toStationId": "SGU",
+      "segmentDeparture": 1_729_872_000_000,
+      "segmentArrival": 1_729_882_800_000,
+      "routeId": "R1",
+      "fromStationName": "Yogyakarta",
+      "toStationName": "Surabaya Gubeng",
+      "fromStationCode": "YK",
+      "toStationCode": "SGU",
+      "durationMinutes": 180,
+    ]
+
+    let decoder = JSONDecoder()
+    return [
+      try! decoder.decode(
+        JourneyService.AvailableTrainItem.self, from: JSONSerialization.data(withJSONObject: json1)),
+      try! decoder.decode(
+        JourneyService.AvailableTrainItem.self, from: JSONSerialization.data(withJSONObject: json2)),
+    ]
+  }()
 
   // MARK: - Initialization Tests
 
