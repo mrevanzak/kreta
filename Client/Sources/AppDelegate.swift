@@ -1,3 +1,4 @@
+import AlarmKit
 import DebugSwift
 import MijickPopups
 import UIKit
@@ -8,6 +9,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
   private let pushRegistrationService = PushRegistrationService.shared
   private let liveActivityService = TrainLiveActivityService.shared
   private let debugSwift = DebugSwift()
+  private let alarmManager = AlarmManager.shared
 
   func application(
     _ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
@@ -23,6 +25,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     notificationCenter.delegate = self
+    // Register notification categories
+    let tripStart = UNNotificationCategory(
+      identifier: "TRIP_START_FALLBACK",
+      actions: [],
+      intentIdentifiers: [],
+      options: [.customDismissAction]
+    )
+    notificationCenter.setNotificationCategories([tripStart])
 
     // Configure telemetry SDKs early
     SentryErrorReporter.configure(
@@ -42,6 +52,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
       // Begin monitoring ActivityKit tokens as early as possible
       await liveActivityService.startGlobalMonitoring()
       await requestNotificationAuthorization()
+
+      // Request AlarmKit authorization
+      let authorized = await TrainAlarmService.shared.requestAuthorization()
+      if !authorized {
+        print("Unable to request AlarmKit authorization")
+      }
     }
 
     #if DEBUG
@@ -71,7 +87,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                         estimatedTime: Date().addingTimeInterval(30)),
                       destination: TrainStation(
                         name: "Pasar Senen", code: "PSE",
-                        estimatedTime: Date().addingTimeInterval(60)),
+                        estimatedTime: Date().addingTimeInterval(120)),
                       seatClass: SeatClass.economy(number: 9),
                       seatNumber: "20C"
                     )
@@ -99,7 +115,26 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                   }
                 }),
             ]
-          )
+          ),
+          .init(
+            title: "AlarmKit",
+            actions: [
+              .init(
+                title: "Printed out pending alarm",
+                action: {
+                  let alarms = try? self.alarmManager.alarms
+
+                  guard let alarms = alarms else {
+                    print("No alarms")
+                    return
+                  }
+
+                  for alarm in alarms {
+                    print("Alarm: \(String(describing: alarm.countdownDuration?.preAlert))")
+                  }
+                })
+            ]
+          ),
         ]
       }
 

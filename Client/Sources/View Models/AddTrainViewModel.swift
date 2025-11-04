@@ -19,10 +19,16 @@ enum SelectionStep {
 
 // MARK: - Journey Data
 
-struct TrainJourneyData {
+struct TrainJourneyData: Codable, Equatable {
   let trainId: String
   let segments: [JourneySegment]
   let allStations: [Station]
+
+  // User-selected journey leg (subset of full route)
+  let userSelectedFromStation: Station
+  let userSelectedToStation: Station
+  let userSelectedDepartureTime: Date
+  let userSelectedArrivalTime: Date
 }
 
 // MARK: - AddTrainView Extension
@@ -37,7 +43,7 @@ extension AddTrainView {
     var connectedStations: [Station] = []
     var availableTrains: [JourneyService.AvailableTrainItem] = []
     var filteredTrains: [JourneyService.AvailableTrainItem] = []
-    
+
     // Store journey data separately from ProjectedTrain
     var trainJourneyData: [String: TrainJourneyData] = [:]
 
@@ -119,44 +125,42 @@ extension AddTrainView {
       // Fetch journey segments for the complete route
       var journeySegments: [JourneySegment] = []
       var allStationsInJourney: [Station] = []
-      
+
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
-        
-        print("🚂 Fetched \(segments.count) segments for train \(item.code)")
-        
+
         // Convert to JourneySegment model
         for (index, segment) in segments.enumerated() {
           if index < segments.count - 1 {
             let nextSegment = segments[index + 1]
-            
-            if index == 0 {
-              print("📍 First segment: departure=\(segment.departureTime), arrival=\(nextSegment.arrivalTime)")
-              print("📅 As dates: \(Date(timeIntervalSince1970: segment.departureTime / 1000)) -> \(Date(timeIntervalSince1970: nextSegment.arrivalTime / 1000))")
-            }
-            
+
+            // Use nextSegment.routeId because the route connects TO the next station
             journeySegments.append(
               JourneySegment(
                 fromStationId: segment.stationId,
                 toStationId: nextSegment.stationId,
-                departureTimeMs: segment.departureTime,
-                arrivalTimeMs: nextSegment.arrivalTime,
-                routeId: segment.routeId
+                departure: segment.departure,
+                arrival: nextSegment.arrival,
+                routeId: nextSegment.routeId
               )
             )
           }
-          
+
           // Collect all stations
           if let station = stationsById[segment.stationId] {
             allStationsInJourney.append(station)
           }
         }
-        
+
         // Store journey data separately
         trainJourneyData[item.trainId] = TrainJourneyData(
           trainId: item.trainId,
           segments: journeySegments,
-          allStations: allStationsInJourney
+          allStations: allStationsInJourney,
+          userSelectedFromStation: fromStation!,
+          userSelectedToStation: toStation!,
+          userSelectedDepartureTime: item.segmentDeparture,
+          userSelectedArrivalTime: item.segmentArrival,
         )
       } catch {
         print("Failed to fetch journey segments: \(error)")
@@ -176,11 +180,11 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-        segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+        segmentDeparture: item.segmentDeparture,
+        segmentArrival: item.segmentArrival,
         progress: nil,
-        journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-        journeyArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
+        journeyDeparture: item.segmentDeparture,
+        journeyArrival: item.segmentArrival
       )
 
       return projected

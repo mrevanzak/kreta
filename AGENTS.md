@@ -12,14 +12,14 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 ## 2. Core Technologies & Stack
 
 - **Languages:** Swift 5.9+ with Observation framework; TypeScript for Bun runtime backend.
-- **Client Frameworks:** SwiftUI, Observation (macros), ActivityKit, WidgetKit, ConvexMobile SDK, MapKit, CoreLocation.
+- **Client Frameworks:** SwiftUI, Observation (macros), ActivityKit, AlarmKit, WidgetKit, ConvexMobile SDK, MapKit, CoreLocation, UserNotifications.
 - **Backend:** Bun v1.2+ runtime with Convex cloud database (queries, mutations, subscriptions).
 - **Key Dependencies:**
   - **Client:** `ConvexMobile` for real-time queries/subscriptions, `Sentry` for error reporting, `PostHog` for analytics, `Disk` for file caching, `DebugSwift` for debugging
   - **Backend:** `convex` NPM package for database operations, `@parse/node-apn` for push notifications
   - **Development:** MijickCalendarView, MijickPopups for UI components
 - **Architecture:** MVVM-inspired with `@Observable` stores, service layer for business logic, HTTPClient for REST APIs, ConvexClient for real-time subscriptions.
-- **Platforms:** iOS 16.1+ (ActivityKit), iOS 17+ (Observation), WidgetKit Live Activities; Bun-compatible server environments.
+- **Platforms:** iOS 26.0+ (target deployment), iOS 16.1+ (ActivityKit), iOS 17+ (Observation), WidgetKit Live Activities; Bun-compatible server environments.
 - **Package Manager:** Swift Package Manager via Xcode; Bun for server.
 
 ## 3. Architectural Patterns
@@ -85,8 +85,10 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 - **Core Services:**
   - `TrainMapStore`: Map state, stations, routes, projection.
   - `JourneyService`: Journey fetching from Convex.
-  - `TrainLiveActivityService`: ActivityKit management.
+  - `TrainLiveActivityService`: ActivityKit management and automatic state transitions.
+  - `TrainAlarmService`: Arrival alarm scheduling using critical notifications (AlarmKit-like functionality).
   - `TrainMapCacheService`: On-device caching.
+  - `AlarmPreferences`: User preferences for alarm settings with per-activity and global defaults.
 - **CI/CD Pipeline:** None configured; create `.github/workflows/` if needed.
 
 ## 6. Development & Testing Workflow
@@ -99,7 +101,7 @@ AI collaborators should operate as expert Swift and SwiftUI developers, using th
 - **Testing:**
   - XCTest for unit tests.
   - Tests in `/Client/kretaTests` and `/Client/Tests`.
-  - Existing: `AddTrainViewModelTests`.
+  - Existing: `AddTrainViewModelTests`, `TrainAlarmServiceTests`.
 - **Quality:**
   - Test user flows, error states, performance, accessibility.
   - Telemetry reports crashes and analytics.
@@ -150,3 +152,59 @@ Benefits:
 - Errors are surfaced where user feedback is decided, keeping stores free of presentation concerns.
 - Consistent user messaging via `Environment(\.showMessage)`.
 - Easier testing of stores (deterministic, no UI coupling).
+
+### Arrival Alarm Architecture
+
+The app uses AlarmKit to alert users 10 minutes before arriving at their journey destination:
+
+**Components:**
+
+1. **TrainAlarmService** (`Client/Sources/Services/TrainAlarmService.swift`):
+
+   - Manages arrival alarm lifecycle (schedule, cancel, status checks)
+   - Uses `AlarmManager` from AlarmKit with fixed schedule alarms
+   - Integrates with Live Activities for coordination
+   - Singleton pattern for global access
+
+2. **TrainActivityAttributes.AlarmState** (`Client/Shared/TrainActivityAttributes.swift`):
+
+   - `alarmEnabled: Bool` - Per-activity alarm toggle (default: true)
+   - `alarmOffsetMinutes: Int` - Customizable advance warning time (default: 10)
+   - Stored in `ContentState` for Live Activity synchronization
+
+3. **TrainLiveActivityService Integration**:
+
+   - Schedules alarm when activity starts (if enabled)
+   - Cancels alarm when activity ends
+   - Reschedules alarms for existing activities on app launch
+   - Automatic transition to `.prepareToDropOff` when alarm fires
+
+4. **AppDelegate Notification Handling**:
+
+   - Handles `willPresent` and `didReceive` delegate methods
+   - Transitions activity state on alarm fire
+   - Backup notification display even when alarm fails
+
+5. **AlarmPreferences** (`Client/Sources/Utility/AlarmPreferences.swift`):
+   - UserDefaults-based preference storage
+   - Per-activity and global default settings
+   - Thread-safe access patterns
+
+**Flow:**
+
+```mermaid
+flowchart TD
+    A[User starts Live Activity] --> B[TrainLiveActivityService.start called]
+    B --> C[scheduleAlarmIfEnabled checks alarmEnabled flag]
+    C --> D[TrainAlarmService.scheduleArrivalAlarm calculates alarm time]
+    D --> E[AlarmManager schedules AlarmKit fixed schedule alarm]
+    E --> F[Alarm fires: journeyArrival - alarmOffsetMinutes]
+    F --> G[AlarmKit displays "Segera Turun!" alert]
+    G --> H[User dismisses alarm]
+```
+
+**Platform Support:**
+
+- iOS 26.0+ required for AlarmKit framework
+- Uses native AlarmKit API for prominent, override-silent alerts
+- Requires `NSAlarmKitUsageDescription` in Info.plist for authorization

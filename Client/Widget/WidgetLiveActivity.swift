@@ -27,8 +27,8 @@ struct BeforeBoardingView: View {
           .font(.title2)
           .bold()
           .foregroundColor(.kretaPrimary)
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+          .lineLimit(2)
+          .minimumScaleFactor(0.6)
 
         HStack(alignment: .firstTextBaseline, spacing: 6) {
           HStack(spacing: 4) {
@@ -485,7 +485,7 @@ struct WidgetLiveActivity: Widget {
 extension TrainActivityAttributes {
   fileprivate static var preview: TrainActivityAttributes {
     TrainActivityAttributes(
-      trainName: "Jayabaya",
+      trainName: "Argo Bromo Anggrek",
       from: TrainStation(
         name: "Malang",
         code: "ML",

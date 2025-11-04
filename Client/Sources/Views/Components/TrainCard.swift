@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TrainCard: View {
   let train: ProjectedTrain
+  let journeyData: TrainJourneyData?
   let onDelete: () -> Void
 
   var body: some View {
@@ -42,16 +43,16 @@ struct TrainCard: View {
 
       // Journey details
       HStack(spacing: 0) {
-        // Departure station
+        // Departure station (use user selection if available)
         VStack(spacing: 4) {
-          Text(train.fromStation?.code ?? "--")
+          Text(departureStationCode)
             .font(.title2)
             .bold()
 
-          Text(train.fromStation?.city ?? "Unknown")
+          Text(departureStationCity)
             .font(.caption)
 
-          Text(formatTime(train.journeyDeparture))
+          Text(formatTime(departureTime))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -69,16 +70,16 @@ struct TrainCard: View {
         }
         .frame(maxWidth: .infinity)
 
-        // Arrival station
+        // Arrival station (use user selection if available)
         VStack(spacing: 4) {
-          Text(train.toStation?.code ?? "--")
+          Text(arrivalStationCode)
             .font(.title2)
             .bold()
 
-          Text(train.toStation?.city ?? "Unknown")
+          Text(arrivalStationCity)
             .font(.caption)
 
-          Text(formatTime(train.journeyArrival))
+          Text(formatTime(arrivalTime))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -93,22 +94,82 @@ struct TrainCard: View {
     .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
   }
 
+  // MARK: - Computed Properties
+
+  /// Use user-selected departure station if available, otherwise use current segment
+  private var departureStationCode: String {
+    journeyData?.userSelectedFromStation.code ?? train.fromStation?.code ?? "--"
+  }
+
+  private var departureStationCity: String {
+    journeyData?.userSelectedFromStation.city ?? train.fromStation?.city ?? "Unknown"
+  }
+
+  private var departureTime: Date? {
+    journeyData?.userSelectedDepartureTime ?? train.journeyDeparture
+  }
+
+  /// Use user-selected arrival station if available, otherwise use current segment
+  private var arrivalStationCode: String {
+    journeyData?.userSelectedToStation.code ?? train.toStation?.code ?? "--"
+  }
+
+  private var arrivalStationCity: String {
+    journeyData?.userSelectedToStation.city ?? train.toStation?.city ?? "Unknown"
+  }
+
+  private var arrivalTime: Date? {
+    journeyData?.userSelectedArrivalTime ?? train.journeyArrival
+  }
+
+  // MARK: - Helper Functions
+
   // Helper function to format duration
   private func formattedDuration() -> String {
-    guard let _ = train.journeyDeparture, let arrival = train.journeyArrival else {
+    guard let departure = departureTime, let arrival = arrivalTime else {
       return "Waktu tidak tersedia"
     }
 
-    let now = Date()
-    let interval = arrival.timeIntervalSince(now)
+    // Format times as strings
+    let departureString = departure.formatted(.dateTime.hour().minute())
+    let arrivalString = arrival.formatted(.dateTime.hour().minute())
+    let nowString = Date().formatted(.dateTime.hour().minute())
     
-    // If already arrived
-    if interval < 0 {
+    // Parse time strings to calculate interval
+    guard let departureComponents = parseTimeString(departureString),
+          let arrivalComponents = parseTimeString(arrivalString),
+          let nowComponents = parseTimeString(nowString) else {
+      return "Waktu tidak tersedia"
+    }
+    
+    let departureMinutes = departureComponents.hour * 60 + departureComponents.minute
+    let arrivalMinutes = arrivalComponents.hour * 60 + arrivalComponents.minute
+    let nowMinutes = nowComponents.hour * 60 + nowComponents.minute
+    
+    // Check if train hasn't departed yet
+    var departureInterval = departureMinutes - nowMinutes
+    if departureInterval < 0 {
+      departureInterval += 24 * 60
+    }
+    
+    // If departure is in the future (and less than 12 hours away)
+    if departureInterval > 0 && departureInterval < 12 * 60 {
+      return "Kereta belum berangkat"
+    }
+    
+    // Calculate difference to arrival (handle day rollover)
+    var intervalMinutes = arrivalMinutes - nowMinutes
+    if intervalMinutes < 0 {
+      intervalMinutes += 24 * 60 // Add 24 hours if negative (crossed midnight)
+    }
+    
+    // If already arrived (more than 12 hours means it's in the past)
+    if intervalMinutes > 12 * 60 {
       return "Sudah Tiba"
     }
     
-    let hours = Int(interval) / 3600
-    let minutes = (Int(interval) % 3600) / 60
+    let hours = intervalMinutes / 60
+    let minutes = intervalMinutes % 60
 
     if hours > 0 && minutes > 0 {
       return "Tiba Dalam \(hours)Jam \(minutes)Menit"
@@ -119,6 +180,17 @@ struct TrainCard: View {
     } else {
       return "Tiba Sebentar Lagi"
     }
+  }
+  
+  private func parseTimeString(_ timeString: String) -> (hour: Int, minute: Int)? {
+    // Expected format: "HH:mm" or "H:mm"
+    let components = timeString.split(separator: ".")
+    guard components.count == 2,
+          let hour = Int(components[0]),
+          let minute = Int(components[1]) else {
+      return nil
+    }
+    return (hour, minute)
   }
 
   private func formatTime(_ date: Date?) -> String {
@@ -165,7 +237,7 @@ struct TrainCard: View {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
 
-    TrainCard(train: train, onDelete: {})
+    TrainCard(train: train, journeyData: nil, onDelete: {})
       .padding()
   }
 }

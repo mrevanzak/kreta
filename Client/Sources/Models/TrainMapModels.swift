@@ -2,7 +2,7 @@ import ConvexMobile
 import CoreLocation
 import Foundation
 
-struct Position: Codable {
+struct Position: Codable, Equatable {
   let latitude: Double
   let longitude: Double
 
@@ -11,7 +11,7 @@ struct Position: Codable {
   }
 }
 
-struct Station: Codable, Identifiable {
+struct Station: Codable, Identifiable, Equatable {
   let id: String?
   let code: String
   let name: String
@@ -156,12 +156,10 @@ struct ProjectedTrain: Codable, Identifiable, Equatable {
   var coordinate: CLLocationCoordinate2D {
     CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude)
   }
-  
+
   static func == (lhs: ProjectedTrain, rhs: ProjectedTrain) -> Bool {
-    lhs.id == rhs.id && 
-    lhs.position.latitude == rhs.position.latitude && 
-    lhs.position.longitude == rhs.position.longitude &&
-    lhs.moving == rhs.moving
+    lhs.id == rhs.id && lhs.position.latitude == rhs.position.latitude
+      && lhs.position.longitude == rhs.position.longitude && lhs.moving == rhs.moving
   }
 }
 
@@ -173,12 +171,53 @@ struct RoutePolyline: Codable, Identifiable, Sendable {
   let path: [Position]
 }
 
-struct JourneySegment: Codable, Sendable {
+struct JourneySegment: Codable, Sendable, Equatable {
   let fromStationId: String
   let toStationId: String
-  let departureTimeMs: Double
-  let arrivalTimeMs: Double
+  let departure: Date
+  let arrival: Date
   let routeId: String?
+
+  init(fromStationId: String, toStationId: String, departure: Date, arrival: Date, routeId: String?)
+  {
+    self.fromStationId = fromStationId
+    self.toStationId = toStationId
+    self.departure = departure
+    self.arrival = arrival
+    self.routeId = routeId
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case fromStationId
+    case toStationId
+    case departureTimeMs
+    case arrivalTimeMs
+    case routeId
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    fromStationId = try container.decode(String.self, forKey: .fromStationId)
+    toStationId = try container.decode(String.self, forKey: .toStationId)
+
+    // Decode milliseconds and normalize to local Date with hour:minute
+    let departureMs = try container.decode(Double.self, forKey: .departureTimeMs)
+    departure = Date(fromMillisecondsSinceEpoch: departureMs)
+
+    let arrivalMs = try container.decode(Double.self, forKey: .arrivalTimeMs)
+    arrival = Date(fromMillisecondsSinceEpoch: arrivalMs)
+
+    routeId = try container.decodeIfPresent(String.self, forKey: .routeId)
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(fromStationId, forKey: .fromStationId)
+    try container.encode(toStationId, forKey: .toStationId)
+    try container.encode(departure.timeIntervalSince1970 * 1000, forKey: .departureTimeMs)
+    try container.encode(arrival.timeIntervalSince1970 * 1000, forKey: .arrivalTimeMs)
+    try container.encodeIfPresent(routeId, forKey: .routeId)
+  }
 }
 
 struct TrainJourney: Codable, Identifiable, Sendable {

@@ -8,18 +8,11 @@ struct HomeScreen: View {
 
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false
-  @State private var selectedTrains: [ProjectedTrain] = []
-  @State private var journeyDataMap: [String: TrainJourneyData] = [:]
-  @State private var liveTrainPositions: [String: ProjectedTrain] = [:]
 
   var body: some View {
     Group {
       ZStack(alignment: .topTrailing) {
-        TrainMapView(
-          selectedTrains: selectedTrains,
-          journeyDataMap: journeyDataMap,
-          liveTrainPositions: $liveTrainPositions
-        )
+        TrainMapView()
 
         MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
           .padding(.trailing)
@@ -43,8 +36,17 @@ struct HomeScreen: View {
             }
           }
 
-          // Show trains if available, otherwise show add button
-          if selectedTrains.isEmpty {
+          // Show train if available, otherwise show add button
+          if let train = trainMapStore.selectedTrain {
+            // Use live projected train if available, otherwise use original
+            let displayTrain = trainMapStore.liveTrainPosition ?? train
+            TrainCard(
+              train: displayTrain,
+              journeyData: trainMapStore.selectedJourneyData,
+              onDelete: {
+                deleteTrain()
+              })
+          } else {
             Button {
               showAddSheet = true
             } label: {
@@ -61,18 +63,6 @@ struct HomeScreen: View {
                 )
             }
             .buttonStyle(.plain)
-          } else {
-            VStack(spacing: 12) {
-              ForEach(selectedTrains) { train in
-                // Use live projected train if available, otherwise use original
-                let displayTrain = liveTrainPositions[train.id] ?? train
-                TrainCard(
-                  train: displayTrain,
-                  onDelete: {
-                    deleteTrain(train)
-                  })
-              }
-            }
           }
         }
         .presentationBackgroundInteraction(.enabled)
@@ -84,11 +74,19 @@ struct HomeScreen: View {
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train, journeyData in
-              selectedTrains.append(train)
               if let journeyData = journeyData {
-                journeyDataMap[train.id] = journeyData
+                Task {
+                  do {
+                    try await trainMapStore.selectTrain(train, journeyData: journeyData)
+                    showAddSheet = false
+                  } catch {
+                    // Handle error - could show alert
+                    print("Failed to select train: \(error)")
+                  }
+                }
+              } else {
+                showAddSheet = false
               }
-              showAddSheet = false
             }
           )
           .presentationDragIndicator(.visible)
@@ -100,13 +98,35 @@ struct HomeScreen: View {
             .presentationBackground(.ultraThinMaterial)
         }
       }
-    }.environment(trainMapStore)
+    }
+    .environment(trainMapStore)
+    .onOpenURL { url in
+      let components = url.fullComponents
+      if components == ["trip", "start"],
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+      {
+        let journeyId = items.first(where: { $0.name == "journeyId" })?.value
+        let trainId = items.first(where: { $0.name == "trainId" })?.value
+
+        if let trainId {
+          Task {
+            do {
+              try await trainMapStore.startFromDeepLink(trainId: trainId, journeyId: journeyId)
+            } catch {
+              print("Failed to start from deeplink: \(error)")
+            }
+          }
+        }
+      }
+    }
+    .task {
+      try? await trainMapStore.loadSelectedTrainFromCache()
+    }
   }
 
-  private func deleteTrain(_ train: ProjectedTrain) {
-    withAnimation(.spring(response: 0.3)) {
-      selectedTrains.removeAll { $0.id == train.id }
-      journeyDataMap.removeValue(forKey: train.id)
+  private func deleteTrain() {
+    Task {
+      await trainMapStore.clearSelectedTrain()
     }
   }
 }

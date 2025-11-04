@@ -1,5 +1,5 @@
 {
-  "originHash" : "85d65cb6f2cac67b919daeea86618ba86c1bc7126f57200ba2111fe913e05631",
+  "originHash" : "66c099dd5562e79bfecbadfcb25e8765184681850429448ba9435a2436965e5b",
   "pins" : [
     {
       "identity" : "calendarview",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/get-convex/convex-swift",
       "state" : {
-        "revision" : "8930e29ad2baccd242770606eea09209a2346961",
-        "version" : "0.5.6"
+        "revision" : "47be041f8b3e7ccbba184c5a9fbea430cd33326b",
+        "version" : "0.6.0"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/DebugSwift/DebugSwift.git",
       "state" : {
-        "revision" : "6454d3660957ee46d584520e3093bb7f37ac2d27",
-        "version" : "1.7.20"
+        "revision" : "1d2e29b5365ed92f92c3264712653f130dd52e32",
+        "version" : "1.8.1"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/stripe/stripe-ios-spm",
       "state" : {
-        "revision" : "51c2a67246ff06fb0df78d34b665ad1b9cd8489c",
-        "version" : "24.24.3"
+        "revision" : "f4f28a0b358011089e4538059d443eccff183382",
+        "version" : "24.25.0"
       }
     }
   ],
