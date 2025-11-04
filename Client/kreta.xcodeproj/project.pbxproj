@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 4E428AD02EAEF22D008DC212 /* MijickCalendarView */; };
-		7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
 		8D0FC8B32C90E03100767285 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */ = {isa = PBXBuildFile; productRef = 8D20503E2CACC09C0088CFAF /* JWTDecode */; };
 		8D3EE22F2C92698B004E4B6D /* (null) in Sources */ = {isa = PBXBuildFile; };
@@ -28,9 +27,9 @@
 		C501C1892E9616E100CC2B4E /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */ = {isa = PBXBuildFile; productRef = C51929E22EAB3AC30036AE74 /* MijickPopups */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
+		C58000012EB9CAD80032530C /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = C58000002EB9CAD80032530C /* Sentry */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
 		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		C5AB85292EB3770D009E242A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 661BA6F9401C4744B476177E /* Sentry */; };
 		C5BC0C512EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
 		C5BC0C522EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
 		C5BC0C542EB62F5F00C508B1 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */; };
@@ -114,8 +113,8 @@
 				8D80217F2CFCF28E006C709C /* StripeApplePay in Frameworks */,
 				C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */,
 				8D8021852CFCF28E006C709C /* StripeIdentity in Frameworks */,
+				C58000012EB9CAD80032530C /* Sentry in Frameworks */,
 				8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */,
-				C5AB85292EB3770D009E242A /* Sentry in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
 				8D80218B2CFCF28F006C709C /* StripePaymentsUI in Frameworks */,
 				C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */,
@@ -130,7 +129,6 @@
 			files = (
 				C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */,
 				C501C17A2E9616DF00CC2B4E /* WidgetKit.framework in Frameworks */,
-				7366F91FA9C44ED3AE4929F8 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,9 +214,9 @@
 				C5892C972EA8CB370043E6B9 /* DebugSwift */,
 				C51929E22EAB3AC30036AE74 /* MijickPopups */,
 				4E428AD02EAEF22D008DC212 /* MijickCalendarView */,
-				661BA6F9401C4744B476177E /* Sentry */,
 				C5CC973F2EB3C0BE00E46229 /* Disk */,
 				C5CC99BC2EB446F600E46229 /* PostHog */,
+				C58000002EB9CAD80032530C /* Sentry */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -307,9 +305,9 @@
 				C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */,
 				C51929E12EAB3AC30036AE74 /* XCRemoteSwiftPackageReference "Popups" */,
 				4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */,
-				5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
 				C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				C580FFFF2EB9CAD80032530C /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -813,14 +811,6 @@
 				minimumVersion = 1.1.1;
 			};
 		};
-		5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.0.0;
-			};
-		};
 		8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/auth0/JWTDecode.swift.git";
@@ -851,6 +841,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.5.6;
+			};
+		};
+		C580FFFF2EB9CAD80032530C /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.57.1;
 			};
 		};
 		C5892C962EA8CB370043E6B9 /* XCRemoteSwiftPackageReference "DebugSwift" */ = {
@@ -884,11 +882,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */;
 			productName = MijickCalendarView;
-		};
-		661BA6F9401C4744B476177E /* Sentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5D7C34EB32FB45F7AE59052E /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
 		};
 		8D20503E2CACC09C0088CFAF /* JWTDecode */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -949,6 +942,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C57893C22E93769300375616 /* XCRemoteSwiftPackageReference "convex-swift" */;
 			productName = ConvexMobile;
+		};
+		C58000002EB9CAD80032530C /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C580FFFF2EB9CAD80032530C /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		C5892C972EA8CB370043E6B9 /* DebugSwift */ = {
 			isa = XCSwiftPackageProductDependency;
