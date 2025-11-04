@@ -375,6 +375,28 @@ extension TrainMapStore {
   }
 
   func clearSelectedTrain() async {
+    // End live activities and cancel alarms for the selected train
+    if let selectedTrain = selectedTrain {
+      let activeActivities = liveActivityService.getActiveLiveActivities()
+
+      // Find matching activity by train name and stations
+      for activity in activeActivities {
+        let matchesTrainName = activity.attributes.trainName == selectedTrain.name
+        let matchesFromStation =
+          activity.attributes.from.code == selectedTrain.fromStation?.code
+          || activity.attributes.from.name == selectedTrain.fromStation?.name
+        let matchesDestination =
+          activity.attributes.destination.code == selectedTrain.toStation?.code
+          || activity.attributes.destination.name == selectedTrain.toStation?.name
+
+        if matchesTrainName && matchesFromStation && matchesDestination {
+          logger.info("Ending live activity \(activity.id) for train \(selectedTrain.name)")
+          await liveActivityService.end(activityId: activity.id)
+          break  // Only end one matching activity
+        }
+      }
+    }
+
     // Cancel any pending trip reminders on server
     if let schedulerId = scheduledNotificationId {
       do {
