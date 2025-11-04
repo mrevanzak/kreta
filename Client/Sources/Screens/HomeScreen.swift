@@ -45,6 +45,10 @@ struct HomeScreen: View {
               onDelete: {
                 deleteTrain()
               })
+            .transition(.asymmetric(
+              insertion: .move(edge: .bottom).combined(with: .opacity),
+              removal: .move(edge: .bottom).combined(with: .opacity)
+            ))
           } else {
             Button {
               showAddSheet = true
@@ -65,6 +69,10 @@ struct HomeScreen: View {
                 )
             }
             .buttonStyle(.plain)
+            .transition(.asymmetric(
+              insertion: .move(edge: .bottom).combined(with: .opacity),
+              removal: .move(edge: .bottom).combined(with: .opacity)
+            ))
           }
         }
         .padding(.horizontal, 20)
@@ -75,6 +83,7 @@ struct HomeScreen: View {
         .presentationDetents(trainMapStore.selectedTrain != nil ? [.height(200)] : [.fraction(0.35)])
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
+        .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train, journeyData in
@@ -129,7 +138,7 @@ struct HomeScreen: View {
   }
 
   private func deleteTrain() {
-    Task {
+    Task { @MainActor in
       await trainMapStore.clearSelectedTrain()
     }
   }
