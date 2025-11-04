@@ -126,24 +126,38 @@ struct TrainCard: View {
 
   // Helper function to format duration
   private func formattedDuration() -> String {
-    guard let arrival = arrivalTime else {
+    guard let departure = departureTime, let arrival = arrivalTime else {
       return "Waktu tidak tersedia"
     }
 
-    // Format both times as strings
+    // Format times as strings
+    let departureString = departure.formatted(.dateTime.hour().minute())
     let arrivalString = arrival.formatted(.dateTime.hour().minute())
     let nowString = Date().formatted(.dateTime.hour().minute())
     
     // Parse time strings to calculate interval
-    guard let arrivalComponents = parseTimeString(arrivalString),
+    guard let departureComponents = parseTimeString(departureString),
+          let arrivalComponents = parseTimeString(arrivalString),
           let nowComponents = parseTimeString(nowString) else {
       return "Waktu tidak tersedia"
     }
     
+    let departureMinutes = departureComponents.hour * 60 + departureComponents.minute
     let arrivalMinutes = arrivalComponents.hour * 60 + arrivalComponents.minute
     let nowMinutes = nowComponents.hour * 60 + nowComponents.minute
     
-    // Calculate difference (handle day rollover)
+    // Check if train hasn't departed yet
+    var departureInterval = departureMinutes - nowMinutes
+    if departureInterval < 0 {
+      departureInterval += 24 * 60
+    }
+    
+    // If departure is in the future (and less than 12 hours away)
+    if departureInterval > 0 && departureInterval < 12 * 60 {
+      return "Kereta belum berangkat"
+    }
+    
+    // Calculate difference to arrival (handle day rollover)
     var intervalMinutes = arrivalMinutes - nowMinutes
     if intervalMinutes < 0 {
       intervalMinutes += 24 * 60 // Add 24 hours if negative (crossed midnight)
