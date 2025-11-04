@@ -26,14 +26,14 @@
 		C501C17C2E9616DF00CC2B4E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */; };
 		C501C1892E9616E100CC2B4E /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */ = {isa = PBXBuildFile; productRef = C51929E22EAB3AC30036AE74 /* MijickPopups */; };
+		C565BFD02EBA33E4003AB6DD /* Development.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */; };
+		C565BFD12EBA33E4003AB6DD /* Development.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */; };
+		C565BFD32EBA33EE003AB6DD /* Production.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */; };
+		C565BFD42EBA33EE003AB6DD /* Production.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 		C58000012EB9CAD80032530C /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = C58000002EB9CAD80032530C /* Sentry */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
 		C5AB85282EB3770D009E242A /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		C5BC0C512EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
-		C5BC0C522EB62F5700C508B1 /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */; };
-		C5BC0C542EB62F5F00C508B1 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */; };
-		C5BC0C552EB62F5F00C508B1 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */; };
 		C5CC97402EB3C0BE00E46229 /* Disk in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC973F2EB3C0BE00E46229 /* Disk */; };
 		C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = C5CC99BC2EB446F600E46229 /* PostHog */; };
 /* End PBXBuildFile section */
@@ -74,8 +74,8 @@
 		C501C1772E9616DF00CC2B4E /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C501C1792E9616DF00CC2B4E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
-		C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
+		C565BFD22EBA33EE003AB6DD /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
 		C5BC0C5A2EB6323300C508B1 /* kretaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kretaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5F65E5C2EA7427100F57118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -152,8 +152,8 @@
 				C5BC0C5B2EB6323300C508B1 /* kretaTests */,
 				C501C1782E9616DF00CC2B4E /* Frameworks */,
 				8DDE5FB22C8A7D9300A0DBE0 /* Products */,
-				C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */,
-				C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */,
+				C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */,
+				C565BFD22EBA33EE003AB6DD /* Production.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -325,8 +325,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5BC0C552EB62F5F00C508B1 /* Release.xcconfig in Resources */,
-				C5BC0C522EB62F5700C508B1 /* Debug.xcconfig in Resources */,
+				C565BFD12EBA33E4003AB6DD /* Development.xcconfig in Resources */,
+				C565BFD42EBA33EE003AB6DD /* Production.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,8 +334,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5BC0C542EB62F5F00C508B1 /* Release.xcconfig in Resources */,
-				C5BC0C512EB62F5700C508B1 /* Debug.xcconfig in Resources */,
+				C565BFD02EBA33E4003AB6DD /* Development.xcconfig in Resources */,
+				C565BFD32EBA33EE003AB6DD /* Production.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -410,7 +410,7 @@
 /* Begin XCBuildConfiguration section */
 		8DDE5FBD2C8A7D9400A0DBE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
+			baseConfigurationReference = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -476,7 +476,7 @@
 		};
 		8DDE5FBE2C8A7D9400A0DBE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
+			baseConfigurationReference = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -535,7 +535,7 @@
 		};
 		8DDE5FC02C8A7D9400A0DBE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
+			baseConfigurationReference = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */;
 			buildSettings = {
 				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -585,7 +585,7 @@
 		};
 		8DDE5FC12C8A7D9400A0DBE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
+			baseConfigurationReference = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */;
 			buildSettings = {
 				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -635,7 +635,7 @@
 		};
 		C501C18C2E9616E100CC2B4E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
+			baseConfigurationReference = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -672,7 +672,7 @@
 		};
 		C501C18D2E9616E100CC2B4E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
+			baseConfigurationReference = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -709,7 +709,7 @@
 		};
 		C5BC0C612EB6323300C508B1 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C502EB62F5700C508B1 /* Debug.xcconfig */;
+			baseConfigurationReference = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -736,7 +736,7 @@
 		};
 		C5BC0C622EB6323300C508B1 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5BC0C532EB62F5F00C508B1 /* Release.xcconfig */;
+			baseConfigurationReference = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
