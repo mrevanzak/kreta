@@ -143,7 +143,7 @@ struct AnimatedSearchBar: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 10)
-    .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
   }
 
@@ -151,7 +151,6 @@ struct AnimatedSearchBar: View {
     HStack(spacing: 8) {
       Image(systemName: "calendar")
         .font(.subheadline)
-        .foregroundStyle(.tertiary)
 
       TextField("Hari, Tanggal", text: $searchText)
         .textFieldStyle(.plain)
@@ -165,7 +164,7 @@ struct AnimatedSearchBar: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 10)
-    .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
   }
 
@@ -179,7 +178,7 @@ struct AnimatedSearchBar: View {
       Image(systemName: "xmark.circle.fill")
         .font(.caption)
         .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.sublime)
         .opacity(isClearing ? 0 : 1)
         .scaleEffect(isClearing ? 0.5 : 1)
     }
@@ -187,7 +186,7 @@ struct AnimatedSearchBar: View {
     .padding(.horizontal, 12)
     .padding(.vertical, 10)
     .frame(minWidth: 60)
-    .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .matchedGeometryEffect(id: id, in: animation)
     .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     .hoverEffect(.highlight)
@@ -197,10 +196,10 @@ struct AnimatedSearchBar: View {
   private func dateChip(_ date: Date) -> some View {
     Text(date.formatted(.dateTime.day().month(.wide).year()))
       .font(.subheadline.weight(.medium))
-      .foregroundStyle(.secondary)
+      .foregroundStyle(.sublime)
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
-      .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+      .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
   }
 }
 

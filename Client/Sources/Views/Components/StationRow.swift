@@ -16,12 +16,13 @@ struct StationRow: View {
       // Station code badge
       ZStack {
         Circle()
-          .glassEffect()
+          .foregroundStyle(.backgroundSecondary)
+          .glassEffect(.regular.tint(.primary))
           .frame(width: 44)
         
         Text(station.code)
           .font(.callout)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(.primary)
           
       }
       

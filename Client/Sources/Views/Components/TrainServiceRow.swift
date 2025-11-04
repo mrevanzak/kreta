@@ -18,8 +18,8 @@ struct TrainServiceRow: View {
           Text(item.name)
             .font(.title3).bold()
           Text("(\(item.code))")
-            .font(.title3)
-            .foregroundStyle(.secondary)
+            .font(.subheadline)
+            .foregroundStyle(.textSecondary)
         }
 
         // Route information
@@ -28,7 +28,7 @@ struct TrainServiceRow: View {
           HStack(spacing: 4) {
             Text(item.fromStationCode ?? "--")
               .font(.subheadline)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(.textSecondary)
 
             Text(
               formatTime(item.segmentDeparture)
@@ -37,15 +37,16 @@ struct TrainServiceRow: View {
           }
 
           // Direction arrow
-          Image(systemName: "arrow.right")
+          Image(systemName: "arrow.right.square.fill")
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(.white, .primaryButton)
             .font(.subheadline)
-            .foregroundStyle(.primary)
 
           // Arrival station
           HStack(spacing: 4) {
             Text(item.toStationCode ?? "--")
               .font(.subheadline)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(.textSecondary)
 
             Text(
               formatTime(item.segmentArrival)
@@ -56,14 +57,6 @@ struct TrainServiceRow: View {
       }
 
       Spacer()
-
-      // Chevron indicator
-      ZStack {
-        Circle()
-          .glassEffect()
-          .frame(width: 44)
-        Image(systemName: "checkmark")
-      }
     }
     .padding()
   }

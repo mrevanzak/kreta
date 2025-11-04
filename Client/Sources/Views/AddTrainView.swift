@@ -24,6 +24,7 @@ struct AddTrainView: View {
     .task {
       viewModel.bootstrap(allStations: store.stations)
     }
+    .background(.backgroundPrimary)
   }
 
   // MARK: - Private Views
@@ -59,10 +60,13 @@ struct AddTrainView: View {
           dismiss()
         } label: {
           Image(systemName: "xmark.circle.fill")
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(.textSecondary, .primary)
             .font(.largeTitle)
-            .foregroundStyle(.gray)
-            .symbolRenderingMode(.hierarchical)
         }
+        .foregroundStyle(.backgroundSecondary)
+        .glassEffect(.regular.tint(.backgroundSecondary))
+
       }
 
       // Animated search bar
@@ -226,6 +230,54 @@ struct AddTrainView: View {
 
 // MARK: - Preview
 
-#Preview {
-  AddTrainView(onTrainSelected: { _, _ in })
+#Preview("Add Train View") {
+  let store = TrainMapStore.preview
+  
+  // Add more sample stations for a realistic preview
+  store.stations = [
+    Station(
+      id: "GMR",
+      code: "GMR",
+      name: "Gambir",
+      position: Position(latitude: -6.1774, longitude: 106.8306),
+      city: "Jakarta"
+    ),
+    Station(
+      id: "JNG",
+      code: "JNG",
+      name: "Jatinegara",
+      position: Position(latitude: -6.2149, longitude: 106.8707),
+      city: "Jakarta"
+    ),
+    Station(
+      id: "BD",
+      code: "BD",
+      name: "Bandung",
+      position: Position(latitude: -6.9175, longitude: 107.6191),
+      city: "Bandung"
+    ),
+    Station(
+      id: "YK",
+      code: "YK",
+      name: "Yogyakarta",
+      position: Position(latitude: -7.7956, longitude: 110.3695),
+      city: "Yogyakarta"
+    ),
+    Station(
+      id: "SB",
+      code: "SB",
+      name: "Surabaya Gubeng",
+      position: Position(latitude: -7.2655, longitude: 112.7523),
+      city: "Surabaya"
+    ),
+  ]
+  
+  return AddTrainView(onTrainSelected: { train, journeyData in
+    print("Selected train: \(train.name)")
+    if let journeyData = journeyData {
+      print("From: \(journeyData.userSelectedFromStation.name)")
+      print("To: \(journeyData.userSelectedToStation.name)")
+    }
+  })
+  .environment(store)
 }

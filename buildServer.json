@@ -12,8 +12,8 @@
 	"argv": [
 		"/opt/homebrew/bin/xcode-build-server"
 	],
-	"workspace": "/Users/rev/kreta/Client/kreta.xcodeproj/project.xcworkspace",
-	"build_root": "/Users/rev/Library/Developer/Xcode/DerivedData/kreta-advlzrtmupbwjsbcchkfavvdspls",
+	"workspace": "/Users/biru/Documents/LearningDevelopment/tututut/Client/kreta.xcodeproj/project.xcworkspace",
+	"build_root": "/Users/biru/Library/Developer/Xcode/DerivedData/kreta-gjykyjtszuxxuvgxxscqlgtjszsa",
 	"scheme": "kreta",
 	"kind": "xcode"
 }

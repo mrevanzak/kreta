@@ -19,7 +19,7 @@ struct HomeScreen: View {
       }
       .sheet(isPresented: .constant(true)) {
         // Bottom card
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
           HStack {
             Text("Perjalanan Kereta")
               .font(.title2).bold()
@@ -28,7 +28,6 @@ struct HomeScreen: View {
               Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
                 showFeedbackBoard = true
               }
-              Button("Pengaturan", systemImage: "gearshape") {}
             } label: {
               Circle().fill(.thinMaterial)
                 .frame(width: 38, height: 38)
@@ -51,13 +50,16 @@ struct HomeScreen: View {
               showAddSheet = true
             } label: {
               RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.gray.opacity(0.15))
+                .fill(.backgroundSecondary)
                 .frame(maxWidth: .infinity)
                 .overlay(
-                  VStack(spacing: 10) {
-                    Image(systemName: "plus").font(.system(size: 42, weight: .semibold))
+                  VStack {
+                    Image(systemName: "plus").font(.system(size: 56, weight: .bold))
                     Text("Tambah Perjalanan Kereta")
-                      .font(.headline)
+                      .font(.subheadline)
+                      .foregroundStyle(.textSecondary)
+                    Text("Mulai track perjalanan kereta di sini")
+                      .font(.caption)
                       .foregroundStyle(.secondary)
                   }
                 )
@@ -69,8 +71,9 @@ struct HomeScreen: View {
         .presentationDetents([.fraction(0.35)])
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
-        .padding(.horizontal, 21)
-        .padding(.top, 23)
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .background(.backgroundPrimary)
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train, journeyData in
