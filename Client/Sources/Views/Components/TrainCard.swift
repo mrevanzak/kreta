@@ -20,7 +20,10 @@ struct TrainCard: View {
         HStack(spacing: 4) {
           Text(train.name)
             .fontWeight(.bold)
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
+          Text("(\(train.code))")
+            .fontWeight(.bold)
+            .foregroundStyle(.sublime)
 
         }
         .frame(maxWidth: .infinity)
@@ -39,10 +42,10 @@ struct TrainCard: View {
       }
       .padding(.horizontal)
       .padding(.vertical, 12)
-      .background(Color.black)
+      .background(.buttonHighlight)
 
       // Journey details
-      HStack(spacing: 0) {
+      HStack(spacing: 10) {
         // Departure station (use user selection if available)
         VStack(spacing: 4) {
           Text(departureStationCode)
@@ -51,21 +54,25 @@ struct TrainCard: View {
 
           Text(departureStationCity)
             .font(.caption)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
 
           Text(formatTime(departureTime))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity)
 
         // Train icon and duration
         VStack(spacing: 8) {
           Image("keretaDark")
             .resizable()
             .scaledToFit()
+            .frame(width: 120)
 
           Text(formattedDuration())
             .font(.caption)
-            .foregroundStyle(.cyan)
+            .foregroundStyle(.blue)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -78,17 +85,18 @@ struct TrainCard: View {
 
           Text(arrivalStationCity)
             .font(.caption)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
 
           Text(formatTime(arrivalTime))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity)
       }
-      .padding(.horizontal, 20)
+      .padding(.horizontal)
       .padding(.vertical, 16)
-      .background(
-        Color(red: 0.15, green: 0.15, blue: 0.15)
-      )
+      .background(.backgroundPrimary)
     }
     .clipShape(RoundedRectangle(cornerRadius: 20))
     .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
@@ -205,13 +213,13 @@ struct TrainCard: View {
       code: "GMR",
       name: "Gambir",
       position: Position(latitude: -6.1774, longitude: 106.8306),
-      city: "Jakarta"
+      city: "Jakarta Selatan"
     ),
     Station(
       code: "JNG",
       name: "Jatinegara",
       position: Position(latitude: -6.2149, longitude: 106.8707),
-      city: "Jakarta"
+      city: "Jakarta Selatan"
     ),
   ]
 

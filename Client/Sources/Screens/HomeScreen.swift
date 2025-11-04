@@ -67,13 +67,14 @@ struct HomeScreen: View {
             .buttonStyle(.plain)
           }
         }
-        .presentationBackgroundInteraction(.enabled)
-        .presentationDetents([.fraction(0.35)])
-        .presentationDragIndicator(.hidden)
-        .interactiveDismissDisabled(true)
         .padding(.horizontal, 20)
         .padding(.top, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.backgroundPrimary)
+        .presentationBackgroundInteraction(.enabled)
+        .presentationDetents(trainMapStore.selectedTrain != nil ? [.height(200)] : [.fraction(0.35)])
+        .presentationDragIndicator(.hidden)
+        .interactiveDismissDisabled(true)
         .sheet(isPresented: $showAddSheet) {
           AddTrainView(
             onTrainSelected: { train, journeyData in

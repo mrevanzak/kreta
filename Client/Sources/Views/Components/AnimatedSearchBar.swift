@@ -23,7 +23,7 @@ struct AnimatedSearchBar: View {
   @State private var clearingArrival = false
 
   var body: some View {
-    HStack(spacing: 8) {
+    HStack(alignment: .center, spacing: 8) {
       // Departure station chip (visible from arrival step onwards, unless clearing)
       if let departure = departureStation, step != .departure && !clearingDeparture {
         Button {
@@ -100,7 +100,6 @@ struct AnimatedSearchBar: View {
 
       // Date chip (visible in date and results steps when date is selected)
       if step == .date || step == .results, let date = selectedDate {
-        Spacer()
         Button {
           onDateChipTap?()
         } label: {
@@ -109,11 +108,12 @@ struct AnimatedSearchBar: View {
         .buttonStyle(ChipButtonStyle())
         .transition(
           .asymmetric(
-            insertion: .move(edge: .leading).combined(with: .opacity),
+            insertion: .move(edge: .trailing).combined(with: .opacity),
             removal: .scale.combined(with: .opacity)
           ))
       }
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: step)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: departureStation?.id)
     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: arrivalStation?.id)
@@ -168,7 +168,8 @@ struct AnimatedSearchBar: View {
   private func stationChip(_ station: Station, id: String, isClearing: Bool) -> some View {
     HStack(spacing: 6) {
       Text(station.code)
-        .font(.subheadline.weight(.semibold))
+        .font(.callout.weight(.semibold))
+        .foregroundStyle(.sublime)
         .opacity(isClearing ? 0 : 1)
         .scaleEffect(isClearing ? 0.5 : 1)
 
@@ -191,12 +192,22 @@ struct AnimatedSearchBar: View {
   }
 
   private func dateChip(_ date: Date) -> some View {
-    Text(date.formatted(.dateTime.day().month(.wide).year()))
-      .font(.subheadline.weight(.medium))
-      .foregroundStyle(.sublime)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 10)
-      .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    HStack(spacing: 6) {
+      Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
+        .font(.callout.weight(.medium))
+        .foregroundStyle(.sublime)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+      
+      Image(systemName: "xmark.circle.fill")
+        .font(.caption)
+        .symbolRenderingMode(.hierarchical)
+        .foregroundStyle(.sublime)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 10)
+    .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
   }
 }
 
