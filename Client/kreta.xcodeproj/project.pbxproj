@@ -30,6 +30,8 @@
 		C565BFD12EBA33E4003AB6DD /* Development.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */; };
 		C565BFD32EBA33EE003AB6DD /* Production.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */; };
 		C565BFD42EBA33EE003AB6DD /* Production.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C565BFD22EBA33EE003AB6DD /* Production.xcconfig */; };
+		C565C1B02EBA6232003AB6DD /* setup_client_env.sh in Resources */ = {isa = PBXBuildFile; fileRef = C565C1AF2EBA6232003AB6DD /* setup_client_env.sh */; };
+		C565C1B12EBA6232003AB6DD /* setup_client_env.sh in Resources */ = {isa = PBXBuildFile; fileRef = C565C1AF2EBA6232003AB6DD /* setup_client_env.sh */; };
 		C57893C42E93769300375616 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C57893C32E93769300375616 /* ConvexMobile */; };
 		C58000012EB9CAD80032530C /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = C58000002EB9CAD80032530C /* Sentry */; };
 		C5892C982EA8CB370043E6B9 /* DebugSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C5892C972EA8CB370043E6B9 /* DebugSwift */; };
@@ -76,6 +78,7 @@
 		C501C17B2E9616DF00CC2B4E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
 		C565BFD22EBA33EE003AB6DD /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
+		C565C1AF2EBA6232003AB6DD /* setup_client_env.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = setup_client_env.sh; sourceTree = "<group>"; };
 		C5BC0C5A2EB6323300C508B1 /* kretaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kretaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5F65E5C2EA7427100F57118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -154,6 +157,7 @@
 				8DDE5FB22C8A7D9300A0DBE0 /* Products */,
 				C565BFCF2EBA33E4003AB6DD /* Development.xcconfig */,
 				C565BFD22EBA33EE003AB6DD /* Production.xcconfig */,
+				C565C1AF2EBA6232003AB6DD /* setup_client_env.sh */,
 			);
 			sourceTree = "<group>";
 		};
@@ -326,6 +330,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C565BFD12EBA33E4003AB6DD /* Development.xcconfig in Resources */,
+				C565C1B02EBA6232003AB6DD /* setup_client_env.sh in Resources */,
 				C565BFD42EBA33EE003AB6DD /* Production.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -335,6 +340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C565BFD02EBA33E4003AB6DD /* Development.xcconfig in Resources */,
+				C565C1B12EBA6232003AB6DD /* setup_client_env.sh in Resources */,
 				C565BFD32EBA33EE003AB6DD /* Production.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

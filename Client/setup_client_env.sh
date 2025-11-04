@@ -5,12 +5,12 @@ set -euo pipefail
 # Usage:
 #   1) No args: generate Client/Development.xcconfig from .env.dev and
 #               Client/Production.xcconfig from .env.prod (if files exist).
-#               If only legacy .env exists, generate Client/Config.xcconfig.
+#               If only .env exists, generate Client/Development.xcconfig.
 #   2) With args: ./setup_client_env.sh [ENV_FILE] [OUTPUT_XCCONFIG]
 #      Example: ./setup_client_env.sh .env.dev Client/Development.xcconfig
 
 PROJECT_ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEFAULT_XCCONFIG_PATH="$PROJECT_ROOT_DIR/Client/Config.xcconfig"
+DEFAULT_XCCONFIG_PATH="$PROJECT_ROOT_DIR/Development.xcconfig"
 
 load_env_file() {
   [ -f "$1" ] && set -a && source "$1" && set +a
@@ -71,23 +71,23 @@ main() {
     exit $?
   fi
 
-  # No args -> try modern multi-env mapping in Client/, fallback to legacy Client/.env
-  local dev_env="$PROJECT_ROOT_DIR/Client/.env.dev"
-  local prod_env="$PROJECT_ROOT_DIR/Client/.env.prod"
-  local legacy_env="$PROJECT_ROOT_DIR/Client/.env"
+  # No args -> try modern multi-env mapping, fallback to legacy .env
+  local dev_env="$PROJECT_ROOT_DIR/.env.dev"
+  local prod_env="$PROJECT_ROOT_DIR/.env.prod"
+  local legacy_env="$PROJECT_ROOT_DIR/.env"
 
   local did_any=0
   if [[ -f "$dev_env" ]]; then
-    generate_xcconfig_from_env "$dev_env" "$PROJECT_ROOT_DIR/Client/Development.xcconfig" && did_any=1
+    generate_xcconfig_from_env "$dev_env" "$PROJECT_ROOT_DIR/Development.xcconfig" && did_any=1
   fi
   if [[ -f "$prod_env" ]]; then
-    generate_xcconfig_from_env "$prod_env" "$PROJECT_ROOT_DIR/Client/Production.xcconfig" && did_any=1
+    generate_xcconfig_from_env "$prod_env" "$PROJECT_ROOT_DIR/Production.xcconfig" && did_any=1
   fi
   if (( did_any == 0 )); then
     if [[ -f "$legacy_env" ]]; then
       generate_xcconfig_from_env "$legacy_env" "$DEFAULT_XCCONFIG_PATH"
     else
-      echo "Error: No Client/.env.dev, Client/.env.prod, or Client/.env found" >&2
+      echo "Error: No .env.dev, .env.prod, or .env found" >&2
       exit 1
     fi
   fi
