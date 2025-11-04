@@ -11,10 +11,10 @@
 import type * as feedback from "../feedback.js";
 import type * as gapeka from "../gapeka.js";
 import type * as journeys from "../journeys.js";
+import type * as notifications from "../notifications.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
 import type * as routes from "../routes.js";
-import type * as scheduledActivities from "../scheduledActivities.js";
 import type * as station from "../station.js";
 import type * as train from "../train.js";
 
@@ -36,10 +36,10 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   gapeka: typeof gapeka;
   journeys: typeof journeys;
+  notifications: typeof notifications;
   push: typeof push;
   registrations: typeof registrations;
   routes: typeof routes;
-  scheduledActivities: typeof scheduledActivities;
   station: typeof station;
   train: typeof train;
 }>;

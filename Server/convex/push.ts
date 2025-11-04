@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import * as apn from "@parse/node-apn";
 
@@ -52,69 +52,6 @@ export const triggerPush = action({
     try {
       const response = await apnProvider.send(note, args.deviceToken);
       // @parse/node-apn returns an object with sent/failed arrays
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
-  },
-});
-
-// Send a fallback alert notification instructing the user to open the app
-// to start the Live Activity and schedule the arrival alarm locally.
-export const sendTripStartFallbackPush = action({
-  args: {
-    deviceToken: v.string(),
-    trainId: v.string(),
-    journeyId: v.optional(v.string()),
-    title: v.optional(v.string()),
-    body: v.optional(v.string()),
-  },
-  handler: async (_ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
-
-    const deeplink = `kreta://trip/start?trainId=${encodeURIComponent(
-      args.trainId
-    )}${args.journeyId ? `&journeyId=${encodeURIComponent(args.journeyId)}` : ""}`;
-
-    const note = new apn.Notification();
-    note.topic = bundleId;
-    note.pushType = "alert";
-    note.alert = {
-      title: args.title ?? "Perjalanan akan dimulai",
-      body:
-        args.body ??
-        "Aktivitas Langsung akan berjalan. Buka aplikasi untuk menjadwalkan alarm kedatangan.",
-    };
-    note.payload = {
-      deeplink,
-      trainId: args.trainId,
-      journeyId: args.journeyId,
-    } as Record<string, unknown>;
-    note.aps.category = "TRIP_START_FALLBACK";
-
-    try {
-      const response = await apnProvider.send(note, args.deviceToken);
       if (response.sent && response.sent.length > 0) {
         return { success: true, status: 200, apnsId: note.id } as const;
       }
@@ -223,6 +160,62 @@ export const startLiveActivity = action({
 
     try {
       const response = await apnProvider.send(note, args.startToken);
+      if (response.sent && response.sent.length > 0) {
+        return { success: true, status: 200, apnsId: note.id } as const;
+      }
+      const firstFailure = response.failed?.[0];
+      const status = firstFailure?.status ?? 500;
+      const reason =
+        firstFailure?.response?.reason ?? firstFailure?.error?.message;
+      return {
+        success: false,
+        error: String(reason ?? "Unknown APNs error"),
+        status,
+        apnsId: note.id,
+      } as const;
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: String(err instanceof Error ? err.message : err),
+      } as const;
+    }
+  },
+});
+
+// Send a trip reminder notification with deeplink payload
+// This is called internally by the notifications scheduler
+export const sendTripReminderPush = internalAction({
+  args: {
+    deviceToken: v.string(),
+    title: v.string(),
+    body: v.string(),
+    deeplink: v.string(),
+    trainId: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const bundleId = process.env.BUNDLE_ID ?? "";
+    if (!bundleId) {
+      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
+    }
+    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
+      return { success: false, error: "Missing APNs token env vars" } as const;
+    }
+
+    const note = new apn.Notification();
+    note.topic = bundleId;
+    note.pushType = "alert";
+    note.alert = {
+      title: args.title,
+      body: args.body,
+    };
+    note.payload = {
+      deeplink: args.deeplink,
+      trainId: args.trainId,
+    } as Record<string, unknown>;
+    note.aps.category = "TRIP_START_FALLBACK";
+
+    try {
+      const response = await apnProvider.send(note, args.deviceToken);
       if (response.sent && response.sent.length > 0) {
         return { success: true, status: 200, apnsId: note.id } as const;
       }

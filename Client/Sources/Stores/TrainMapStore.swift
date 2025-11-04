@@ -32,6 +32,9 @@ final class TrainMapStore {
   // Timestamp for triggering live position updates (must be observable)
   private var projectionTimestamp: Date = Date()
 
+  // Scheduler ID for the scheduled trip reminder notification
+  @ObservationIgnored private var scheduledNotificationId: String?
+
   var liveTrainPosition: ProjectedTrain? {
     guard selectedTrain != nil, selectedJourneyData != nil else { return nil }
     // Access projectionTimestamp to establish dependency for observation
@@ -287,19 +290,7 @@ extension TrainMapStore {
       return
     }
 
-    // Compute interval using only hour & minute from departureTime relative to today
-    // let calendar = Calendar.current
-    // let hm = calendar.dateComponents([.hour, .minute], from: departureTime)
-    // let now = Date()
-    // departureTime =
-    //   calendar.date(
-    //     bySettingHour: hm.hour ?? 0,
-    //     minute: hm.minute ?? 0,
-    //     second: 0,
-    //     of: now
-    //   ) ?? departureTime
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
-
     let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
 
     if timeUntilDeparture <= scheduleOffset {
@@ -324,28 +315,26 @@ extension TrainMapStore {
         seatNumber: "1A"  // TODO: Replace with actual seat number
       )
     } else {
-      // Queue on server to start 30 minutes before departure
       logger.info(
-        "Queuing Live Activity on server (departure in \(timeUntilDeparture / 60) minutes)")
+        "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
 
-      let scheduledStartTime = departureTime.addingTimeInterval(-scheduleOffset)
-      try await queueLiveActivityOnServer(
+      try await queueTripReminderNotification(
         train: train,
         fromStation: fromStation,
         toStation: toStation,
-        scheduledStartTime: scheduledStartTime
+        departureTime: departureTime
       )
     }
   }
 
-  private func queueLiveActivityOnServer(
+  private func queueTripReminderNotification(
     train: ProjectedTrain,
     fromStation: Station,
     toStation: Station,
-    scheduledStartTime: Date
+    departureTime: Date
   ) async throws {
     guard let deviceToken = PushRegistrationService.shared.currentToken() else {
-      logger.error("No device token available for queuing Live Activity")
+      logger.error("No device token available for queuing trip reminder")
       throw TrainMapError.missingDeviceToken
     }
 
@@ -359,13 +348,13 @@ extension TrainMapStore {
       destinationEstimatedTime = arrivalTime.timeIntervalSince1970 * 1000
     }
 
-    let _: String = try await convexClient.mutation(
-      "scheduledActivities:queueLiveActivityStart",
+    let schedulerId: String = try await convexClient.mutation(
+      "notifications:scheduleTripReminder",
       with: [
         "deviceToken": deviceToken as ConvexEncodable,
-        "scheduledStartTime": (scheduledStartTime.timeIntervalSince1970 * 1000) as ConvexEncodable,  // Convert seconds to milliseconds
         "trainId": train.id as ConvexEncodable,
         "trainName": train.name as ConvexEncodable,
+        "departureTime": (departureTime.timeIntervalSince1970 * 1000) as ConvexEncodable,  // Convert seconds to milliseconds
         "fromStation": [
           "name": fromStation.name as ConvexEncodable,
           "code": fromStation.code as ConvexEncodable,
@@ -380,21 +369,24 @@ extension TrainMapStore {
       captureTelemetry: true
     )
 
-    logger.info("Successfully queued Live Activity to start at \(scheduledStartTime)")
+    scheduledNotificationId = schedulerId
+    logger.info(
+      "Successfully scheduled trip reminder notification with scheduler ID: \(schedulerId)")
   }
 
   func clearSelectedTrain() async {
-    // Cancel any pending scheduled activities on server
-    if let deviceToken = PushRegistrationService.shared.currentToken() {
+    // Cancel any pending trip reminders on server
+    if let schedulerId = scheduledNotificationId {
       do {
         let _: String = try await convexClient.mutation(
-          "scheduledActivities:cancelScheduledActivity",
-          with: ["deviceToken": deviceToken],
+          "notifications:cancelTripReminder",
+          with: ["schedulerId": schedulerId as ConvexEncodable],
           captureTelemetry: true
         )
-        logger.info("Cancelled scheduled Live Activity")
+        logger.info("Cancelled scheduled trip reminder with scheduler ID: \(schedulerId)")
+        scheduledNotificationId = nil
       } catch {
-        logger.error("Failed to cancel scheduled activity: \(error)")
+        logger.error("Failed to cancel scheduled trip reminder: \(error)")
       }
     }
 
