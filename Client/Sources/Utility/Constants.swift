@@ -69,7 +69,9 @@ struct Constants {
 
   struct AppMeta {
     static let environment: String = {
-      if let env = ProcessInfo.processInfo.environment["APP_ENV"], !env.isEmpty { return env }
+      if let env = ProcessInfo.processInfo.environment["APS_ENVIRONMENT"], !env.isEmpty {
+        return env
+      }
       #if DEBUG
         return "development"
       #else
