@@ -309,3 +309,23 @@ struct SaveOrderResponse: Codable {
   let success: Bool
   let message: String?
 }
+
+// MARK: - Live Activity Scheduling DTOs
+
+struct StationInfoDTO: Codable {
+  let name: String
+  let code: String
+  let estimatedTime: Double?
+
+  private enum CodingKeys: String, CodingKey {
+    case name, code, estimatedTime
+  }
+}
+
+struct QueueLiveActivityRequest: Codable {
+  let deviceToken: String
+  let scheduledStartTime: Double
+  let trainName: String
+  let fromStation: StationInfoDTO
+  let destinationStation: StationInfoDTO
+}

@@ -19,8 +19,8 @@ type ProjectedListItem = {
   name: string;
   fromStationId: string;
   toStationId: string;
-  segmentDepartureMs: number;
-  segmentArrivalMs: number;
+  segmentDeparture: number;
+  segmentArrival: number;
   routeId?: string;
   // Optional server-provided enrichment fields for client convenience
   fromStationName?: string;
@@ -107,8 +107,8 @@ export const projectedForRoute = query({
           name: fromRow.trainName,
           fromStationId: fromRow.stationId,
           toStationId: toRow.stationId,
-          segmentDepartureMs: fromRow.departureTime,
-          segmentArrivalMs: toRow.arrivalTime,
+          segmentDeparture: fromRow.departureTime,
+          segmentArrival: toRow.arrivalTime,
           // Use toRow.routeId because the routeId on a station row represents
           // the route that connects TO that station (ending at that station)
           routeId: toRow.routeId ?? undefined,

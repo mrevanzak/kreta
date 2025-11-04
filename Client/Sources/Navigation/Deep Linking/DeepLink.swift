@@ -14,6 +14,8 @@ struct DeepLink {
   }
 
   static let registeredParsers: [DeepLinkParser] = [
-    .equal(to: ["home"], destination: .tab(.home))
+    .equal(to: ["home"], destination: .tab(.home)),
+    // Open Home and let HomeScreen handle side effects (start live activity)
+    .equal(to: ["trip", "start"], destination: .tab(.home)),
   ]
 }

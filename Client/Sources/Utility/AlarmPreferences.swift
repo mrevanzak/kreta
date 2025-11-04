@@ -46,47 +46,6 @@ final class AlarmPreferences: @unchecked Sendable {
     }
   }
 
-  // MARK: - Per-Activity Preferences
-
-  /// Get alarm enabled setting for a specific activity
-  /// Falls back to global default if not set
-  func alarmEnabled(for activityId: String) -> Bool {
-    // If explicitly set for this activity, use that value
-    if userDefaults.object(forKey: Keys.alarmEnabled(activityId: activityId)) is Bool {
-      return userDefaults.bool(forKey: Keys.alarmEnabled(activityId: activityId))
-    }
-    // Otherwise use global default
-    return defaultAlarmEnabled
-  }
-
-  /// Set alarm enabled setting for a specific activity
-  func setAlarmEnabled(_ enabled: Bool, for activityId: String) {
-    userDefaults.set(enabled, forKey: Keys.alarmEnabled(activityId: activityId))
-  }
-
-  /// Get alarm offset for a specific activity
-  /// Falls back to global default if not set
-  func alarmOffsetMinutes(for activityId: String) -> Int {
-    // If explicitly set for this activity, use that value
-    let value = userDefaults.integer(forKey: Keys.alarmOffsetMinutes(activityId: activityId))
-    if value > 0 {
-      return value
-    }
-    // Otherwise use global default
-    return defaultAlarmOffsetMinutes
-  }
-
-  /// Set alarm offset for a specific activity
-  func setAlarmOffsetMinutes(_ minutes: Int, for activityId: String) {
-    userDefaults.set(minutes, forKey: Keys.alarmOffsetMinutes(activityId: activityId))
-  }
-
-  /// Remove all preferences for a specific activity
-  func clearPreferences(for activityId: String) {
-    userDefaults.removeObject(forKey: Keys.alarmEnabled(activityId: activityId))
-    userDefaults.removeObject(forKey: Keys.alarmOffsetMinutes(activityId: activityId))
-  }
-
   /// Clear all global defaults (resets to hardcoded defaults)
   func clearGlobalDefaults() {
     userDefaults.removeObject(forKey: Keys.defaultAlarmEnabled)

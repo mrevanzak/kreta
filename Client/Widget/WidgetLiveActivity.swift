@@ -27,8 +27,8 @@ struct BeforeBoardingView: View {
           .font(.title2)
           .bold()
           .foregroundColor(.kretaPrimary)
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+          .lineLimit(2)
+          .minimumScaleFactor(0.6)
 
         HStack(alignment: .firstTextBaseline, spacing: 6) {
           HStack(spacing: 4) {
@@ -485,7 +485,7 @@ struct WidgetLiveActivity: Widget {
 extension TrainActivityAttributes {
   fileprivate static var preview: TrainActivityAttributes {
     TrainActivityAttributes(
-      trainName: "Jayabaya",
+      trainName: "Argo Bromo Anggrek",
       from: TrainStation(
         name: "Malang",
         code: "ML",
@@ -505,25 +505,19 @@ extension TrainActivityAttributes {
 extension TrainActivityAttributes.ContentState {
   fileprivate static var beforeBoarding: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .beforeBoarding,
-      alarmEnabled: true,
-      alarmOffsetMinutes: 10
+      journeyState: .beforeBoarding
     )
   }
 
   fileprivate static var onBoard: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .onBoard,
-      alarmEnabled: true,
-      alarmOffsetMinutes: 10
+      journeyState: .onBoard
     )
   }
 
   fileprivate static var prepareToDropOff: TrainActivityAttributes.ContentState {
     TrainActivityAttributes.ContentState(
-      journeyState: .prepareToDropOff,
-      alarmEnabled: true,
-      alarmOffsetMinutes: 10
+      journeyState: .prepareToDropOff
     )
   }
 }

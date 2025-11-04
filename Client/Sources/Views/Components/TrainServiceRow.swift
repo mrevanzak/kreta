@@ -31,7 +31,7 @@ struct TrainServiceRow: View {
               .foregroundStyle(.secondary)
 
             Text(
-              formatTime(Date(timeIntervalSince1970: TimeInterval(item.segmentDepartureMs) / 1000))
+              formatTime(item.segmentDeparture)
             )
             .font(.subheadline).bold()
           }
@@ -48,7 +48,7 @@ struct TrainServiceRow: View {
               .foregroundStyle(.secondary)
 
             Text(
-              formatTime(Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000))
+              formatTime(item.segmentArrival)
             )
             .font(.subheadline).bold()
           }
@@ -90,21 +90,27 @@ struct TrainServiceRow: View {
     ),
   ]
 
-  let item = JourneyService.AvailableTrainItem(
-    id: "T1",
-    trainId: "T1",
-    code: "T1",
-    name: "Sample Express",
-    fromStationId: "GMR",
-    toStationId: "JNG",
-    segmentDepartureMs: Int64(Date().addingTimeInterval(-15 * 60).timeIntervalSince1970 * 1000),
-    segmentArrivalMs: Int64(Date().addingTimeInterval(15 * 60).timeIntervalSince1970 * 1000),
-    routeId: "L1",
-    fromStationName: stations[0].name,
-    toStationName: stations[1].name,
-    fromStationCode: stations[0].code,
-    toStationCode: stations[1].code,
-    durationMinutes: 30
+  // Create test item by decoding from JSON since AvailableTrainItem has custom Decodable
+  let testJSON: [String: Any] = [
+    "id": "T1",
+    "trainId": "T1",
+    "code": "T1",
+    "name": "Sample Express",
+    "fromStationId": "GMR",
+    "toStationId": "JNG",
+    "segmentDeparture": Int64(Date().addingTimeInterval(-15 * 60).timeIntervalSince1970 * 1000),
+    "segmentArrival": Int64(Date().addingTimeInterval(15 * 60).timeIntervalSince1970 * 1000),
+    "routeId": "L1",
+    "fromStationName": stations[0].name,
+    "toStationName": stations[1].name,
+    "fromStationCode": stations[0].code,
+    "toStationCode": stations[1].code,
+    "durationMinutes": 30,
+  ]
+
+  let item = try! JSONDecoder().decode(
+    JourneyService.AvailableTrainItem.self,
+    from: JSONSerialization.data(withJSONObject: testJSON)
   )
 
   TrainServiceRow(item: item)
