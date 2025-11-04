@@ -160,14 +160,12 @@ extension AddTrainView {
           userSelectedFromStation: fromStation!,
           userSelectedToStation: toStation!,
           userSelectedDepartureTime: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
-          userSelectedArrivalTime: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0)
+          userSelectedArrivalTime: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         )
       } catch {
         print("Failed to fetch journey segments: \(error)")
       }
-    
-      print("time duration : \(Date(timeIntervalSince1970: TimeInterval(item.segmentArrivalMs) / 1000).formatted(.dateTime.hour().minute()))")
-
+      
       let projected = ProjectedTrain(
         id: item.id,
         code: item.code,
@@ -182,7 +180,7 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
         segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         progress: nil,
         journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
