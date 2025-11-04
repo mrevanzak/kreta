@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TrainServiceRow: View {
   let item: JourneyService.AvailableTrainItem
+  var isSelected: Bool = false
 
   var body: some View {
     HStack(alignment: .center, spacing: 16) {
@@ -59,6 +60,7 @@ struct TrainServiceRow: View {
       Spacer()
     }
     .padding()
+    .background(isSelected ? .backgroundSecondary : Color.clear)
   }
 
   private func formatTime(_ date: Date?) -> String {
@@ -106,5 +108,9 @@ struct TrainServiceRow: View {
     from: JSONSerialization.data(withJSONObject: testJSON)
   )
 
-  TrainServiceRow(item: item)
+  return VStack(spacing: 0) {
+    TrainServiceRow(item: item, isSelected: false)
+    Divider()
+    TrainServiceRow(item: item, isSelected: true)
+  }
 }

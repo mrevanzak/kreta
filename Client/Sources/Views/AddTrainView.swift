@@ -128,7 +128,7 @@ struct AddTrainView: View {
         ProgressView()
           .controlSize(.large)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(.ultraThinMaterial)
+          .background(.backgroundPrimary)
       } else if viewModel.filteredStations.isEmpty {
         ContentUnavailableView.search(text: viewModel.searchText)
       }
@@ -189,29 +189,55 @@ struct AddTrainView: View {
   }
 
   private func trainResultsView() -> some View {
-    ScrollView {
-      LazyVStack(spacing: 0) {
-        ForEach(viewModel.filteredTrains) { item in
-          TrainServiceRow(item: item)
+    VStack(spacing: 0) {
+      ScrollView {
+        LazyVStack(spacing: 0) {
+          ForEach(viewModel.filteredTrains) { item in
+            TrainServiceRow(
+              item: item,
+              isSelected: viewModel.isTrainSelected(item)
+            )
             .contentShape(Rectangle())
             .onTapGesture {
-              Task {
-                let projected = await viewModel.didSelect(item)
-                handleTrainSelection(projected)
-              }
+              viewModel.toggleTrainSelection(item)
             }
 
-          Divider()
-            .padding(.leading, 16)
+            Divider()
+              .padding(.leading, 16)
+          }
         }
       }
+      
+      // Always show confirmation button
+      VStack(spacing: 0) {
+        Divider()
+        
+        Button {
+          guard let selectedItem = viewModel.selectedTrainItem else { return }
+          Task {
+            let projected = await viewModel.didSelect(selectedItem)
+            handleTrainSelection(projected)
+          }
+        } label: {
+          Text("Track Kereta")
+            .font(.headline)
+            .foregroundStyle(viewModel.selectedTrainItem != nil ? .lessDark : .sublime)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(viewModel.selectedTrainItem != nil ? .primaryButton : .inactiveButton)
+            .cornerRadius(1000)
+        }
+        .disabled(viewModel.selectedTrainItem == nil)
+        .padding()
+      }
+      .background(.backgroundPrimary)
     }
     .overlay {
       if viewModel.isLoadingTrains {
         ProgressView()
           .controlSize(.large)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(.ultraThinMaterial)
+          .background(.backgroundPrimary)
       } else if viewModel.filteredTrains.isEmpty {
         ContentUnavailableView(
           "Tidak ada kereta tersedia",

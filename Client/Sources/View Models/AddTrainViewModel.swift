@@ -56,6 +56,9 @@ extension AddTrainView {
     var selectedDepartureStation: Station?
     var selectedArrivalStation: Station?
     var selectedDate: Date?
+    
+    // Selected train item (for confirmation before tracking)
+    var selectedTrainItem: JourneyService.AvailableTrainItem?
 
     // MARK: - Private Properties
 
@@ -113,6 +116,20 @@ extension AddTrainView {
         print("Failed to fetch available trains: \(error)")
         filteredTrains = []
       }
+    }
+    
+    /// Toggle selection of a train item
+    func toggleTrainSelection(_ item: JourneyService.AvailableTrainItem) {
+      if selectedTrainItem?.id == item.id {
+        selectedTrainItem = nil
+      } else {
+        selectedTrainItem = item
+      }
+    }
+    
+    /// Check if a train item is currently selected
+    func isTrainSelected(_ item: JourneyService.AvailableTrainItem) -> Bool {
+      selectedTrainItem?.id == item.id
     }
 
     /// Build and select a ProjectedTrain from a selected list item

@@ -17,12 +17,13 @@ struct DateOptionRow: View {
       // Icon badge
       ZStack {
         Circle()
-          .glassEffect()
+          .foregroundStyle(.backgroundSecondary)
+          .glassEffect(.regular.tint(.primary))
           .frame(width: 44)
         
         Image(systemName: icon)
           .font(.title3)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(.textSecondary)
       }
       
       // Title and subtitle

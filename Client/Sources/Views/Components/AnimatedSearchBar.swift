@@ -149,10 +149,7 @@ struct AnimatedSearchBar: View {
 
   private var dateTextField: some View {
     HStack(spacing: 8) {
-      Image(systemName: "calendar")
-        .font(.subheadline)
-
-      TextField("Hari, Tanggal", text: $searchText)
+      TextField("Bulan, Tanggal", text: $searchText)
         .textFieldStyle(.plain)
         .keyboardType(.numbersAndPunctuation)
         .autocorrectionDisabled()
