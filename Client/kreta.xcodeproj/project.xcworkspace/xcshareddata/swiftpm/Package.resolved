@@ -29,15 +29,6 @@
       }
     },
     {
-      "identity" : "disk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/saoudrizwan/Disk",
-      "state" : {
-        "revision" : "b0cb4fdf23e51849cc2460bdc6de795c3bcca99d",
-        "version" : "0.6.4"
-      }
-    },
-    {
       "identity" : "jwtdecode.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/auth0/JWTDecode.swift.git",
@@ -53,24 +44,6 @@
       "state" : {
         "revision" : "3aa55233eda7bbcbd98b52a6f63d5a7e1955189a",
         "version" : "4.0.5"
-      }
-    },
-    {
-      "identity" : "posthog-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/PostHog/posthog-ios.git",
-      "state" : {
-        "revision" : "ba5dd65d2341ab8ea1949f072594ef67c490af3a",
-        "version" : "3.34.0"
-      }
-    },
-    {
-      "identity" : "sentry-cocoa",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/getsentry/sentry-cocoa/",
-      "state" : {
-        "revision" : "e1e94efb9d5a688af85c607ae34a8b56961ca118",
-        "version" : "8.57.1"
       }
     },
     {
