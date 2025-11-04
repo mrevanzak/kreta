@@ -59,18 +59,8 @@ export const queueLiveActivityStart = mutation({
       );
     }
 
-    // Send immediate fallback alert with deep link to open the app
-    await ctx.scheduler.runAfter(
-      0,
-      internal.scheduledActivities.sendImmediateFallback,
-      {
-        deviceToken: args.deviceToken,
-        trainId: args.trainId,
-      }
-    );
-
-    // Schedule a reminder fallback in 5 minutes if not started yet
-    const reminderDelayMs = 5 * 60 * 1000;
+    // Schedule a reminder fallback 5 minutes after the scheduled start time in case the activity is not started yet
+    const reminderDelayMs = delayMs + 5 * 60 * 1000;
     await ctx.scheduler.runAfter(
       reminderDelayMs,
       internal.scheduledActivities.maybeSendStartReminder,
@@ -142,17 +132,6 @@ export const executeScheduledStart = internalAction({
         activityId: args.activityId,
       });
     }
-  },
-});
-
-// Internal action to send the immediate fallback alert
-export const sendImmediateFallback = internalAction({
-  args: { deviceToken: v.string(), trainId: v.string() },
-  handler: async (ctx, args) => {
-    await ctx.runAction(api.push.sendTripStartFallbackPush, {
-      deviceToken: args.deviceToken,
-      trainId: args.trainId,
-    });
   },
 });
 
