@@ -180,7 +180,7 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
+        segmentDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
         segmentArrival: Date(timeIntervalSince1970: Double(item.segmentArrivalMs) / 1000.0),
         progress: nil,
         journeyDeparture: Date(timeIntervalSince1970: Double(item.segmentDepartureMs) / 1000.0),
