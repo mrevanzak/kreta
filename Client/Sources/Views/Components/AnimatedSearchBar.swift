@@ -23,7 +23,7 @@ struct AnimatedSearchBar: View {
   @State private var clearingArrival = false
 
   var body: some View {
-    HStack(alignment: .center, spacing: 8) {
+    HStack(alignment: .center, spacing: 4) {
       // Departure station chip (visible from arrival step onwards, unless clearing)
       if let departure = departureStation, step != .departure && !clearingDeparture {
         Button {
@@ -141,7 +141,7 @@ struct AnimatedSearchBar: View {
         .buttonStyle(.plain)
       }
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 4)
     .padding(.vertical, 10)
     .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
@@ -159,16 +159,16 @@ struct AnimatedSearchBar: View {
           onDateTextSubmit?()
         }
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 4)
     .padding(.vertical, 10)
     .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     .frame(maxWidth: .infinity)
   }
 
   private func stationChip(_ station: Station, id: String, isClearing: Bool) -> some View {
-    HStack(spacing: 6) {
+    HStack(spacing: 3) {
       Text(station.code)
-        .font(.callout.weight(.semibold))
+        .font(.callout)
         .foregroundStyle(.sublime)
         .opacity(isClearing ? 0 : 1)
         .scaleEffect(isClearing ? 0.5 : 1)
@@ -181,7 +181,7 @@ struct AnimatedSearchBar: View {
         .scaleEffect(isClearing ? 0.5 : 1)
     }
     .foregroundStyle(.primary)
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 4)
     .padding(.vertical, 10)
     .frame(minWidth: 60)
     .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -194,10 +194,10 @@ struct AnimatedSearchBar: View {
   private func dateChip(_ date: Date) -> some View {
     HStack(spacing: 6) {
       Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
-        .font(.callout.weight(.medium))
+        .font(.callout)
         .foregroundStyle(.sublime)
         .lineLimit(1)
-        .minimumScaleFactor(0.8)
+        .minimumScaleFactor(1)
       
       Image(systemName: "xmark.circle.fill")
         .font(.caption)
@@ -205,7 +205,7 @@ struct AnimatedSearchBar: View {
         .foregroundStyle(.sublime)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 4)
     .padding(.vertical, 10)
     .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
   }

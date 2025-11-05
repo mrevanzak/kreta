@@ -40,7 +40,7 @@ struct TrainServiceRow: View {
           // Direction arrow
           Image(systemName: "arrow.right.square.fill")
             .symbolRenderingMode(.palette)
-            .foregroundStyle(.white, .primaryButton)
+            .foregroundStyle(.backgroundPrimary, .primaryButton)
             .font(.subheadline)
 
           // Arrival station
