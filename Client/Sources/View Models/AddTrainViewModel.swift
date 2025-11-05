@@ -88,7 +88,7 @@ extension AddTrainView {
     var selectedDepartureStation: Station?
     var selectedArrivalStation: Station?
     var selectedDate: Date?
-    
+
     // Selected train item (for confirmation before tracking)
     var selectedTrainItem: JourneyService.AvailableTrainItem?
 
@@ -104,6 +104,7 @@ extension AddTrainView {
 
     func bootstrap(allStations: [Station]) {
       self.allStations = allStations
+      AnalyticsEventService.shared.trackTrainSearchInitiated()
     }
 
     /// Fetch connected stations for the selected departure station
@@ -149,7 +150,7 @@ extension AddTrainView {
         filteredTrains = []
       }
     }
-    
+
     /// Toggle selection of a train item
     func toggleTrainSelection(_ item: JourneyService.AvailableTrainItem) {
       if selectedTrainItem?.id == item.id {
@@ -158,7 +159,7 @@ extension AddTrainView {
         selectedTrainItem = item
       }
     }
-    
+
     /// Check if a train item is currently selected
     func isTrainSelected(_ item: JourneyService.AvailableTrainItem) -> Bool {
       selectedTrainItem?.id == item.id
@@ -215,6 +216,9 @@ extension AddTrainView {
         print("Failed to fetch journey segments: \(error)")
       }
 
+      // Track selected train
+      AnalyticsEventService.shared.trackTrainSelected(item: item)
+
       let projected = ProjectedTrain(
         id: item.id,
         code: item.code,
@@ -249,6 +253,8 @@ extension AddTrainView {
       switch currentStep {
       case .departure:
         selectedDepartureStation = station
+        AnalyticsEventService.shared.trackStationSelected(
+          station: station, selectionType: "departure")
         currentStep = .arrival
         searchText = ""
         // Fetch connected stations in background
@@ -257,6 +263,8 @@ extension AddTrainView {
         }
       case .arrival:
         selectedArrivalStation = station
+        AnalyticsEventService.shared.trackStationSelected(
+          station: station, selectionType: "arrival")
         currentStep = .date
         searchText = ""
       default:

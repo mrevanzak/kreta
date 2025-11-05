@@ -95,6 +95,11 @@ struct TrainArriveScreen: View {
 
         // 'Sip!' Button
         Button {
+          AnalyticsEventService.shared.trackArrivalConfirmed(
+            stationCode: stationCode, stationName: stationName)
+          AnalyticsEventService.shared.trackJourneyCompletedMinimal(
+            destinationCode: stationCode, destinationName: stationName,
+            completionType: "arrival_screen")
           dismiss()
         } label: {
           Text("Sip!")
@@ -111,6 +116,13 @@ struct TrainArriveScreen: View {
     }
     .onAppear {
       pulse = true
+      Dependencies.shared.telemetry.screen(
+        name: "TrainArriveScreen",
+        properties: [
+          "station_code": stationCode,
+          "station_name": stationName,
+        ]
+      )
     }
   }
 }

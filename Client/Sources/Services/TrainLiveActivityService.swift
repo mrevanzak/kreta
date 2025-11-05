@@ -167,11 +167,25 @@ final class TrainLiveActivityService: @unchecked Sendable {
   @MainActor
   func transitionToOnBoard(activityId: String) async {
     await update(activityId: activityId, journeyState: .onBoard)
+    if let activity = findActivity(with: activityId) {
+      AnalyticsEventService.shared.trackLiveActivityStateChanged(
+        activityId: activityId,
+        state: "onBoard",
+        trainName: activity.attributes.trainName
+      )
+    }
   }
 
   @MainActor
   func transitionToPrepareToDropOff(activityId: String) async {
     await update(activityId: activityId, journeyState: .prepareToDropOff)
+    if let activity = findActivity(with: activityId) {
+      AnalyticsEventService.shared.trackLiveActivityStateChanged(
+        activityId: activityId,
+        state: "prepareToDropOff",
+        trainName: activity.attributes.trainName
+      )
+    }
   }
 
   // MARK: - State Transitions
@@ -255,6 +269,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
         destinationCode: destinationCode
       )
       logger.info("Successfully scheduled alarm for activity \(activityId, privacy: .public)")
+      AnalyticsEventService.shared.trackAlarmScheduled(
+        activityId: activityId,
+        arrivalTime: arrivalTime,
+        offsetMinutes: alarmOffsetMinutes,
+        destinationCode: destinationCode
+      )
     } catch {
       logger.error(
         "Failed to schedule alarm for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
@@ -488,6 +508,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       return
     }
 
+    AnalyticsEventService.shared.trackAlarmTriggered(activityId: activityId)
     await transitionToPrepareToDropOff(activityId: activityId)
     logger.info(
       "Automatically transitioned activity \(activityId, privacy: .public) to .prepareToDropOff due to alarm"

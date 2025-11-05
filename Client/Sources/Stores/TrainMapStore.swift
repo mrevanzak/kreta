@@ -277,6 +277,19 @@ extension TrainMapStore {
 
     // Start Live Activity
     try await startLiveActivityForTrain(train: train, journeyData: journeyData)
+
+    // Track journey start
+    if let from = train.fromStation, let to = train.toStation {
+      AnalyticsEventService.shared.trackJourneyStarted(
+        trainId: journeyData.trainId,
+        trainName: train.name,
+        from: from,
+        to: to,
+        userSelectedDeparture: journeyData.userSelectedDepartureTime,
+        userSelectedArrival: journeyData.userSelectedArrivalTime,
+        hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
+      )
+    }
   }
 
   private func startLiveActivityForTrain(train: ProjectedTrain, journeyData: TrainJourneyData)
@@ -379,6 +392,31 @@ extension TrainMapStore {
   }
 
   func clearSelectedTrain() async {
+    // Evaluate completion vs cancellation before clearing
+    if let train = selectedTrain, let data = selectedJourneyData {
+      let now = Date()
+      if now < data.userSelectedArrivalTime {
+        AnalyticsEventService.shared.trackJourneyCancelled(
+          trainId: data.trainId,
+          reason: "ended_before_arrival",
+          context: [
+            "expected_arrival_time": ISO8601DateFormatter().string(from: data.userSelectedArrivalTime),
+            "train_name": train.name,
+          ]
+        )
+      } else {
+        AnalyticsEventService.shared.trackJourneyCompleted(
+          trainId: data.trainId,
+          from: data.userSelectedFromStation,
+          to: data.userSelectedToStation,
+          userSelectedDeparture: data.userSelectedDepartureTime,
+          completionType: "scheduled_arrival",
+          actualArrival: now,
+          wasTrackedUntilArrival: true
+        )
+      }
+    }
+
     // End live activities and cancel alarms for the selected train
     if let selectedTrain = selectedTrain {
       let activeActivities = liveActivityService.getActiveLiveActivities()

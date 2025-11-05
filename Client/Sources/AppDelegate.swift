@@ -88,8 +88,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                       destination: TrainStation(
                         name: "Pasar Senen", code: "PSE",
                         estimatedTime: Date().addingTimeInterval(120)),
-//                      seatClass: SeatClass.economy(number: 9),
-//                      seatNumber: "20C"
+                      //                      seatClass: SeatClass.economy(number: 9),
+                      //                      seatNumber: "20C"
                     )
                   }
                 }),
@@ -182,6 +182,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     didReceive response: UNNotificationResponse
   ) async {
     let userInfo = response.notification.request.content.userInfo
+
+    AnalyticsEventService.shared.trackNotificationInteraction(
+      identifier: response.notification.request.identifier,
+      category: response.notification.request.content.categoryIdentifier,
+      action: response.actionIdentifier
+    )
 
     guard
       let deepLinkString = userInfo["deeplink"] as? String,

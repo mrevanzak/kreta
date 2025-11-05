@@ -54,6 +54,10 @@ extension DeepLinkParser {
   static func equal(to components: [String], destination: Destination) -> Self {
     .init { url in
       guard url.fullComponents == components else { return nil }
+      AnalyticsEventService.shared.trackDeepLinkOpened(
+        urlString: url.absoluteString,
+        params: url.queryParameters ?? [:]
+      )
       return destination
     }
   }
@@ -65,6 +69,13 @@ extension DeepLinkParser {
       let stationName = url.queryParameters?["name"]
     else { return nil }
 
+    AnalyticsEventService.shared.trackDeepLinkOpened(
+      urlString: url.absoluteString,
+      params: [
+        "code": stationCode,
+        "name": stationName,
+      ]
+    )
     return .fullScreen(.arrival(stationCode: stationCode, stationName: stationName))
   }
 }
