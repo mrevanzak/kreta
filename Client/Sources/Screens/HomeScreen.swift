@@ -9,14 +9,33 @@ struct HomeScreen: View {
   @State private var showAddSheet = false
   @State private var showFeedbackBoard = false
 
-  var body: some View {
-    Group {
-      ZStack(alignment: .topTrailing) {
-        TrainMapView()
+    @State private var isFollowing: Bool = true
+    @State private var focusTrigger: Bool = false
 
-        MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
+    var body: some View {
+      Group {
+        ZStack(alignment: .topTrailing) {
+          TrainMapView(
+            isFollowing: $isFollowing,
+            focusTrigger: $focusTrigger
+          )
+
+          VStack(alignment: .trailing, spacing: 8) {
+            MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
+            if !isFollowing && trainMapStore.liveTrainPosition != nil {
+              Button {
+                focusTrigger = true
+              } label: {
+                Label("Focus", systemImage: "scope")
+                  .font(.headline)
+                  .padding(.horizontal, 12)
+                  .padding(.vertical, 10)
+                  .background(.ultraThickMaterial, in: Capsule())
+              }
+            }
+          }
           .padding(.trailing)
-      }
+        }
       .sheet(isPresented: .constant(true)) {
         // Bottom card
         VStack(alignment: .leading, spacing: 10) {

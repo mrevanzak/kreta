@@ -5,134 +5,146 @@ struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
   @Environment(\.showToast) private var showToast
 
+  @Binding var isFollowing: Bool
+  @Binding var focusTrigger: Bool
   @State private var cameraPosition: MapCameraPosition = .automatic
 
   var body: some View {
-    Map(position: $cameraPosition) {
-      // Lines (polylines) - show only selected train routes or all routes
-      ForEach(filteredRoutes) { route in
-        let coords = route.coordinates
-        if coords.count > 1 {
-          MapPolyline(coordinates: coords)
-            .stroke(.blue, lineWidth: 3)
-        }
-      }
-      // Stations (annotations) - show only connected stations or all stations
-      ForEach(filteredStations) { station in
-        Annotation(station.name, coordinate: station.coordinate) {
-          ZStack {
-            Circle().fill(.white).frame(width: 10, height: 10)
-            Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
+    ZStack(alignment: .bottomTrailing) {
+      Map(position: $cameraPosition) {
+        // Routes
+        ForEach(filteredRoutes) { route in
+          let coords = route.coordinates
+          if coords.count > 1 {
+            MapPolyline(coordinates: coords)
+              .stroke(.blue, lineWidth: 3)
           }
         }
+        // Stations (simple marker for visibility)
+        ForEach(filteredStations) { station in
+          Marker(station.name, systemImage: "tram.fill", coordinate: station.coordinate)
+            .tint(.green)
+        }
+        // Live train(s)
+        ForEach(filteredTrains) { train in
+          let isMoving = train.moving
+          Marker("\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate)
+            .tint(isMoving ? .blue : .red)
+        }
       }
-      // Train positions (symbols) - show only selected trains or all trains
-      ForEach(filteredTrains) { train in
-        let isMoving = train.moving
-        Marker(
-          "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
-        )
-        .tint(isMoving ? .green : .blue)
-      }
+      // break follow as soon as user interacts with the map
+      .gesture(
+        DragGesture(minimumDistance: 0).onChanged { _ in
+          if isFollowing { isFollowing = false }
+        }
+      )
     }
     .mapControlVisibility(.hidden)
     .mapStyle(mapStyleForCurrentSelection)
     .ignoresSafeArea()
+
+    // Data refresh on timestamp tick
     .onChange(of: mapStore.lastUpdatedAt) { _, lastUpdatedAt in
       guard let lastUpdatedAt else { return }
-
       Task(priority: .high) {
         do {
           try await mapStore.loadData(at: lastUpdatedAt)
         } catch let error as TrainMapError {
-          let errorMessage = "\(error.errorName): \(error.localizedDescription)"
-          print("🚂 TrainMapView: \(errorMessage)")
-          showToast(errorMessage)
+          let msg = "\(error.errorName): \(error.localizedDescription)"
+          print("🚂 TrainMapView: \(msg)")
+          showToast(msg)
         }
       }
     }
+
+    // Follow live position updates
     .onChange(of: mapStore.liveTrainPosition) { _, newPosition in
       if let position = newPosition {
         updateCameraPosition(with: [position])
       }
     }
+
+    // External “focus” poke from the sheet button
+    .onChange(of: focusTrigger) { _, newValue in
+      if newValue {
+        isFollowing = true
+        if let position = mapStore.liveTrainPosition {
+          updateCameraPosition(with: [position])
+        }
+      }
+    }
+
+    // Initial load
     .onAppear {
-      // Ensure data loads on app launch even if subscription hasn't fired yet
       if let lastUpdatedAt = mapStore.lastUpdatedAt {
         Task(priority: .high) {
           do {
             try await mapStore.loadData(at: lastUpdatedAt)
           } catch let error as TrainMapError {
-            let errorMessage = "\(error.errorName): \(error.localizedDescription)"
-            print("🚂 TrainMapView: \(errorMessage)")
-            showToast(errorMessage)
+            let msg = "\(error.errorName): \(error.localizedDescription)"
+            print("🚂 TrainMapView: \(msg)")
+            showToast(msg)
           }
         }
       }
     }
+
+    // Auto-reset the trigger after it’s consumed so it’s fire-once
+    .task(id: focusTrigger) {
+      if focusTrigger {
+        focusTrigger = false
+      }
+    }
   }
 
-  // MARK: - Computed Properties
+  // MARK: - Computed filters
 
-  /// Filter routes based on selected train - builds complete journey routes from segments
   private var filteredRoutes: [Route] {
     guard let journeyData = mapStore.selectedJourneyData else {
       return mapStore.routes
     }
-
-    // Collect all unique route IDs from journey segments
     var routeIds = Set<String>()
     for segment in journeyData.segments {
       if let routeId = segment.routeId {
         routeIds.insert(routeId)
       }
     }
-
     return mapStore.routes.filter { routeIds.contains($0.id) }
   }
 
-  /// Filter stations based on selected train - shows all stations along journey path
   private var filteredStations: [Station] {
     guard let journeyData = mapStore.selectedJourneyData else {
       return mapStore.stations
     }
-
-    // Get all unique stations from complete journey path
     var stationCodes = Set<String>()
     for station in journeyData.allStations {
       stationCodes.insert(station.code)
     }
-
     return mapStore.stations.filter { stationCodes.contains($0.code) }
   }
 
-  /// Filter trains based on selected train - shows live projected position if available
   private var filteredTrains: [ProjectedTrain] {
-    guard let selectedTrain = mapStore.selectedTrain else {
-      return []
-    }
-
-    // Return live projected position if available, otherwise return original train
+    guard let selectedTrain = mapStore.selectedTrain else { return [] }
     return [mapStore.liveTrainPosition ?? selectedTrain]
   }
 
-  // MARK: - Map Style Computation
+  // MARK: - Map style
+
   private var mapStyleForCurrentSelection: MapStyle {
     switch mapStore.selectedMapStyle {
     case .standard:
-      return .standard(
-        elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
+      return .standard(elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
     case .hybrid:
       return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
     }
   }
 
-  // MARK: - Camera Management
+  // MARK: - Camera
 
   private func updateCameraPosition(with positions: [ProjectedTrain]) {
     guard !positions.isEmpty else { return }
+    guard isFollowing else { return } // respect user exploration
 
-    // If single train, follow it with smooth animation
     if positions.count == 1, let train = positions.first {
       withAnimation(.easeInOut(duration: 1.0)) {
         cameraPosition = .region(
@@ -143,9 +155,8 @@ struct TrainMapView: View {
         )
       }
     } else {
-      // Multiple trains - show all in view
-      let coordinates = positions.map { $0.coordinate }
-      updateCameraToFitCoordinates(coordinates)
+      let coords = positions.map { $0.coordinate }
+      updateCameraToFitCoordinates(coords)
     }
   }
 
