@@ -10,10 +10,9 @@ import SwiftUI
 struct AddTrainView: View {
   @Environment(TrainMapStore.self) private var store
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.showToast) private var showToast
 
   @State private var viewModel: ViewModel = ViewModel()
-
-  let onTrainSelected: (ProjectedTrain, TrainJourneyData?) -> Void
 
   var body: some View {
     VStack(spacing: 0) {
@@ -207,16 +206,16 @@ struct AddTrainView: View {
           }
         }
       }
-      
+
       // Always show confirmation button
       VStack(spacing: 0) {
         Divider()
-        
+
         Button {
           guard let selectedItem = viewModel.selectedTrainItem else { return }
           Task {
             let projected = await viewModel.didSelect(selectedItem)
-            handleTrainSelection(projected)
+            await handleTrainSelection(projected)
           }
         } label: {
           Text("Track Kereta")
@@ -248,9 +247,16 @@ struct AddTrainView: View {
     }
   }
 
-  private func handleTrainSelection(_ train: ProjectedTrain) {
+  private func handleTrainSelection(_ train: ProjectedTrain) async {
     let journeyData = viewModel.trainJourneyData[train.id]
-    onTrainSelected(train, journeyData)
+    if let journeyData = journeyData {
+      do {
+        try await store.selectTrain(train, journeyData: journeyData)
+        dismiss()
+      } catch {
+        showToast("Failed to select train: \(error)")
+      }
+    }
   }
 }
 
@@ -258,7 +264,7 @@ struct AddTrainView: View {
 
 #Preview("Add Train View") {
   let store = TrainMapStore.preview
-  
+
   // Add more sample stations for a realistic preview
   store.stations = [
     Station(
@@ -297,13 +303,7 @@ struct AddTrainView: View {
       city: "Surabaya"
     ),
   ]
-  
-  return AddTrainView(onTrainSelected: { train, journeyData in
-    print("Selected train: \(train.name)")
-    if let journeyData = journeyData {
-      print("From: \(journeyData.userSelectedFromStation.name)")
-      print("To: \(journeyData.userSelectedToStation.name)")
-    }
-  })
-  .environment(store)
+
+  return AddTrainView()
+    .environment(store)
 }
