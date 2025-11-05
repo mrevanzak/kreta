@@ -107,8 +107,8 @@ export const projectedForRoute = query({
           name: fromRow.trainName,
           fromStationId: fromRow.stationId,
           toStationId: toRow.stationId,
-          segmentDeparture: fromRow.departureTime,
-          segmentArrival: toRow.arrivalTime,
+          segmentDeparture: Math.round(fromRow.departureTime),
+          segmentArrival: Math.round(toRow.arrivalTime),
           // Use toRow.routeId because the routeId on a station row represents
           // the route that connects TO that station (ending at that station)
           routeId: toRow.routeId ?? undefined,
@@ -136,8 +136,8 @@ export const segmentsForTrain = query({
 
     return rows.map((r) => ({
       stationId: r.stationId,
-      arrivalTime: r.arrivalTime,
-      departureTime: r.departureTime,
+      arrivalTime: Math.round(r.arrivalTime),
+      departureTime: Math.round(r.departureTime),
       trainCode: r.trainCode,
       trainName: r.trainName,
       routeId: r.routeId,
