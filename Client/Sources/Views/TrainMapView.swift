@@ -8,6 +8,7 @@ struct TrainMapView: View {
   @Binding var isFollowing: Bool
   @Binding var focusTrigger: Bool
   @State private var cameraPosition: MapCameraPosition = .automatic
+  @State private var visibleRegionSpan: MKCoordinateSpan?
 
   var body: some View {
     ZStack(alignment: .bottomTrailing) {
@@ -28,9 +29,15 @@ struct TrainMapView: View {
         // Live train(s)
         ForEach(filteredTrains) { train in
           let isMoving = train.moving
-          Marker("\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate)
-            .tint(isMoving ? .blue : .red)
+          Marker(
+            "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
+          )
+          .tint(isMoving ? .blue : .red)
         }
+      }
+      .onMapCameraChange(frequency: .onEnd) { context in
+        let region = context.region
+        visibleRegionSpan = region.span
       }
       // break follow as soon as user interacts with the map
       .gesture(
@@ -113,6 +120,9 @@ struct TrainMapView: View {
   }
 
   private var filteredStations: [Station] {
+    // Respect zoom level – show only at moderate zoom to reduce clutter
+    guard isStationZoomVisible else { return [] }
+
     guard let journeyData = mapStore.selectedJourneyData else {
       return mapStore.stations
     }
@@ -133,7 +143,8 @@ struct TrainMapView: View {
   private var mapStyleForCurrentSelection: MapStyle {
     switch mapStore.selectedMapStyle {
     case .standard:
-      return .standard(elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
+      return .standard(
+        elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
     case .hybrid:
       return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
     }
@@ -141,9 +152,16 @@ struct TrainMapView: View {
 
   // MARK: - Camera
 
+  // Stations are visible only when the camera span indicates a moderate zoom level
+  private var isStationZoomVisible: Bool {
+    guard let span = visibleRegionSpan else { return false }
+    // Rough thresholds: around city/regional view (~50–100km)
+    return span.latitudeDelta >= 0.3 && span.latitudeDelta <= 2.0
+  }
+
   private func updateCameraPosition(with positions: [ProjectedTrain]) {
     guard !positions.isEmpty else { return }
-    guard isFollowing else { return } // respect user exploration
+    guard isFollowing else { return }  // respect user exploration
 
     if positions.count == 1, let train = positions.first {
       withAnimation(.easeInOut(duration: 1.0)) {
