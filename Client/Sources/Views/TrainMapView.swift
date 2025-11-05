@@ -30,10 +30,8 @@ struct TrainMapView: View {
         // Live train(s)
         ForEach(filteredTrains) { train in
           let isMoving = train.moving
-          Marker(
-            "\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate
-          )
-          .tint(isMoving ? .blue : .red)
+          Marker("\(train.name) (\(train.code))", systemImage: "tram.fill", coordinate: train.coordinate)
+            .tint(isMoving ? .blue : .red)
         }
       }
       .onMapCameraChange(frequency: .onEnd) { context in
@@ -131,19 +129,21 @@ struct TrainMapView: View {
     return mapStore.routes.filter { routeIds.contains($0.id) }
   }
 
-  private var filteredStations: [Station] {
-    // Respect zoom level – show only at moderate zoom to reduce clutter
-    guard isStationZoomVisible else { return [] }
+    private var filteredStations: [Station] {
+      guard let jd = mapStore.selectedJourneyData else {
+        return mapStore.stations
+      }
 
-    guard let journeyData = mapStore.selectedJourneyData else {
-      return mapStore.stations
+      // Get stop station IDs derived from segment times only
+      let stopIds = Set(jd.stopStationIds(dwellThreshold: 30)) // tweak threshold if needed
+
+      // Match against Station.id first, then fallback to code
+      return mapStore.stations.filter { st in
+        let key = st.id ?? st.code
+        return stopIds.contains(key)
+      }
     }
-    var stationCodes = Set<String>()
-    for station in journeyData.allStations {
-      stationCodes.insert(station.code)
-    }
-    return mapStore.stations.filter { stationCodes.contains($0.code) }
-  }
+
 
   private var filteredTrains: [ProjectedTrain] {
     guard let selectedTrain = mapStore.selectedTrain else { return [] }

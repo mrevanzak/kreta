@@ -24,11 +24,43 @@ struct TrainJourneyData: Codable, Equatable {
   let segments: [JourneySegment]
   let allStations: [Station]
 
-  // User-selected journey leg (subset of full route)
   let userSelectedFromStation: Station
   let userSelectedToStation: Station
   let userSelectedDepartureTime: Date
   let userSelectedArrivalTime: Date
+}
+
+// MARK: - Logiks
+extension TrainJourneyData {
+  func stopStationIds(dwellThreshold seconds: TimeInterval = 30) -> [String] {
+    guard !segments.isEmpty else { return [] }
+
+    var stops: [String] = []
+    stops.append(segments[0].fromStationId)
+
+    if segments.count >= 2 {
+      for i in 0..<(segments.count - 1) {
+        let prevSeg = segments[i]
+        let nextSeg = segments[i + 1]
+
+        // Sanity: these should meet at the same station
+        let intermediateStation = prevSeg.toStationId
+        if intermediateStation == nextSeg.fromStationId {
+          let dwell = nextSeg.departure.timeIntervalSince(prevSeg.arrival)
+          if dwell >= seconds { stops.append(intermediateStation) }
+        } else {
+          // If segments don't meet (data glitch), be conservative: don't add as stop.
+          // You can log here if you want.
+        }
+      }
+    }
+
+    stops.append(segments.last!.toStationId)
+
+    var seen = Set<String>()
+    let ordered = stops.filter { seen.insert($0).inserted }
+    return ordered
+  }
 }
 
 // MARK: - AddTrainView Extension
