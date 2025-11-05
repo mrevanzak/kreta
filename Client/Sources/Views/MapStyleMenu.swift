@@ -16,7 +16,7 @@ enum MapStyleOption: String, CaseIterable {
     case .standard:
       return "map"
     case .hybrid:
-      return "globe"
+      return "globe.asia.australia.fill"
     }
   }
 
@@ -30,20 +30,21 @@ struct MapStylePicker: View {
 
   var body: some View {
     Menu {
-      ForEach(MapStyleOption.allCases, id: \.self) { style in
-        Button {
-          selectedStyle = style
-        } label: {
+      Picker(selection: $selectedStyle) {
+        ForEach(MapStyleOption.allCases, id: \.self) { style in
           Label(style.displayName, systemImage: style.icon)
+            .tag(style)
         }
+      } label: {
+        EmptyView()
       }
+      .pickerStyle(.inline)
     } label: {
       Image(systemName: selectedStyle.icon)
         .font(.system(size: 20, weight: .medium))
         .foregroundStyle(.primary)
         .frame(width: 44, height: 44)
-        .background(.regularMaterial, in: Circle())
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .glassEffect()
     }
     .accessibilityLabel("Select Map Style")
   }
