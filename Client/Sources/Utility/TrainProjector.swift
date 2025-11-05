@@ -175,13 +175,23 @@ enum TrainProjector {
     endMs: Double,
     nowMs: Double,
     timeMs: Double,
-    cycle: Double
+    cycle: Double,
+    now: Date
   ) -> (departure: Date, arrival: Date) {
-    let base = nowMs - timeMs
-    var departureMs = base + startMs
-    var arrivalMs = base + endMs
+    let calendar = Calendar.current
+    let todayStart = calendar.startOfDay(for: now)
+    
+    // Calculate offset from current time-of-day to target times
+    let offsetToDeparture = startMs - timeMs
+    let offsetToArrival = endMs - timeMs
+    
+    // Convert milliseconds to seconds and add to today's start
+    var departureMs = nowMs + offsetToDeparture
+    var arrivalMs = nowMs + offsetToArrival
+    
     // Ensure arrival is after departure within the same cycle
     if arrivalMs < departureMs { arrivalMs += cycle }
+    
     // If the computed departure is already in the past relative to now,
     // roll both departure and arrival forward by one cycle (next day)
     if departureMs < nowMs {
@@ -189,9 +199,14 @@ enum TrainProjector {
       // Keep arrival after (potentially updated) departure
       if arrivalMs < departureMs { arrivalMs += cycle }
     }
+    
+    // Convert from milliseconds since midnight to actual Date
+    let departureSeconds = departureMs / 1_000
+    let arrivalSeconds = arrivalMs / 1_000
+    
     return (
-      Date(timeIntervalSince1970: departureMs / 1_000),
-      Date(timeIntervalSince1970: arrivalMs / 1_000)
+      todayStart.addingTimeInterval(departureSeconds),
+      todayStart.addingTimeInterval(arrivalSeconds)
     )
   }
 
@@ -200,13 +215,22 @@ enum TrainProjector {
     times: SegmentTimeComponents,
     nowMs: Double,
     timeMs: Double,
-    cycle: Double
+    cycle: Double,
+    now: Date
   ) -> (start: Date, arrival: Date, departure: Date) {
-    let base = nowMs - timeMs
-    var startAbs = base + times.departureMs
-    var arrivalAbs = base + times.arrivalMs
+    let calendar = Calendar.current
+    let todayStart = calendar.startOfDay(for: now)
+    
+    // Calculate offset from current time-of-day to target times
+    let offsetToDeparture = times.departureMs - timeMs
+    let offsetToArrival = times.arrivalMs - timeMs
+    
+    var startAbs = nowMs + offsetToDeparture
+    var arrivalAbs = nowMs + offsetToArrival
+    
     // Ensure arrival is after start within the same cycle
     if arrivalAbs < startAbs { arrivalAbs += cycle }
+    
     // If the computed start (departure) is already in the past relative to now,
     // roll both start and arrival forward by one cycle (next day)
     if startAbs < nowMs {
@@ -215,10 +239,15 @@ enum TrainProjector {
     }
     let departureAbs = startAbs
 
+    // Convert from milliseconds since midnight to actual Date
+    let startSeconds = startAbs / 1_000
+    let arrivalSeconds = arrivalAbs / 1_000
+    let departureSeconds = departureAbs / 1_000
+    
     return (
-      Date(timeIntervalSince1970: startAbs / 1_000),
-      Date(timeIntervalSince1970: arrivalAbs / 1_000),
-      Date(timeIntervalSince1970: departureAbs / 1_000)
+      todayStart.addingTimeInterval(startSeconds),
+      todayStart.addingTimeInterval(arrivalSeconds),
+      todayStart.addingTimeInterval(departureSeconds)
     )
   }
 
@@ -230,7 +259,10 @@ enum TrainProjector {
     stationsById: [String: Station],
     routesById: [String: Route]
   ) -> ProjectedTrain? {
-    let nowMs = now.timeIntervalSince1970 * 1_000
+    // Extract current time-of-day in milliseconds since midnight
+    let nowTimeComponents = timeComponents(from: now)
+    let nowMs = nowTimeComponents.millisecond
+    
     guard let first = journey.segments.first, let last = journey.segments.last else { return nil }
 
     // Extract time components once for journey boundaries
@@ -255,14 +287,16 @@ enum TrainProjector {
       times: segTimes,
       nowMs: nowMs,
       timeMs: timeMs,
-      cycle: journeyWindow.cycle
+      cycle: journeyWindow.cycle,
+      now: now
     )
     let journeyDates = resolveJourneyDates(
       startMs: journeyWindow.startMs,
       endMs: journeyWindow.endMs,
       nowMs: nowMs,
       timeMs: timeMs,
-      cycle: journeyWindow.cycle
+      cycle: journeyWindow.cycle,
+      now: now
     )
 
     let fromStation = stationsById[seg.fromStationId]
