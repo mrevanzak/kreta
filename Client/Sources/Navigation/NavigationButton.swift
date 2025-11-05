@@ -14,13 +14,13 @@ struct NavigationButton<Content: View>: View {
     self.content = content
   }
 
-  // init(
-  //   push destination: PushDestination,
-  //   @ViewBuilder content: @escaping () -> Content
-  // ) {
-  //   self.destination = .push(destination)
-  //   self.content = content
-  // }
+  init(
+    push destination: PushDestination,
+    @ViewBuilder content: @escaping () -> Content
+  ) {
+    self.destination = .push(destination)
+    self.content = content
+  }
 
   // init(
   //   sheet destination: SheetDestination,
@@ -30,13 +30,13 @@ struct NavigationButton<Content: View>: View {
   //   self.content = content
   // }
 
-  // init(
-  //   fullScreen destination: FullScreenDestination,
-  //   @ViewBuilder content: @escaping () -> Content
-  // ) {
-  //   self.destination = .fullScreen(destination)
-  //   self.content = content
-  // }
+  init(
+    fullScreen destination: FullScreenDestination,
+    @ViewBuilder content: @escaping () -> Content
+  ) {
+    self.destination = .fullScreen(destination)
+    self.content = content
+  }
 
   var body: some View {
     Button(action: { router.navigate(to: destination) }) {

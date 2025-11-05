@@ -4,38 +4,17 @@ import SwiftUI
 // MARK: - Main Map Screen
 
 struct HomeScreen: View {
+  @Environment(Router.self) private var router
   @State private var trainMapStore = TrainMapStore()
 
-  @State private var showAddSheet = false
-  @State private var showFeedbackBoard = false
+  @State private var isFollowing: Bool = true
+  @State private var focusTrigger: Bool = false
 
-    @State private var isFollowing: Bool = true
-    @State private var focusTrigger: Bool = false
-
-    var body: some View {
-      Group {
-        ZStack(alignment: .topTrailing) {
-          TrainMapView(
-            isFollowing: $isFollowing,
-            focusTrigger: $focusTrigger
-          )
-
-          VStack(alignment: .trailing, spacing: 8) {
-            MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
-            if !isFollowing && trainMapStore.liveTrainPosition != nil {
-              Button {
-                focusTrigger = true
-              } label: {
-                Label("Focus", systemImage: "scope")
-                  .font(.headline)
-                  .padding(.horizontal, 12)
-                  .padding(.vertical, 10)
-                  .background(.ultraThickMaterial, in: Capsule())
-              }
-            }
-          }
-          .padding(.trailing)
-        }
+  var body: some View {
+    Group {
+      TrainMapView(
+        bottomInset: trainMapStore.selectedTrain != nil ? CGFloat(200) : Screen.height * 0.35
+      )
       .sheet(isPresented: .constant(true)) {
         // Bottom card
         VStack(alignment: .leading, spacing: 10) {
@@ -45,7 +24,7 @@ struct HomeScreen: View {
             Spacer()
             Menu {
               Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
-                showFeedbackBoard = true
+                router.navigate(to: .sheet(.feedback))
               }
             } label: {
               Circle().fill(.thinMaterial)
@@ -72,7 +51,7 @@ struct HomeScreen: View {
               ))
           } else {
             Button {
-              showAddSheet = true
+              router.navigate(to: .sheet(.addTrain))
             } label: {
               RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.backgroundSecondary)
@@ -108,38 +87,14 @@ struct HomeScreen: View {
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
         .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
-        .sheet(isPresented: $showAddSheet) {
-          AddTrainView()
-            .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showFeedbackBoard) {
-          FeedbackBoardScreen()
-            .presentationDetents([.large])
-            .presentationDragIndicator(.hidden)
-            .presentationBackground(.ultraThinMaterial)
+        // present sheet based on router
+        .sheet(item: Binding(get: { router.presentingSheet }, set: { router.presentingSheet = $0 }))
+        { sheet in
+          navigationView(for: sheet, from: router)
         }
       }
     }
     .environment(trainMapStore)
-    .onOpenURL { url in
-      let components = url.fullComponents
-      if components == ["trip", "start"],
-        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-      {
-        let journeyId = items.first(where: { $0.name == "journeyId" })?.value
-        let trainId = items.first(where: { $0.name == "trainId" })?.value
-
-        if let trainId {
-          Task {
-            do {
-              try await trainMapStore.startFromDeepLink(trainId: trainId, journeyId: journeyId)
-            } catch {
-              print("Failed to start from deeplink: \(error)")
-            }
-          }
-        }
-      }
-    }
     .task {
       try? await trainMapStore.loadSelectedTrainFromCache()
     }
@@ -150,8 +105,11 @@ struct HomeScreen: View {
       await trainMapStore.clearSelectedTrain()
     }
   }
-}
 
-#Preview {
-  HomeScreen()
+  @ViewBuilder
+  func navigationView(for destination: SheetDestination, from router: Router)
+    -> some View
+  {
+    NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
 }

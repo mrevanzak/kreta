@@ -6,20 +6,14 @@ final class Router {
   let id = UUID()
   let level: Int
 
-  /// Specifies which tab the router was build for
-  let identifierTab: TabScreen?
+  /// Values presented in the navigation stack
+  var navigationStackPath: [PushDestination] = []
 
-  /// Only relevant for the `level 0` root router. Defines the tab to select
-  var selectedTab: TabScreen?
+  /// Current presented sheet
+  var presentingSheet: SheetDestination?
 
-  // /// Values presented in the navigation stack
-  // var navigationStackPath: [PushDestination] = []
-
-  // /// Current presented sheet
-  // var presentingSheet: SheetDestination?
-
-  // /// Current presented full screen
-  // var presentingFullScreen: FullScreenDestination?
+  /// Current presented full screen
+  var presentingFullScreen: FullScreenDestination?
 
   let logger = Logger(subsystem: "kreta", category: "Navigation")
 
@@ -31,9 +25,8 @@ final class Router {
   /// Used for deep link resolution
   private(set) var isActive: Bool = false
 
-  init(level: Int, identifierTab: TabScreen?) {
+  init(level: Int) {
     self.level = level
-    self.identifierTab = identifierTab
     self.parent = nil
 
     logger.debug("\(self.debugDescription) initialized")
@@ -44,17 +37,17 @@ final class Router {
   }
 
   private func resetContent() {
-    // navigationStackPath = []
+    navigationStackPath = []
     // presentingSheet = nil
-    // presentingFullScreen = nil
+    presentingFullScreen = nil
   }
 }
 
 // MARK: - Router Management
 
 extension Router {
-  func childRouter(for tab: TabScreen? = nil) -> Router {
-    let router = Router(level: level + 1, identifierTab: tab ?? identifierTab)
+  func childRouter() -> Router {
+    let router = Router(level: level + 1)
     router.parent = self
     return router
   }
@@ -71,7 +64,7 @@ extension Router {
   }
 
   static func previewRouter() -> Router {
-    Router(level: 0, identifierTab: nil)
+    Router(level: 0)
   }
 }
 
@@ -80,44 +73,32 @@ extension Router {
 extension Router {
   func navigate(to destination: Destination) {
     switch destination {
-    case let .tab(tab):
-      select(tab: tab)
 
     case let .push(destination):
-      Void()
+      push(destination)
 
     case let .sheet(destination):
-      Void()
+      present(sheet: destination)
 
     case let .fullScreen(destination):
-      Void()
+      present(fullScreen: destination)
     }
   }
 
-  func select(tab destination: TabScreen) {
-    logger.debug("\(self.debugDescription) \(#function) \(destination.rawValue)")
-    if level == 0 {
-      selectedTab = destination
-    } else {
-      parent?.select(tab: destination)
-      resetContent()
-    }
+  func push(_ destination: PushDestination) {
+    logger.debug("\(self.debugDescription): \(#function) \(destination)")
+    navigationStackPath.append(destination)
   }
 
-  // func push(_ destination: PushDestination) {
-  //   logger.debug("\(self.debugDescription): \(#function) \(destination)")
-  //   navigationStackPath.append(destination)
-  // }
+  func present(sheet destination: SheetDestination) {
+    logger.debug("\(self.debugDescription): \(#function) \(destination)")
+    presentingSheet = destination
+  }
 
-  // func present(sheet destination: SheetDestination) {
-  //   logger.debug("\(self.debugDescription): \(#function) \(destination)")
-  //   presentingSheet = destination
-  // }
-
-  // func present(fullScreen destination: FullScreenDestination) {
-  //   logger.debug("\(self.debugDescription): \(#function) \(destination)")
-  //   presentingFullScreen = destination
-  // }
+  func present(fullScreen destination: FullScreenDestination) {
+    logger.debug("\(self.debugDescription): \(#function) \(destination)")
+    presentingFullScreen = destination
+  }
 
   func deepLinkOpen(to destination: Destination) {
     guard isActive else { return }
@@ -129,12 +110,8 @@ extension Router {
 
 extension Router: CustomDebugStringConvertible {
   var debugDescription: String {
-    "Router[\(shortId) - \(identifierTabName) - Level: \(level)]"
+    "Router[\(shortId) - Level: \(level)]"
   }
 
   private var shortId: String { String(id.uuidString.split(separator: "-").first ?? "") }
-
-  private var identifierTabName: String {
-    identifierTab?.rawValue ?? "No Tab"
-  }
 }

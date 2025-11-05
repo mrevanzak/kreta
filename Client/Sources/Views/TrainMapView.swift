@@ -5,12 +5,14 @@ struct TrainMapView: View {
   @Environment(TrainMapStore.self) private var mapStore
   @Environment(\.showToast) private var showToast
 
-  @Binding var isFollowing: Bool
-  @Binding var focusTrigger: Bool
+  @State var isFollowing: Bool = true
+  @State var focusTrigger: Bool = false
   @State private var cameraPosition: MapCameraPosition = .automatic
+  @State private var visibleRegionSpan: MKCoordinateSpan?
+  let bottomInset: CGFloat
 
   var body: some View {
-    ZStack(alignment: .bottomTrailing) {
+    ZStack(alignment: .topTrailing) {
       Map(position: $cameraPosition) {
         // Routes
         ForEach(filteredRoutes) { route in
@@ -32,16 +34,21 @@ struct TrainMapView: View {
             .tint(isMoving ? .blue : .red)
         }
       }
+      .onMapCameraChange(frequency: .onEnd) { context in
+        let region = context.region
+        visibleRegionSpan = region.span
+      }
       // break follow as soon as user interacts with the map
       .gesture(
         DragGesture(minimumDistance: 0).onChanged { _ in
           if isFollowing { isFollowing = false }
         }
       )
+
+      MapControl(isFollowing: $isFollowing, focusTrigger: $focusTrigger)
     }
     .mapControlVisibility(.hidden)
     .mapStyle(mapStyleForCurrentSelection)
-    .ignoresSafeArea()
 
     // Data refresh on timestamp tick
     .onChange(of: mapStore.lastUpdatedAt) { _, lastUpdatedAt in
@@ -71,6 +78,16 @@ struct TrainMapView: View {
         if let position = mapStore.liveTrainPosition {
           updateCameraPosition(with: [position])
         }
+      }
+    }
+
+    // Re-center when the bottom sheet inset changes (while following)
+    .onChange(of: bottomInset) { _, _ in
+      guard isFollowing else { return }
+      if let position = mapStore.liveTrainPosition {
+        updateCameraPosition(with: [position])
+      } else if let selected = mapStore.selectedTrain {
+        updateCameraPosition(with: [selected])
       }
     }
 
@@ -138,7 +155,8 @@ struct TrainMapView: View {
   private var mapStyleForCurrentSelection: MapStyle {
     switch mapStore.selectedMapStyle {
     case .standard:
-      return .standard(elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
+      return .standard(
+        elevation: .realistic, emphasis: .automatic, pointsOfInterest: .all, showsTraffic: false)
     case .hybrid:
       return .hybrid(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
     }
@@ -146,16 +164,31 @@ struct TrainMapView: View {
 
   // MARK: - Camera
 
+  // Stations are visible only when the camera span indicates a moderate zoom level
+  private var isStationZoomVisible: Bool {
+    guard let span = visibleRegionSpan else { return false }
+    // Rough thresholds: around city/regional view (~50–100km)
+    return span.latitudeDelta >= 0.3 && span.latitudeDelta <= 2.0
+  }
+
   private func updateCameraPosition(with positions: [ProjectedTrain]) {
     guard !positions.isEmpty else { return }
-    guard isFollowing else { return } // respect user exploration
+    guard isFollowing else { return }  // respect user exploration
 
     if positions.count == 1, let train = positions.first {
       withAnimation(.easeInOut(duration: 1.0)) {
+        let sheetFraction = max(0, min(1, bottomInset / Screen.height))
+        let latDelta: CLLocationDegrees = 0.05
+        let lonDelta: CLLocationDegrees = 0.05
+        let latOffset = latDelta * CLLocationDegrees(sheetFraction) * 0.5
+        let adjustedCenter = CLLocationCoordinate2D(
+          latitude: train.coordinate.latitude + latOffset,
+          longitude: train.coordinate.longitude
+        )
         cameraPosition = .region(
           MKCoordinateRegion(
-            center: train.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            center: adjustedCenter,
+            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
           )
         )
       }
@@ -191,7 +224,13 @@ struct TrainMapView: View {
     )
 
     withAnimation(.easeInOut(duration: 1.0)) {
-      cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
+      let sheetFraction = max(0, min(1, bottomInset / Screen.height))
+      let latOffset = span.latitudeDelta * CLLocationDegrees(sheetFraction) * 0.5
+      let adjustedCenter = CLLocationCoordinate2D(
+        latitude: center.latitude + latOffset,
+        longitude: center.longitude
+      )
+      cameraPosition = .region(MKCoordinateRegion(center: adjustedCenter, span: span))
     }
   }
 }

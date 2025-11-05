@@ -136,6 +136,10 @@ final class TrainLiveActivityService: @unchecked Sendable {
       )
       logger.info("Alarm scheduling complete for activity \(activityId, privacy: .public)")
     }
+
+    Task {
+      await scheduleServerArrivalAlert(trainName: trainName, destination: destination)
+    }
   }
 
   @MainActor
@@ -320,6 +324,47 @@ final class TrainLiveActivityService: @unchecked Sendable {
     for await tokenData in activity.pushTokenUpdates {
       let token = tokenData.hexEncodedString()
       await registerLiveActivityToken(activityId: activity.id, token: token)
+    }
+  }
+
+  // MARK: - Server Arrival Alert Scheduling
+
+  private func scheduleServerArrivalAlert(
+    trainName: String,
+    destination: TrainStation
+  ) async {
+    guard let deviceToken = PushRegistrationService.shared.currentToken() else {
+      logger.debug("No device token available; skipping server arrival alert scheduling")
+      return
+    }
+
+    guard let arrivalTime = destination.estimatedTime else {
+      logger.debug("No destination ETA; skipping server arrival alert scheduling")
+      return
+    }
+
+    let arrivalMs = Int(arrivalTime.timeIntervalSince1970 * 1000)
+
+    do {
+      let _: String = try await convexClient.mutation(
+        "notifications:scheduleArrivalAlert",
+        with: [
+          "deviceToken": deviceToken,
+          "trainId": nil as String?,
+          "trainName": trainName,
+          "arrivalTime": arrivalMs,
+          "destinationStation": [
+            "name": destination.name,
+            "code": destination.code,
+            "estimatedTime": arrivalMs,
+          ],
+        ],
+        captureTelemetry: true
+      )
+      logger.info("Scheduled server arrival alert for \(destination.name, privacy: .public)")
+    } catch {
+      logger.error(
+        "Failed to schedule server arrival alert: \(error.localizedDescription, privacy: .public)")
     }
   }
 
