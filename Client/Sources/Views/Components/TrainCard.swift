@@ -11,7 +11,9 @@ struct TrainCard: View {
   let train: ProjectedTrain
   let journeyData: TrainJourneyData?
   let onDelete: () -> Void
-  
+
+  @State private var showingDeleteAlert = false
+
   var body: some View {
     VStack(spacing: 0) {
       // Header with train name and class
@@ -24,26 +26,34 @@ struct TrainCard: View {
           Text("(\(train.code))")
             .fontWeight(.bold)
             .foregroundStyle(.sublime)
-          
+
         }
         .frame(maxWidth: .infinity)
-        
+
         // Delete button aligned to trailing
         HStack {
           Spacer()
-          
+
           Button(action: {
-            onDelete()
+            showingDeleteAlert = true
           }) {
             Image(systemName: "trash")
               .foregroundStyle(.red)
+          }
+          .alert("Hapus Tracking Kereta?", isPresented: $showingDeleteAlert) {
+            Button("Hapus", role: .destructive) {
+              onDelete()
+            }
+            Button("Batal", role: .cancel) {}
+          } message: {
+            Text("Kreta akan berhenti melacak \(train.name) (\(train.code))")
           }
         }
       }
       .padding(.horizontal)
       .padding(.vertical, 12)
       .background(.buttonHighlight)
-      
+
       // Journey details
       HStack(spacing: 10) {
         // Departure station (use user selection if available)
@@ -51,43 +61,43 @@ struct TrainCard: View {
           Text(departureStationCode)
             .font(.title2)
             .bold()
-          
+
           Text(departureStationCity)
             .font(.caption)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
-          
+
           Text(formatTime(departureTime))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        
+
         // Train icon and duration
         VStack(spacing: 8) {
           Image("keretaDark")
             .resizable()
             .scaledToFit()
             .frame(width: 120)
-          
+
           Text(formattedDuration())
             .font(.caption)
             .foregroundStyle(.blue)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        
+
         // Arrival station (use user selection if available)
         VStack(spacing: 4) {
           Text(arrivalStationCode)
             .font(.title2)
             .bold()
-          
+
           Text(arrivalStationCity)
             .font(.caption)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
-          
+
           Text(formatTime(arrivalTime))
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -101,63 +111,63 @@ struct TrainCard: View {
     .clipShape(RoundedRectangle(cornerRadius: 20))
     .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
   }
-  
+
   // MARK: - Computed Properties
-  
+
   /// Use user-selected departure station if available, otherwise use current segment
   private var departureStationCode: String {
     journeyData?.userSelectedFromStation.code ?? train.fromStation?.code ?? "--"
   }
-  
+
   private var departureStationCity: String {
     journeyData?.userSelectedFromStation.city ?? train.fromStation?.city ?? "Unknown"
   }
-  
+
   private var departureTime: Date? {
     journeyData?.userSelectedDepartureTime ?? train.journeyDeparture
   }
-  
+
   /// Use user-selected arrival station if available, otherwise use current segment
   private var arrivalStationCode: String {
     journeyData?.userSelectedToStation.code ?? train.toStation?.code ?? "--"
   }
-  
+
   private var arrivalStationCity: String {
     journeyData?.userSelectedToStation.city ?? train.toStation?.city ?? "Unknown"
   }
-  
+
   private var arrivalTime: Date? {
     journeyData?.userSelectedArrivalTime ?? train.journeyArrival
   }
-  
+
   // MARK: - Helper Functions
-  
+
   // Helper function to format duration
   private func formattedDuration() -> String {
     guard let departure = departureTime, let arrival = arrivalTime else {
       return "Waktu tidak tersedia"
     }
-    
+
     let now = Date()
-    
+
     // Check if train hasn't departed yet
     // Since times are normalized to today, we can do direct comparison
     if now < departure {
       return "Kereta belum berangkat"
     }
-    
+
     // Check if train has already arrived
     if now >= arrival {
       return "Sudah Tiba"
     }
-    
+
     // Calculate time remaining until arrival
     let timeInterval = arrival.timeIntervalSince(now)
     let totalMinutes = Int(timeInterval / 60)
-    
+
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
-    
+
     if hours > 0 && minutes > 0 {
       return "Tiba Dalam \(hours)Jam \(minutes)Menit"
     } else if hours > 0 {
@@ -168,7 +178,7 @@ struct TrainCard: View {
       return "Tiba Sebentar Lagi"
     }
   }
-  
+
   private func formatTime(_ date: Date?) -> String {
     guard let date else { return "--:--" }
     return date.formatted(.dateTime.hour().minute())
@@ -190,7 +200,7 @@ struct TrainCard: View {
       city: "Jakarta Selatan"
     ),
   ]
-  
+
   let train = ProjectedTrain(
     id: "T1-0",
     code: "T1",
@@ -208,13 +218,12 @@ struct TrainCard: View {
     journeyDeparture: Date().addingTimeInterval(-60 * 60),
     journeyArrival: Date().addingTimeInterval(2 * 60 * 60)
   )
-  
+
   ZStack {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
-    
+
     TrainCard(train: train, journeyData: nil, onDelete: {})
       .padding()
   }
 }
-
