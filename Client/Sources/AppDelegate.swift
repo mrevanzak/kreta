@@ -88,8 +88,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                       destination: TrainStation(
                         name: "Pasar Senen", code: "PSE",
                         estimatedTime: Date().addingTimeInterval(120)),
-                      seatClass: SeatClass.economy(number: 9),
-                      seatNumber: "20C"
+//                      seatClass: SeatClass.economy(number: 9),
+//                      seatNumber: "20C"
                     )
                   }
                 }),

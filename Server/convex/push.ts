@@ -93,15 +93,15 @@ export const startLiveActivity = action({
         code: v.string(),
         estimatedTime: v.union(v.number(), v.null()),
       }),
-      seatClass: v.object({
-        kind: v.union(
-          v.literal("economy"),
-          v.literal("business"),
-          v.literal("executive")
-        ),
-        number: v.number(),
-      }),
-      seatNumber: v.string(),
+      // seatClass: v.object({
+      //   kind: v.union(
+      //     v.literal("economy"),
+      //     v.literal("business"),
+      //     v.literal("executive")
+      //   ),
+      //   number: v.number(),
+      // }),
+      // seatNumber: v.string(),
     }),
     // Content state matching TrainActivityAttributes.ContentState
     contentState,
@@ -139,8 +139,8 @@ export const startLiveActivity = action({
       trainName: args.attributes.trainName,
       from: args.attributes.from,
       destination: args.attributes.destination,
-      seatClass: encodeSeatClass(args.attributes.seatClass),
-      seatNumber: args.attributes.seatNumber,
+      // seatClass: encodeSeatClass(args.attributes.seatClass),
+      // seatNumber: args.attributes.seatNumber,
     } as const;
 
     const contentState = args.contentState;

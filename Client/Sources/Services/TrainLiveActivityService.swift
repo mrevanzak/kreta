@@ -49,15 +49,17 @@ final class TrainLiveActivityService: @unchecked Sendable {
     trainName: String,
     from: TrainStation,
     destination: TrainStation,
-    seatClass: SeatClass,
-    seatNumber: String,
+    // seatClass: SeatClass,
+    // seatNumber: String,
+    initialJourneyState: JourneyState? = nil
   ) async throws -> Activity<TrainActivityAttributes> {
     let activity = try await createActivity(
       trainName: trainName,
       from: from,
       destination: destination,
-      seatClass: seatClass,
-      seatNumber: seatNumber
+      // seatClass: seatClass,
+      // seatNumber: seatNumber,
+      initialJourneyState: initialJourneyState
     )
 
     await setupActivityMonitoring(for: activity, destination: destination, trainName: trainName)
@@ -70,18 +72,20 @@ final class TrainLiveActivityService: @unchecked Sendable {
     trainName: String,
     from: TrainStation,
     destination: TrainStation,
-    seatClass: SeatClass,
-    seatNumber: String
+    // seatClass: SeatClass,
+    // seatNumber: String,
+    initialJourneyState: JourneyState? = nil
   ) async throws -> Activity<TrainActivityAttributes> {
     let attributes = TrainActivityAttributes(
       trainName: trainName,
       from: from,
       destination: destination,
-      seatClass: seatClass,
-      seatNumber: seatNumber
+      // seatClass: seatClass,
+      // seatNumber: seatNumber
     )
 
-    let contentState = TrainActivityAttributes.ContentState(journeyState: .beforeBoarding)
+    let initialState = initialJourneyState ?? .beforeBoarding
+    let contentState = TrainActivityAttributes.ContentState(journeyState: initialState)
     let content = ActivityContent(state: contentState, staleDate: nil)
 
     return try Activity<TrainActivityAttributes>.request(
@@ -103,6 +107,15 @@ final class TrainLiveActivityService: @unchecked Sendable {
     logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
     logger.debug("Activity ID: \(activityId, privacy: .public)")
     logger.debug("Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes")
+
+    // Safety: if departure is already in the past and state is still beforeBoarding,
+    // immediately transition to onBoard to reflect in-progress journeys.
+    if let departure = activity.attributes.from.estimatedTime,
+      departure <= Date(),
+      activity.content.state.journeyState == .beforeBoarding
+    {
+      await transitionToOnBoard(activityId: activityId)
+    }
 
     Task {
       logger.info("Starting automatic transitions for activity \(activityId, privacy: .public)")

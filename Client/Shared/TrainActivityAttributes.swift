@@ -74,8 +74,8 @@ public struct TrainActivityAttributes: ActivityAttributes, Sendable {
   public var from: TrainStation
   public var destination: TrainStation
 
-  public var seatClass: SeatClass
-  public var seatNumber: String
+  // public var seatClass: SeatClass
+  // public var seatNumber: String
 }
 
 public enum SeatClass: Codable, Hashable, Sendable {

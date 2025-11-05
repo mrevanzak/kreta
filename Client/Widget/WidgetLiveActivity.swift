@@ -30,28 +30,28 @@ struct BeforeBoardingView: View {
           .lineLimit(2)
           .minimumScaleFactor(0.6)
 
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-          HStack(spacing: 4) {
-            Image(systemName: "train.side.middle.car")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 12, height: 12)
-            Text("\(context.attributes.seatClass.number) \(context.attributes.seatClass.name)")
-          }
+        // HStack(alignment: .firstTextBaseline, spacing: 6) {
+        //   HStack(spacing: 4) {
+        //     Image(systemName: "train.side.middle.car")
+        //       .resizable()
+        //       .scaledToFit()
+        //       .frame(width: 12, height: 12)
+        //     Text("\(context.attributes.seatClass.number) \(context.attributes.seatClass.name)")
+        //   }
 
-          HStack(spacing: 4) {
-            Image(systemName: "chair.lounge.fill")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 12, height: 12)
-            Text(context.attributes.seatNumber)
-          }
-        }
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .font(.caption2)
-        .monospacedDigit()
-        .foregroundStyle(.secondary)
+        //   HStack(spacing: 4) {
+        //     Image(systemName: "chair.lounge.fill")
+        //       .resizable()
+        //       .scaledToFit()
+        //       .frame(width: 12, height: 12)
+        //     Text(context.attributes.seatNumber)
+        //   }
+        // }
+        // .lineLimit(1)
+        // .minimumScaleFactor(0.8)
+        // .font(.caption2)
+        // .monospacedDigit()
+        // .foregroundStyle(.secondary)
       }
 
       Spacer()
@@ -159,14 +159,14 @@ struct BeforeBoardingSmallView: View {
       Spacer()
 
       VStack(alignment: .trailing, spacing: 4) {
-        Text(
-          "\(context.attributes.seatClass.number) \(context.attributes.seatClass.name) | \(context.attributes.seatNumber)"
-        )
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .font(.footnote)
-        .monospacedDigit()
-        .foregroundStyle(.secondary)
+        // Text(
+        //   "\(context.attributes.seatClass.number) \(context.attributes.seatClass.name) | \(context.attributes.seatNumber)"
+        // )
+        // .lineLimit(1)
+        // .minimumScaleFactor(0.8)
+        // .font(.footnote)
+        // .monospacedDigit()
+        // .foregroundStyle(.secondary)
 
         if let departureTime = context.attributes.from.estimatedTime {
           Text(timerInterval: Date()...departureTime, showsHours: true)
@@ -496,8 +496,8 @@ extension TrainActivityAttributes {
         code: "PSE",
         estimatedTime: Date().addingTimeInterval(60 * 60 * 24)
       ),
-      seatClass: SeatClass.economy(number: 9),
-      seatNumber: "20C"
+      // seatClass: SeatClass.economy(number: 9),
+      // seatNumber: "20C"
     )
   }
 }

@@ -292,6 +292,9 @@ extension TrainMapStore {
 
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
     let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
+    let now = Date()
+    let isInProgress =
+      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
     if timeUntilDeparture <= scheduleOffset {
       // Start immediately on device
@@ -311,8 +314,9 @@ extension TrainMapStore {
           code: toStation.code,
           estimatedTime: train.segmentArrival
         ),
-        seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
-        seatNumber: "1A"  // TODO: Replace with actual seat number
+        // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
+        // seatNumber: "1A",  // TODO: Replace with actual seat number
+        initialJourneyState: isInProgress ? .onBoard : nil
       )
     } else {
       logger.info(
