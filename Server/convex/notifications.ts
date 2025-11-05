@@ -1,5 +1,6 @@
 import { internalAction, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { stationValidator } from "./validators";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 
@@ -10,16 +11,8 @@ export const scheduleTripReminder = mutation({
     trainId: v.string(),
     trainName: v.string(),
     departureTime: v.number(), // milliseconds since epoch
-    fromStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
-    destinationStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
+    fromStation: stationValidator,
+    destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
     // Calculate notification time: 10 minutes before departure
@@ -57,16 +50,8 @@ export const sendTripReminder = internalAction({
     deviceToken: v.string(),
     trainId: v.string(),
     trainName: v.string(),
-    fromStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
-    destinationStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
+    fromStation: stationValidator,
+    destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
     // Construct the deeplink
@@ -107,11 +92,7 @@ export const scheduleArrivalAlert = mutation({
     trainId: v.union(v.string(), v.null()),
     trainName: v.string(),
     arrivalTime: v.number(), // milliseconds since epoch
-    destinationStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
+    destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
     const notificationTimeMs = args.arrivalTime - 2 * 60 * 1000;
@@ -144,18 +125,12 @@ export const sendArrivalAlert = internalAction({
     deviceToken: v.string(),
     trainId: v.union(v.string(), v.null()),
     trainName: v.string(),
-    destinationStation: v.object({
-      name: v.string(),
-      code: v.string(),
-      estimatedTime: v.union(v.number(), v.null()),
-    }),
+    destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
     const stationName = args.destinationStation.name;
     const stationCode = args.destinationStation.code;
-    const deeplink = `kreta://arrival?code=${encodeURIComponent(
-      stationCode
-    )}&name=${encodeURIComponent(stationName)}`;
+    const deeplink = `kreta://arrival?code=${stationCode}&name=${stationName}`;
 
     const title = "Segera Turun!";
     const body = `2 menit lagi tiba di ${stationName}`;

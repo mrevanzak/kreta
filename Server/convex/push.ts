@@ -3,25 +3,13 @@
 import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import * as apn from "@parse/node-apn";
+import {
+  buildApnsProvider,
+  validateApnsEnvironment,
+} from "../utils/apns-utils";
+import { contentStateValidator } from "./validators";
 
-// Construct a singleton APNs provider using token-based auth
-const apnsKey = (process.env.APNS_KEY ?? "").replace(/\\n/g, "\n");
-const apnProvider = new apn.Provider({
-  token: {
-    key: apnsKey,
-    keyId: process.env.APNS_KEY_ID ?? "",
-    teamId: process.env.APNS_TEAM_ID ?? "",
-  },
-  production: process.env.APNS_PRODUCTION === "true",
-});
-
-const contentState = v.object({
-  journeyState: v.union(
-    v.literal("beforeBoarding"),
-    v.literal("onBoard"),
-    v.literal("prepareToDropOff")
-  ),
-});
+const contentState = contentStateValidator;
 
 // Trigger a standard APNs alert push to a specific device token
 export const triggerPush = action({
@@ -32,14 +20,12 @@ export const triggerPush = action({
     body: v.string(),
   },
   handler: async (_ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
+    const validation = validateApnsEnvironment();
+    if (!validation.ok)
+      return { success: false, error: validation.error } as const;
+    const bundleId = validation.bundleId;
 
+    const provider = buildApnsProvider();
     const note = new apn.Notification();
     note.topic = bundleId;
     note.pushType = "alert";
@@ -48,29 +34,7 @@ export const triggerPush = action({
       subtitle: args.subtitle,
       body: args.body,
     };
-
-    try {
-      const response = await apnProvider.send(note, args.deviceToken);
-      // @parse/node-apn returns an object with sent/failed arrays
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
+    return await provider.sendNotification(note, args.deviceToken);
   },
 });
 
@@ -112,13 +76,10 @@ export const startLiveActivity = action({
     }),
   },
   handler: async (ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
+    const validation = validateApnsEnvironment();
+    if (!validation.ok)
+      return { success: false, error: validation.error } as const;
+    const bundleId = validation.bundleId;
 
     // Convert SeatClass to Swift Codable enum payload
     const encodeSeatClass = (seat: {
@@ -145,6 +106,7 @@ export const startLiveActivity = action({
 
     const contentState = args.contentState;
 
+    const provider = buildApnsProvider();
     const note = new apn.Notification();
     note.topic = `${bundleId}.push-type.liveactivity`;
     note.pushType = "liveactivity";
@@ -157,28 +119,7 @@ export const startLiveActivity = action({
     note.aps["attributes-type"] = "TrainActivityAttributes";
     note.aps.attributes = attributes;
     note.alert = args.alert;
-
-    try {
-      const response = await apnProvider.send(note, args.startToken);
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
+    return await provider.sendNotification(note, args.startToken);
   },
 });
 
@@ -193,14 +134,12 @@ export const sendTripReminderPush = internalAction({
     trainId: v.string(),
   },
   handler: async (_ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
+    const validation = validateApnsEnvironment();
+    if (!validation.ok)
+      return { success: false, error: validation.error } as const;
+    const bundleId = validation.bundleId;
 
+    const provider = buildApnsProvider();
     const note = new apn.Notification();
     note.topic = bundleId;
     note.pushType = "alert";
@@ -214,27 +153,7 @@ export const sendTripReminderPush = internalAction({
     } as Record<string, unknown>;
     note.aps.category = "TRIP_START_FALLBACK";
 
-    try {
-      const response = await apnProvider.send(note, args.deviceToken);
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
+    return await provider.sendNotification(note, args.deviceToken);
   },
 });
 
@@ -250,14 +169,12 @@ export const sendArrivalPush = internalAction({
     trainId: v.union(v.string(), v.null()),
   },
   handler: async (_ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
+    const validation = validateApnsEnvironment();
+    if (!validation.ok)
+      return { success: false, error: validation.error } as const;
+    const bundleId = validation.bundleId;
 
+    const provider = buildApnsProvider();
     const note = new apn.Notification();
     note.topic = bundleId;
     note.pushType = "alert";
@@ -273,27 +190,7 @@ export const sendArrivalPush = internalAction({
     } as Record<string, unknown>;
     note.aps.category = "ARRIVAL_ALERT";
 
-    try {
-      const response = await apnProvider.send(note, args.deviceToken);
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
+    return await provider.sendNotification(note, args.deviceToken);
   },
 });
 
@@ -305,44 +202,21 @@ export const updateLiveActivity = action({
     contentState,
   },
   handler: async (ctx, args) => {
-    const bundleId = process.env.BUNDLE_ID ?? "";
-    if (!bundleId) {
-      return { success: false, error: "Missing BUNDLE_ID env var" } as const;
-    }
-    if (!apnsKey || !(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID)) {
-      return { success: false, error: "Missing APNs token env vars" } as const;
-    }
+    const validation = validateApnsEnvironment();
+    if (!validation.ok)
+      return { success: false, error: validation.error } as const;
+    const bundleId = validation.bundleId;
 
-    const contentState = args.contentState;
+    const contentStatePayload = args.contentState;
 
+    const provider = buildApnsProvider();
     const note = new apn.Notification();
     note.topic = `${bundleId}.push-type.liveactivity`;
     note.pushType = "liveactivity";
     note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
-    note.aps["content-state"] = contentState;
+    note.aps["content-state"] = contentStatePayload;
     note.aps.event = "update";
     note.aps.timestamp = Math.floor(Date.now() / 1000);
-
-    try {
-      const response = await apnProvider.send(note, args.activityToken);
-      if (response.sent && response.sent.length > 0) {
-        return { success: true, status: 200, apnsId: note.id } as const;
-      }
-      const firstFailure = response.failed?.[0];
-      const status = firstFailure?.status ?? 500;
-      const reason =
-        firstFailure?.response?.reason ?? firstFailure?.error?.message;
-      return {
-        success: false,
-        error: String(reason ?? "Unknown APNs error"),
-        status,
-        apnsId: note.id,
-      } as const;
-    } catch (err: unknown) {
-      return {
-        success: false,
-        error: String(err instanceof Error ? err.message : err),
-      } as const;
-    }
+    return await provider.sendNotification(note, args.activityToken);
   },
 });
