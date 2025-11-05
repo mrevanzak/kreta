@@ -29,7 +29,7 @@ struct TrainMapView: View {
         ForEach(filteredTrains) { train in
           let isMoving = train.moving
           Marker("\(train.name) (\(train.id))", systemImage: "tram.fill", coordinate: train.coordinate)
-            .tint(isMoving ? .green : .blue)
+            .tint(isMoving ? .blue : .red)
         }
       }
       // break follow as soon as user interacts with the map
