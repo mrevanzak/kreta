@@ -15,14 +15,12 @@ enum FeedbackStatus: String, Codable, CaseIterable {
 }
 
 struct FeedbackItem: Codable, Identifiable {
-  let _id: String
-  let title: String
+  let id: String
+  // let title: String
   let description: String
   let status: FeedbackStatus
-  let createdAt: Int
+  let createdAt: Float
   let voteCount: Int
-
-  var id: String { _id }
 
   var statusColor: String {
     switch status {

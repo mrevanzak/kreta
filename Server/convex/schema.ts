@@ -104,7 +104,6 @@ export default defineSchema({
   }).index("by_customId", ["id"]),
 
   feedback: defineTable({
-    title: v.string(),
     description: v.string(),
     email: v.union(v.string(), v.null()),
     status: v.union(
@@ -113,10 +112,7 @@ export default defineSchema({
       v.literal("rejected"),
       v.literal("done")
     ),
-    createdAt: v.number(),
-  })
-    .index("by_createdAt", ["createdAt"])
-    .index("by_status", ["status"]),
+  }).index("by_status", ["status"]),
 
   votes: defineTable({
     feedbackId: v.id("feedback"),

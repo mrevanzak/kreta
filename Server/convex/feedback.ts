@@ -15,12 +15,12 @@ export const list = query({
           .collect();
 
         return {
-          _id: item._id.toString(),
-          title: item.title,
+          id: item._id.toString(),
+          // title: item.title,
           description: item.description,
           status: item.status,
-          createdAt: item.createdAt,
           voteCount: votes.length,
+          createdAt: item._creationTime,
         };
       })
     );
@@ -32,18 +32,17 @@ export const list = query({
 // Mutation: create feedback
 export const create = mutation({
   args: {
-    title: v.string(),
+    // title: v.string(),
     description: v.string(),
     email: v.union(v.string(), v.null()),
     deviceToken: v.string(),
   },
   handler: async (ctx, args) => {
     const feedbackId = await ctx.db.insert("feedback", {
-      title: args.title,
+      // title: args.title,
       description: args.description,
       email: args.email,
       status: "pending",
-      createdAt: Date.now(),
     });
 
     // Return ID as string to match Swift model

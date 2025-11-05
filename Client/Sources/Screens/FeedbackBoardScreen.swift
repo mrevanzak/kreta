@@ -17,7 +17,7 @@ struct FeedbackBoardScreen: View {
   @State private var sortOrder: SortOrder = .descending
 
   var sortedItems: [FeedbackItem] {
-    let sorted = feedbackStore.feedbackItems.sorted { a, b in
+    let sorted = feedbackStore.feedbackItems.sorted { (a: FeedbackItem, b: FeedbackItem) -> Bool in
       let comparison: Bool
       switch sortOption {
       case .votes:

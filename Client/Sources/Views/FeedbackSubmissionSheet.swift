@@ -140,7 +140,7 @@ struct FeedbackSubmissionSheet: View {
     Task {
       do {
         try await store.submitFeedback(
-          title: generatedTitle,
+          // title: generatedTitle,
           description: trimmedDescription,
           email: emailValue
         )

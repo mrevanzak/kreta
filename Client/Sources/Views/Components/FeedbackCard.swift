@@ -19,7 +19,7 @@ struct FeedbackCard: View {
   init(item: FeedbackItem, store: FeedbackStore) {
     self.item = item
     self.store = store
-    _hasVoted = State(initialValue: store.hasUserVoted(feedbackId: item._id))
+    _hasVoted = State(initialValue: store.hasUserVoted(feedbackId: item.id))
     _localVoteCount = State(initialValue: item.voteCount)
   }
 
@@ -27,22 +27,18 @@ struct FeedbackCard: View {
     HStack(alignment: .top, spacing: 16) {
       // Left side: content
       VStack(alignment: .leading, spacing: 12) {
-        // Title and status
-        HStack(spacing: 8) {
-          Text(item.title)
-            .font(.headline)
-            .foregroundStyle(primaryTextColor)
-
-          statusTag
-
-          Spacer()
-        }
-
-        // Description
+        // Title
         Text(item.description)
-          .font(.subheadline)
-          .foregroundStyle(secondaryTextColor)
-          .lineLimit(3)
+          .font(.headline)
+          .foregroundStyle(primaryTextColor)
+
+        statusTag
+
+        // // Description
+        // Text(item.description)
+        //   .font(.subheadline)
+        //   .foregroundStyle(secondaryTextColor)
+        //   .lineLimit(3)
 
         // Timestamp
         Text(item.relativeTime)
@@ -87,7 +83,8 @@ struct FeedbackCard: View {
         .font(.title3.weight(.semibold))
         .foregroundStyle(hasVoted ? voteAccentColor : secondaryTextColor)
         .frame(width: 36, height: 40)
-        .background(cardActionBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(
+          cardActionBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
     .disabled(isVoting)
   }
@@ -111,7 +108,7 @@ struct FeedbackCard: View {
     // Actual vote
     Task {
       do {
-        let result = try await store.toggleVote(feedbackId: item._id)
+        let result = try await store.toggleVote(feedbackId: item.id)
         // Only update if result differs (shouldn't happen but safety net)
         hasVoted = result
         if result != previousHasVoted {
@@ -154,11 +151,11 @@ struct FeedbackCard: View {
       colors: colorScheme == .dark
         ? [
           Color.white.opacity(0.18),
-          Color.white.opacity(0.04)
+          Color.white.opacity(0.04),
         ]
         : [
           Color.white.opacity(0.8),
-          Color.white.opacity(0.45)
+          Color.white.opacity(0.45),
         ],
       startPoint: .topLeading,
       endPoint: .bottomTrailing
@@ -169,7 +166,7 @@ struct FeedbackCard: View {
     LinearGradient(
       colors: [
         Color.white.opacity(colorScheme == .dark ? 0.35 : 0.6),
-        Color.white.opacity(colorScheme == .dark ? 0.05 : 0.25)
+        Color.white.opacity(colorScheme == .dark ? 0.05 : 0.25),
       ],
       startPoint: .topLeading,
       endPoint: .bottomTrailing
@@ -184,7 +181,7 @@ struct FeedbackCard: View {
     LinearGradient(
       colors: [
         Color.blue.opacity(colorScheme == .dark ? 0.35 : 0.4),
-        Color.cyan.opacity(colorScheme == .dark ? 0.45 : 0.5)
+        Color.cyan.opacity(colorScheme == .dark ? 0.45 : 0.5),
       ],
       startPoint: .topLeading,
       endPoint: .bottomTrailing
@@ -227,12 +224,12 @@ extension Color {
 #Preview {
   let store = FeedbackStore()
   let item = FeedbackItem(
-    _id: "1",
-    title: "Add dark mode support",
+    id: "1",
+    // title: "Add dark mode support",
     description:
       "It would be great to have a dark mode option for users who prefer darker interfaces.",
     status: .pending,
-    createdAt: Int(Date().timeIntervalSince1970 - 3600) * 1000,
+    createdAt: Float(Date().timeIntervalSince1970 - 3600),
     voteCount: 42
   )
 

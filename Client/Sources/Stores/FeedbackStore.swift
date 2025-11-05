@@ -59,14 +59,13 @@ final class FeedbackStore {
     )
   }
 
-  func submitFeedback(title: String, description: String, email: String?) async throws {
+  func submitFeedback(description: String, email: String?) async throws {
     isLoading = true
     defer { isLoading = false }
 
     let _: CreateFeedbackResponse = try await convexClient.mutation(
       "feedback:create",
       with: [
-        "title": title,
         "description": description,
         "email": email,
         "deviceToken": deviceToken,
