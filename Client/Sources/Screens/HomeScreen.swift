@@ -12,31 +12,9 @@ struct HomeScreen: View {
 
   var body: some View {
     Group {
-      ZStack(alignment: .topTrailing) {
-        TrainMapView(
-          isFollowing: $isFollowing,
-          focusTrigger: $focusTrigger,
-          bottomInset: trainMapStore.selectedTrain != nil ? CGFloat(200) : Screen.height * 0.35
-        )
-
-        VStack(alignment: .trailing, spacing: 8) {
-          MapStylePicker(selectedStyle: $trainMapStore.selectedMapStyle)
-          if !isFollowing && trainMapStore.liveTrainPosition != nil {
-            Button {
-              focusTrigger = true
-            } label: {
-              Label("Focus", systemImage: "scope")
-                .font(.headline)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(.ultraThickMaterial, in: Capsule())
-            }
-          }
-        }
-        .padding(.trailing)
-        .padding(.top, Screen.safeArea.top)
-        .ignoresSafeArea(edges: .top)
-      }
+      TrainMapView(
+        bottomInset: trainMapStore.selectedTrain != nil ? CGFloat(200) : Screen.height * 0.35
+      )
       .sheet(isPresented: .constant(true)) {
         // Bottom card
         VStack(alignment: .leading, spacing: 10) {
