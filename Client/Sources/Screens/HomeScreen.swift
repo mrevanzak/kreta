@@ -87,11 +87,7 @@ struct HomeScreen: View {
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(true)
         .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
-        // present sheet based on router
-        .sheet(item: Binding(get: { router.presentingSheet }, set: { router.presentingSheet = $0 }))
-        { sheet in
-          navigationView(for: sheet, from: router)
-        }
+        .routerPresentation(router: router)
       }
     }
     .environment(trainMapStore)
@@ -108,6 +104,13 @@ struct HomeScreen: View {
 
   @ViewBuilder
   func navigationView(for destination: SheetDestination, from router: Router)
+    -> some View
+  {
+    NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
+
+  @ViewBuilder
+  func navigationView(for destination: FullScreenDestination, from router: Router)
     -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }

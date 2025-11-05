@@ -14,5 +14,16 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kreta</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>app.kreta.kreta</string>
+		</dict>
+	</array>
 </dict>
 </plist>

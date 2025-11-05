@@ -130,7 +130,7 @@ export const sendArrivalAlert = internalAction({
   handler: async (ctx, args) => {
     const stationName = args.destinationStation.name;
     const stationCode = args.destinationStation.code;
-    const deeplink = `kreta://arrival?code=${stationCode}&name=${stationName}`;
+    const deeplink = `kreta://arrival?code=${encodeURIComponent(stationCode)}&name=${encodeURIComponent(stationName)}`;
 
     const title = "Segera Turun!";
     const body = `2 menit lagi tiba di ${stationName}`;

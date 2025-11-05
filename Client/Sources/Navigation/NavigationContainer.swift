@@ -47,28 +47,38 @@ private struct InnerContainer<Content: View>: View {
       //   view(for: destination)
       // }
     }
-    // it's important that the these modifiers are **outside** the `NavigationStack`
-    // otherwise the content closure will be called infinitely freezing the app
-    // .sheet(item: $router.presentingSheet) { sheet in
-    //   navigationView(for: sheet, from: router)
-    // }
-    .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
-      navigationView(for: fullScreen, from: router)
-    }
+  }
+}
+
+private struct RouterPresentationModifier: ViewModifier {
+  @Bindable var router: Router
+
+  func body(content: Content) -> some View {
+    content
+      .sheet(item: $router.presentingSheet) { sheet in
+        navigationView(for: sheet, from: router)
+      }
+      .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
+        navigationView(for: fullScreen, from: router)
+      }
   }
 
-  // @ViewBuilder
-  // func navigationView(for destination: SheetDestination, from router: Router)
-  //   -> some View
-  // {
-  //   NavigationContainer(parentRouter: router) { view(for: destination) }
-  // }
+  @ViewBuilder
+  private func navigationView(for destination: SheetDestination, from router: Router) -> some View {
+    NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
 
   @ViewBuilder
-  func navigationView(for destination: FullScreenDestination, from router: Router)
+  private func navigationView(for destination: FullScreenDestination, from router: Router)
     -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
+}
+
+extension View {
+  func routerPresentation(router: Router) -> some View {
+    modifier(RouterPresentationModifier(router: router))
   }
 }
 

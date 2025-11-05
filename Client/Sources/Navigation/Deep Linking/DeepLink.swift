@@ -14,8 +14,8 @@ struct DeepLink {
   }
 
   static let registeredParsers: [DeepLinkParser] = [
-    .equal(
-      to: ["arrival"],
-      destination: .fullScreen(.arrival(stationCode: "BDO", stationName: "Bandung")))
+    // Match arrival deep links with query parameters, e.g.:
+    // kreta://arrival?code=ABC&name=Station%20Name
+    .arrival
   ]
 }
