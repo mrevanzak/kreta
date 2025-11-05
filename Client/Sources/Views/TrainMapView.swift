@@ -48,7 +48,6 @@ struct TrainMapView: View {
     }
     .mapControlVisibility(.hidden)
     .mapStyle(mapStyleForCurrentSelection)
-    .ignoresSafeArea()
 
     // Data refresh on timestamp tick
     .onChange(of: mapStore.lastUpdatedAt) { _, lastUpdatedAt in
