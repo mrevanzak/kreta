@@ -97,6 +97,7 @@ extension AddTrainView {
     private let stationConnectionService = StationConnectionService()
     private let trainConnectionService = TrainConnectionService()
     private let journeyService = JourneyService()
+    private let trainStopService = TrainStopService()
 
     // no longer caching all journeys; server provides list DTOs
 
@@ -140,17 +141,36 @@ extension AddTrainView {
       defer { isLoadingTrains = false }
 
       do {
-        let items = try await journeyService.fetchProjectedForRoute(
+        // Use new TrainStopService for efficient server-side filtering
+        // This query only returns trains that actually stop at both stations
+        let trainRoutes = try await trainStopService.findTrainsByRoute(
           departureStationId: departureId,
           arrivalStationId: arrivalId
         )
+        
+        // Convert TrainRouteJourney to AvailableTrainItem
+        // Note: We still need to call the existing API to get the full journey data with routes
+        var items: [JourneyService.AvailableTrainItem] = []
+        
+        for route in trainRoutes {
+          // Fetch full journey data for trains that actually stop at both stations
+          let fullItems = try await journeyService.fetchProjectedForRoute(
+            departureStationId: departureId,
+            arrivalStationId: arrivalId
+          )
+          
+          // Filter to only include the trains from trainStopService
+          let validTrainIds = Set(trainRoutes.map { $0.trainId })
+          items = fullItems.filter { validTrainIds.contains($0.trainId) }
+          break // Only need to fetch once
+        }
+        
         filteredTrains = items
       } catch {
         print("Failed to fetch available trains: \(error)")
         filteredTrains = []
       }
     }
-
     /// Toggle selection of a train item
     func toggleTrainSelection(_ item: JourneyService.AvailableTrainItem) {
       if selectedTrainItem?.id == item.id {
