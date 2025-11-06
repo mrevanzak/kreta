@@ -21,10 +21,15 @@ struct TrainMapView: View {
               .stroke(.blue, lineWidth: 3)
           }
         }
-        // Stations (simple marker for visibility)
-        ForEach(filteredStations) { station in
-          Marker(station.name, systemImage: "tram.fill", coordinate: station.coordinate)
-            .tint(.green)
+        if isStationZoomVisible {
+          ForEach(filteredStations) { station in
+            Annotation(station.name, coordinate: station.coordinate) {
+              ZStack {
+                Circle().fill(.white).frame(width: 10, height: 10)
+                Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
+              }
+            }
+          }
         }
         // Live train(s)
         ForEach(filteredTrains) { train in
@@ -152,12 +157,9 @@ struct TrainMapView: View {
   }
 
   // MARK: - Camera
-
-  // Stations are visible only when the camera span indicates a moderate zoom level
   private var isStationZoomVisible: Bool {
     guard let span = visibleRegionSpan else { return false }
-    // Rough thresholds: around city/regional view (~50–100km)
-    return span.latitudeDelta >= 0.3 && span.latitudeDelta <= 2.0
+    return span.latitudeDelta <= 2.0
   }
 
   private func updateCameraPosition(with positions: [ProjectedTrain]) {
