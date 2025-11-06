@@ -82,6 +82,9 @@ extension Router {
 
     case let .fullScreen(destination):
       present(fullScreen: destination)
+
+    case let .action(action):
+      execute(action: action)
     }
   }
 
@@ -98,6 +101,11 @@ extension Router {
   func present(fullScreen destination: FullScreenDestination) {
     logger.debug("\(self.debugDescription): \(#function) \(destination)")
     presentingFullScreen = destination
+  }
+
+  func execute(action: ActionDestination) {
+    logger.debug("\(self.debugDescription): executing action \(action)")
+    NotificationCenter.default.post(name: .routerActionRequested, object: action)
   }
 
   func deepLinkOpen(to destination: Destination) {
@@ -117,4 +125,8 @@ extension Router: CustomDebugStringConvertible {
   }
 
   private var shortId: String { String(id.uuidString.split(separator: "-").first ?? "") }
+}
+
+extension Notification.Name {
+  static let routerActionRequested = Notification.Name("routerActionRequested")
 }

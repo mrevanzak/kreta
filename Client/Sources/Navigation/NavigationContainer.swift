@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// ``NavigationStack`` container that works with the ``Router``
@@ -52,6 +53,7 @@ private struct InnerContainer<Content: View>: View {
 
 private struct RouterPresentationModifier: ViewModifier {
   @Bindable var router: Router
+  @Environment(TrainMapStore.self) private var trainMapStore
 
   func body(content: Content) -> some View {
     content
@@ -73,6 +75,11 @@ private struct RouterPresentationModifier: ViewModifier {
           router.setActive()
         }
       }
+      .onReceive(NotificationCenter.default.publisher(for: .routerActionRequested)) {
+        notification in
+        guard let action = notification.object as? ActionDestination else { return }
+        handleAction(action)
+      }
   }
 
   @ViewBuilder
@@ -85,6 +92,20 @@ private struct RouterPresentationModifier: ViewModifier {
     -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
+
+  private func handleAction(_ action: ActionDestination) {
+    switch action {
+    case let .startTrip(trainId):
+      Task { @MainActor in
+        do {
+          try await trainMapStore.startFromDeepLink(trainId: trainId)
+        } catch {
+          // Intentionally minimal UI: no presentation; just log
+          print("Failed to start trip from deep link: \(error)")
+        }
+      }
+    }
   }
 }
 

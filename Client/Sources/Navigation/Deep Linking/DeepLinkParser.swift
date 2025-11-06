@@ -78,4 +78,18 @@ extension DeepLinkParser {
     )
     return .fullScreen(.arrival(stationCode: stationCode, stationName: stationName))
   }
+
+  static let tripStart: Self = .init { url in
+    // Match: kreta://trip/start?trainId=...
+    guard
+      url.fullComponents == ["trip", "start"],
+      let trainId = url.queryParameters?["trainId"]
+    else { return nil }
+
+    AnalyticsEventService.shared.trackDeepLinkOpened(
+      urlString: url.absoluteString,
+      params: ["trainId": trainId]
+    )
+    return .action(.startTrip(trainId: trainId))
+  }
 }

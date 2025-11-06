@@ -6,6 +6,7 @@ enum Destination: Hashable {
   case push(_ destination: PushDestination)
   case sheet(_ destination: SheetDestination)
   case fullScreen(_ destination: FullScreenDestination)
+  case action(_ action: ActionDestination)
 }
 
 extension Destination: CustomStringConvertible {
@@ -14,6 +15,7 @@ extension Destination: CustomStringConvertible {
     case let .push(destination): ".push(\(destination))"
     case let .sheet(destination): ".sheet(\(destination))"
     case let .fullScreen(destination): ".fullScreen(\(destination))"
+    case let .action(action): ".action(\(action))"
     }
   }
 }
@@ -65,6 +67,20 @@ extension FullScreenDestination: Identifiable {
   var id: String {
     switch self {
     case let .arrival(stationCode, stationName): "\(stationCode)-\(stationName)"
+    }
+  }
+}
+
+// MARK: - Action destinations (no UI presentation)
+
+enum ActionDestination: Hashable {
+  case startTrip(trainId: String)
+}
+
+extension ActionDestination: CustomStringConvertible {
+  var description: String {
+    switch self {
+    case let .startTrip(trainId): ".startTrip(\(trainId))"
     }
   }
 }

@@ -16,6 +16,7 @@ struct DeepLink {
   static let registeredParsers: [DeepLinkParser] = [
     // Match arrival deep links with query parameters, e.g.:
     // kreta://arrival?code=ABC&name=Station%20Name
-    .arrival
+    .arrival,
+    .tripStart,
   ]
 }
