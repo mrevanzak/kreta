@@ -81,6 +81,39 @@ export default defineSchema({
       "departureTime",
     ]),
 
+  // Unified table for efficient queries by train code and route searches
+  trainStops: defineTable({
+    // Train identification
+    trainId: v.string(),
+    trainCode: v.string(),
+    trainName: v.string(),
+
+    // Current stop details
+    stopSequence: v.number(),
+    stationId: v.string(),
+    stationCode: v.string(),
+    stationName: v.string(),
+    city: v.string(),
+    arrivalTime: v.union(v.string(), v.null()), // "HH:MM:SS" or null for origin
+    departureTime: v.union(v.string(), v.null()), // "HH:MM:SS" or null for destination
+
+    // Route metadata for fast filtering
+    routeOriginId: v.string(),
+    routeOriginName: v.string(),
+    routeDestinationId: v.string(),
+    routeDestinationName: v.string(),
+    totalStops: v.number(),
+
+    // Helper flags
+    isOrigin: v.boolean(),
+    isDestination: v.boolean(),
+  })
+    .index("by_trainCode", ["trainCode"])
+    .index("by_trainId", ["trainId"])
+    .index("by_stationId", ["stationId"])
+    .index("by_trainCode_sequence", ["trainCode", "stopSequence"])
+    .index("by_train_station", ["trainId", "stationId"]),
+
   stationConnections: defineTable({
     stationId: v.string(),
     connectedStationId: v.string(),

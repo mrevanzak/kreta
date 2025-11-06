@@ -17,6 +17,7 @@ import type * as registrations from "../registrations.js";
 import type * as routes from "../routes.js";
 import type * as station from "../station.js";
 import type * as train from "../train.js";
+import type * as trainStops from "../trainStops.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   routes: typeof routes;
   station: typeof station;
   train: typeof train;
+  trainStops: typeof trainStops;
   validators: typeof validators;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
