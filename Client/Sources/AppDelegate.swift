@@ -4,7 +4,7 @@ import MijickPopups
 import UIKit
 @preconcurrency import UserNotifications
 
-final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+final class AppDelegate: NSObject, UIApplicationDelegate {
   private let notificationCenter = UNUserNotificationCenter.current()
   private let pushRegistrationService = PushRegistrationService.shared
   private let liveActivityService = TrainLiveActivityService.shared
@@ -170,37 +170,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     print("Failed to register for remote notifications: \(error.localizedDescription)")
   }
 
-  nonisolated func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    willPresent notification: UNNotification
-  ) async -> UNNotificationPresentationOptions {
-    [.banner, .list, .sound]
-  }
-
-  nonisolated func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse
-  ) async {
-    let userInfo = response.notification.request.content.userInfo
-
-    AnalyticsEventService.shared.trackNotificationInteraction(
-      identifier: response.notification.request.identifier,
-      category: response.notification.request.content.categoryIdentifier,
-      action: response.actionIdentifier
-    )
-
-    guard
-      let deepLinkString = userInfo["deeplink"] as? String,
-      let url = URL(string: deepLinkString)
-    else {
-      return
-    }
-
-    await MainActor.run {
-      UIApplication.shared.open(url)
-    }
-  }
-
   private func requestNotificationAuthorization() async {
     // Inform DebugSwift that we're about to request permissions
     DebugSwift.APNSToken.willRequestPermissions()
@@ -222,5 +191,37 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     } catch {
       print("Unable to request notification authorization: \(error.localizedDescription)")
     }
+  }
+}
+
+extension AppDelegate: @MainActor UNUserNotificationCenterDelegate {
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .list, .sound])
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse
+  ) async {
+    let userInfo = response.notification.request.content.userInfo
+
+    AnalyticsEventService.shared.trackNotificationInteraction(
+      identifier: response.notification.request.identifier,
+      category: response.notification.request.content.categoryIdentifier,
+      action: response.actionIdentifier
+    )
+
+    guard
+      let deepLinkString = userInfo["deeplink"] as? String,
+      let url = URL(string: deepLinkString)
+    else {
+      return
+    }
+
+    await UIApplication.shared.open(url)
   }
 }

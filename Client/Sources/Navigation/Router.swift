@@ -101,7 +101,10 @@ extension Router {
   }
 
   func deepLinkOpen(to destination: Destination) {
-    guard isActive else { return }
+    guard isActive else {
+      logger.debug("\(self.debugDescription): \(#function) not active")
+      return
+    }
 
     logger.debug("\(self.debugDescription): \(#function) \(destination)")
     navigate(to: destination)
