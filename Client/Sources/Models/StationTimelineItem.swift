@@ -28,74 +28,80 @@ struct StationTimelineItem: Identifiable {
 // MARK: - Timeline Builder
 
 extension StationTimelineItem {
-  /// Build timeline items from journey data and current train position
-  static func buildTimeline(
-    from journeyData: TrainJourneyData,
-    currentSegmentFromStationId: String?
-  ) -> [StationTimelineItem] {
-    let stopStationIds = Set(journeyData.stopStationIds())
-    let stationsById = Dictionary(
-      uniqueKeysWithValues: journeyData.allStations.map { ($0.id ?? $0.code, $0) }
-    )
-    
-    var items: [StationTimelineItem] = []
-    var foundCurrent = false
-    
-    // Add first station (departure)
-    if let firstSegment = journeyData.segments.first,
-       let firstStation = stationsById[firstSegment.fromStationId] {
-      let isCurrent = firstSegment.fromStationId == currentSegmentFromStationId && !foundCurrent
-      if isCurrent { foundCurrent = true }
-      
-      items.append(
-        StationTimelineItem(
-          id: firstStation.id ?? firstStation.code,
-          station: firstStation,
-          arrivalTime: nil,
-          departureTime: firstSegment.departure,
-          state: isCurrent ? .current : .completed,
-          isStop: true
-        )
-      )
-    }
-    
-    // Add intermediate stations based on segments
-    for (index, segment) in journeyData.segments.enumerated() {
-      guard let station = stationsById[segment.toStationId] else { continue }
-      
-      let isStop = stopStationIds.contains(segment.toStationId)
-      let isCurrent = segment.fromStationId == currentSegmentFromStationId && !foundCurrent
-      if isCurrent { foundCurrent = true }
-      
-      let state: StationState
-      if foundCurrent {
-        state = .upcoming
-      } else if isCurrent {
-        state = .current
-      } else {
-        state = .completed
+  /// Build timeline items from TrainStopService schedule (only actual stops)
+  static func buildTimelineFromStops(
+    trainCode: String,
+    currentSegmentFromStationId: String?,
+    trainStopService: TrainStopService
+  ) async -> [StationTimelineItem] {
+    do {
+      guard let schedule = try await trainStopService.getTrainSchedule(trainCode: trainCode) else {
+        return []
       }
       
-      // Get departure time from next segment if exists
-      let departureTime: Date?
-      if index < journeyData.segments.count - 1 {
-        departureTime = journeyData.segments[index + 1].departure
-      } else {
-        departureTime = nil // Last station has no departure
+      var items: [StationTimelineItem] = []
+      var foundCurrent = false
+      
+      for (index, stop) in schedule.stops.enumerated() {
+        // Determine if this is the current station
+        let isCurrent = stop.stationId == currentSegmentFromStationId && !foundCurrent
+        if isCurrent { foundCurrent = true }
+        
+        // Determine state
+        let state: StationState
+        if foundCurrent && !isCurrent {
+          state = .upcoming
+        } else if isCurrent {
+          state = .current
+        } else {
+          state = .completed
+        }
+        
+        // Convert time strings to Date (HH:MM:SS format from server)
+        let arrivalDate = stop.arrivalTime.flatMap { parseTimeString($0) }
+        let departureDate = stop.departureTime.flatMap { parseTimeString($0) }
+        
+        // Create station model
+        let station = Station(
+          id: stop.stationId,
+          code: stop.stationCode,
+          name: stop.stationName,
+          position: Position(latitude: 0, longitude: 0), // Not needed for timeline
+          city: stop.city
+        )
+        
+        items.append(
+          StationTimelineItem(
+            id: stop.stationId,
+            station: station,
+            arrivalTime: arrivalDate,
+            departureTime: departureDate,
+            state: state,
+            isStop: true // All items from trainStops are actual stops
+          )
+        )
       }
       
-      items.append(
-        StationTimelineItem(
-          id: station.id ?? station.code,
-          station: station,
-          arrivalTime: segment.arrival,
-          departureTime: departureTime,
-          state: state,
-          isStop: isStop,
-        )
-      )
+      return items
+    } catch {
+      print("Failed to build timeline from train stops: \(error)")
+      return []
+    }
+  }
+  
+  /// Parse time string in "HH:MM:SS" format to Date (normalized to today)
+  private static func parseTimeString(_ timeString: String) -> Date? {
+    let components = timeString.split(separator: ":")
+    guard components.count >= 2,
+          let hour = Int(components[0]),
+          let minute = Int(components[1]) else {
+      return nil
     }
     
-    return items
+    let calendar = Calendar.current
+    let now = Date()
+    let startOfDay = calendar.startOfDay(for: now)
+    
+    return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay)
   }
 }

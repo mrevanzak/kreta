@@ -35,7 +35,7 @@ struct HomeScreen: View {
             compactBottomSheet
           }
         }
-        .presentationBackgroundInteraction(.enabled(upThrough: .large))
+        .presentationBackgroundInteraction(.enabled)
         .presentationDetents(presentationDetents, selection: $selectedDetent)
         .presentationDragIndicator(selectedDetent == .large ? .visible : .hidden)
         .interactiveDismissDisabled(true)

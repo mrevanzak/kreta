@@ -12,6 +12,10 @@ struct JourneyProgressView: View {
   let journeyData: TrainJourneyData?
   let onDelete: () -> Void
   
+  @State private var timelineItems: [StationTimelineItem] = []
+  @State private var isLoadingTimeline = true
+  private let trainStopService = TrainStopService()
+  
   var body: some View {
     ScrollView {
       VStack(spacing: 20) {
@@ -38,9 +42,11 @@ struct JourneyProgressView: View {
               Spacer()
               
               // Total stations count
-              Text("\(timelineItems(from: journeyData).count) Stasiun")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+              if !isLoadingTimeline {
+                Text("\(timelineItems.count) Stasiun")
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+              }
             }
             .padding(.horizontal, 20)
             
@@ -48,8 +54,14 @@ struct JourneyProgressView: View {
               .padding(.horizontal, 20)
             
             // Timeline list
-            JourneyTimelineView(items: timelineItems(from: journeyData))
-              .padding(.horizontal, 20)
+            if isLoadingTimeline {
+              ProgressView()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding()
+            } else {
+              JourneyTimelineView(items: timelineItems)
+                .padding(.horizontal, 20)
+            }
           }
           .padding(.vertical, 16)
           .background(.backgroundPrimary)
@@ -61,18 +73,33 @@ struct JourneyProgressView: View {
       .padding(.vertical, 16)
     }
     .background(.backgroundSecondary)
+    .task {
+      await loadTimeline()
+    }
+    .onChange(of: train.fromStation?.id) { _, _ in
+      Task {
+        await loadTimeline()
+      }
+    }
   }
   
   // MARK: - Helper Methods
   
-  private func timelineItems(from journeyData: TrainJourneyData) -> [StationTimelineItem] {
+  private func loadTimeline() async {
+    isLoadingTimeline = true
+    defer { isLoadingTimeline = false }
+    
     // Get current segment's from station to determine progress
     let currentSegmentFromStationId = train.fromStation?.id ?? train.fromStation?.code
     
-    return StationTimelineItem.buildTimeline(
-      from: journeyData,
-      currentSegmentFromStationId: currentSegmentFromStationId
+    // Use new service to get only actual stops
+    let items = await StationTimelineItem.buildTimelineFromStops(
+      trainCode: train.code,
+      currentSegmentFromStationId: currentSegmentFromStationId,
+      trainStopService: trainStopService
     )
+    
+    timelineItems = items
   }
 }
 
