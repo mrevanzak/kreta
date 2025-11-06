@@ -58,8 +58,20 @@ private struct RouterPresentationModifier: ViewModifier {
       .sheet(item: $router.presentingSheet) { sheet in
         navigationView(for: sheet, from: router)
       }
+      .onChange(of: router.presentingSheet) { oldValue, newValue in
+        // Re-activate parent router when sheet is dismissed
+        if oldValue != nil && newValue == nil {
+          router.setActive()
+        }
+      }
       .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
         navigationView(for: fullScreen, from: router)
+      }
+      .onChange(of: router.presentingFullScreen) { oldValue, newValue in
+        // Re-activate parent router when fullscreen is dismissed
+        if oldValue != nil && newValue == nil {
+          router.setActive()
+        }
       }
   }
 
