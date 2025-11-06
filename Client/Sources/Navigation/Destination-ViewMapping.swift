@@ -19,7 +19,6 @@ func view(for destination: SheetDestination) -> some View {
       FeedbackBoardScreen()
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
-        .presentationBackground(.ultraThinMaterial)
     case .addTrain:
       AddTrainView()
         .presentationDragIndicator(.visible)
