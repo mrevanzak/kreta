@@ -81,6 +81,7 @@ extension AddTrainView {
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
+    var trainSearchText: String = "" // Separate search for train filtering
     var showCalendar: Bool = false
     var isLoadingConnections: Bool = false
     var isLoadingTrains: Bool = false
@@ -375,6 +376,17 @@ extension AddTrainView {
       return stations.filter {
         $0.name.localizedCaseInsensitiveContains(searchText)
           || $0.code.localizedCaseInsensitiveContains(searchText)
+      }
+    }
+    
+    var searchableTrains: [JourneyService.AvailableTrainItem] {
+      if trainSearchText.isEmpty {
+        return filteredTrains
+      }
+      
+      return filteredTrains.filter { item in
+        item.name.localizedCaseInsensitiveContains(trainSearchText)
+          || item.code.localizedCaseInsensitiveContains(trainSearchText)
       }
     }
 

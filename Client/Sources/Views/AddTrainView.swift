@@ -188,10 +188,14 @@ struct AddTrainView: View {
   }
 
   private func trainResultsView() -> some View {
-    VStack(spacing: 0) {
+    ZStack {
       ScrollView {
         LazyVStack(spacing: 0) {
-          ForEach(viewModel.filteredTrains) { item in
+          // Add top padding to prevent content from hiding under search bar
+          Color.clear
+            .frame(height: 60)
+          
+          ForEach(viewModel.searchableTrains) { item in
             TrainServiceRow(
               item: item,
               isSelected: viewModel.isTrainSelected(item)
@@ -204,13 +208,80 @@ struct AddTrainView: View {
             Divider()
               .padding(.leading, 16)
           }
+          
+          // Add bottom padding to prevent content from hiding under button
+          Color.clear
+            .frame(height: 100)
         }
       }
-
-      // Always show confirmation button
+      .scrollEdgeEffectStyle(.soft, for: .all)
+      .overlay {
+        if viewModel.isLoadingTrains {
+          ProgressView()
+            .controlSize(.large)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.backgroundPrimary)
+        } else if viewModel.searchableTrains.isEmpty {
+          ContentUnavailableView(
+            viewModel.trainSearchText.isEmpty ? "Tidak ada kereta tersedia" : "Tidak ditemukan",
+            systemImage: "train.side.front.car",
+            description: Text(
+              viewModel.trainSearchText.isEmpty
+                ? "Tidak ada layanan kereta untuk rute ini pada tanggal yang dipilih"
+                : "Tidak ada kereta yang cocok dengan pencarian '\(viewModel.trainSearchText)'"
+            )
+          )
+        }
+      }
+      
+            // Floating search bar at top with gradient blur
       VStack(spacing: 0) {
-        Divider()
+        HStack(spacing: 8) {
+          Image(systemName: "magnifyingglass")
+            .font(.subheadline)
+            .foregroundStyle(.tertiary)
 
+          TextField("Search", text: $viewModel.trainSearchText)
+            .textFieldStyle(.plain)
+
+          if !viewModel.trainSearchText.isEmpty {
+            Button {
+              viewModel.trainSearchText = ""
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .font(.caption)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+          }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(.componentFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .glassEffect()
+        .padding(.horizontal, 16)
+        .padding(.bottom, 20)
+        .background(
+          LinearGradient(
+            colors: [
+              Color.backgroundPrimary,
+              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+        
+        Spacer()
+      }
+      
+      // Floating button at bottom with gradient blur
+      VStack(spacing: 0) {
+        Spacer()
+        
         Button {
           guard let selectedItem = viewModel.selectedTrainItem else { return }
           Task {
@@ -227,21 +298,20 @@ struct AddTrainView: View {
             .cornerRadius(1000)
         }
         .disabled(viewModel.selectedTrainItem == nil)
-        .padding()
-      }
-      .background(.backgroundPrimary)
-    }
-    .overlay {
-      if viewModel.isLoadingTrains {
-        ProgressView()
-          .controlSize(.large)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(.backgroundPrimary)
-      } else if viewModel.filteredTrains.isEmpty {
-        ContentUnavailableView(
-          "Tidak ada kereta tersedia",
-          systemImage: "train.side.front.car",
-          description: Text("Tidak ada layanan kereta untuk rute ini pada tanggal yang dipilih")
+        .padding(.horizontal, 16)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
+        .background(
+          LinearGradient(
+            colors: [
+              Color.backgroundPrimary.opacity(0),
+              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
         )
       }
     }
