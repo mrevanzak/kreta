@@ -13,6 +13,7 @@ struct AddTrainView: View {
   @Environment(\.showToast) private var showToast
 
   @State private var viewModel: ViewModel = ViewModel()
+  @State private var isSearchBarOverContent: Bool = false
 
   var body: some View {
     VStack(spacing: 0) {
@@ -193,7 +194,17 @@ struct AddTrainView: View {
         LazyVStack(spacing: 0) {
           // Add top padding to prevent content from hiding under search bar
           Color.clear
-            .frame(height: 60)
+            .frame(height: 40)
+          
+          // Invisible geometry reader to detect scroll position
+          GeometryReader { geometry in
+            Color.clear
+              .preference(
+                key: ScrollOffsetPreferenceKey.self,
+                value: geometry.frame(in: .named("scrollView")).minY
+              )
+          }
+          .frame(height: 0)
           
           ForEach(viewModel.searchableTrains) { item in
             TrainServiceRow(
@@ -213,6 +224,11 @@ struct AddTrainView: View {
           Color.clear
             .frame(height: 100)
         }
+      }
+      .coordinateSpace(name: "scrollView")
+      .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+        // When content scrolls up past the search bar area
+        isSearchBarOverContent = value < 14
       }
       .scrollEdgeEffectStyle(.soft, for: .all)
       .overlay {
@@ -234,7 +250,7 @@ struct AddTrainView: View {
         }
       }
       
-            // Floating search bar at top with gradient blur
+      // Floating search bar at top with gradient blur
       VStack(spacing: 0) {
         HStack(spacing: 8) {
           Image(systemName: "magnifyingglass")
@@ -258,16 +274,23 @@ struct AddTrainView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(.componentFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .glassEffect()
+        .if(!isSearchBarOverContent) { view in
+          view.background(.componentFill.opacity(0.1), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        }
+        .if(!isSearchBarOverContent) { view in
+          view.glassEffect()
+        }
+        .if(isSearchBarOverContent) { view in
+          view.glassEffect()
+        }
         .padding(.horizontal, 16)
         .padding(.bottom, 20)
         .background(
           LinearGradient(
             colors: [
               Color.backgroundPrimary,
-              Color.backgroundPrimary.opacity(0.7),
-              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0.3),
+              Color.backgroundPrimary.opacity(0.3),
               Color.backgroundPrimary.opacity(0)
             ],
             startPoint: .top,
@@ -306,7 +329,7 @@ struct AddTrainView: View {
             colors: [
               Color.backgroundPrimary.opacity(0),
               Color.backgroundPrimary.opacity(0.7),
-              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0.9),
               Color.backgroundPrimary
             ],
             startPoint: .top,
@@ -327,6 +350,16 @@ struct AddTrainView: View {
         showToast("Failed to select train: \(error)")
       }
     }
+  }
+}
+
+// MARK: - Scroll Tracking
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+  static let defaultValue: CGFloat = 0
+  
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = nextValue()
   }
 }
 
