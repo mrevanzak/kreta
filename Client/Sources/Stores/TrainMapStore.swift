@@ -143,7 +143,7 @@ final class TrainMapStore {
 extension TrainMapStore {
   /// Start Live Activity from deep link parameters by resolving journey segments
   /// and constructing the required `ProjectedTrain` and `TrainJourneyData`.
-  func startFromDeepLink(trainId: String, journeyId: String?) async throws {
+  func startFromDeepLink(trainId: String) async throws {
     // Ensure stations and routes are loaded (attempt to load from cache if empty)
     if stations.isEmpty || routes.isEmpty {
       _ = try? loadCachedDataIfAvailable()
@@ -400,7 +400,8 @@ extension TrainMapStore {
           trainId: data.trainId,
           reason: "ended_before_arrival",
           context: [
-            "expected_arrival_time": ISO8601DateFormatter().string(from: data.userSelectedArrivalTime),
+            "expected_arrival_time": ISO8601DateFormatter().string(
+              from: data.userSelectedArrivalTime),
             "train_name": train.name,
           ]
         )

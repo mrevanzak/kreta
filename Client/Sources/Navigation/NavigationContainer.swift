@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// ``NavigationStack`` container that works with the ``Router``
@@ -52,14 +53,32 @@ private struct InnerContainer<Content: View>: View {
 
 private struct RouterPresentationModifier: ViewModifier {
   @Bindable var router: Router
+  @Environment(TrainMapStore.self) private var trainMapStore
 
   func body(content: Content) -> some View {
     content
       .sheet(item: $router.presentingSheet) { sheet in
         navigationView(for: sheet, from: router)
       }
+      .onChange(of: router.presentingSheet) { oldValue, newValue in
+        // Re-activate parent router when sheet is dismissed
+        if oldValue != nil && newValue == nil {
+          router.setActive()
+        }
+      }
       .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
         navigationView(for: fullScreen, from: router)
+      }
+      .onChange(of: router.presentingFullScreen) { oldValue, newValue in
+        // Re-activate parent router when fullscreen is dismissed
+        if oldValue != nil && newValue == nil {
+          router.setActive()
+        }
+      }
+      .onReceive(NotificationCenter.default.publisher(for: .routerActionRequested)) {
+        notification in
+        guard let action = notification.object as? ActionDestination else { return }
+        handleAction(action)
       }
   }
 
@@ -73,6 +92,20 @@ private struct RouterPresentationModifier: ViewModifier {
     -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
+  }
+
+  private func handleAction(_ action: ActionDestination) {
+    switch action {
+    case let .startTrip(trainId):
+      Task { @MainActor in
+        do {
+          try await trainMapStore.startFromDeepLink(trainId: trainId)
+        } catch {
+          // Intentionally minimal UI: no presentation; just log
+          print("Failed to start trip from deep link: \(error)")
+        }
+      }
+    }
   }
 }
 

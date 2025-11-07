@@ -9,7 +9,6 @@ struct TrainMapView: View {
   @State var focusTrigger: Bool = false
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var visibleRegionSpan: MKCoordinateSpan?
-  let bottomInset: CGFloat
 
   var body: some View {
     ZStack(alignment: .topTrailing) {
@@ -22,10 +21,15 @@ struct TrainMapView: View {
               .stroke(.blue, lineWidth: 3)
           }
         }
-        // Stations (simple marker for visibility)
-        ForEach(filteredStations) { station in
-          Marker(station.name, systemImage: "tram.fill", coordinate: station.coordinate)
-            .tint(.green)
+        if isStationZoomVisible {
+          ForEach(filteredStations) { station in
+            Annotation(station.name, coordinate: station.coordinate) {
+              ZStack {
+                Circle().fill(.white).frame(width: 10, height: 10)
+                Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
+              }
+            }
+          }
         }
         // Live train(s)
         ForEach(filteredTrains) { train in
@@ -78,16 +82,6 @@ struct TrainMapView: View {
         if let position = mapStore.liveTrainPosition {
           updateCameraPosition(with: [position])
         }
-      }
-    }
-
-    // Re-center when the bottom sheet inset changes (while following)
-    .onChange(of: bottomInset) { _, _ in
-      guard isFollowing else { return }
-      if let position = mapStore.liveTrainPosition {
-        updateCameraPosition(with: [position])
-      } else if let selected = mapStore.selectedTrain {
-        updateCameraPosition(with: [selected])
       }
     }
 
@@ -163,12 +157,9 @@ struct TrainMapView: View {
   }
 
   // MARK: - Camera
-
-  // Stations are visible only when the camera span indicates a moderate zoom level
   private var isStationZoomVisible: Bool {
     guard let span = visibleRegionSpan else { return false }
-    // Rough thresholds: around city/regional view (~50–100km)
-    return span.latitudeDelta >= 0.3 && span.latitudeDelta <= 2.0
+    return span.latitudeDelta <= 2.0
   }
 
   private func updateCameraPosition(with positions: [ProjectedTrain]) {
@@ -177,18 +168,10 @@ struct TrainMapView: View {
 
     if positions.count == 1, let train = positions.first {
       withAnimation(.easeInOut(duration: 1.0)) {
-        let sheetFraction = max(0, min(1, bottomInset / Screen.height))
-        let latDelta: CLLocationDegrees = 0.05
-        let lonDelta: CLLocationDegrees = 0.05
-        let latOffset = latDelta * CLLocationDegrees(sheetFraction) * 0.5
-        let adjustedCenter = CLLocationCoordinate2D(
-          latitude: train.coordinate.latitude + latOffset,
-          longitude: train.coordinate.longitude
-        )
         cameraPosition = .region(
           MKCoordinateRegion(
-            center: adjustedCenter,
-            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
+            center: train.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
           )
         )
       }
@@ -224,13 +207,7 @@ struct TrainMapView: View {
     )
 
     withAnimation(.easeInOut(duration: 1.0)) {
-      let sheetFraction = max(0, min(1, bottomInset / Screen.height))
-      let latOffset = span.latitudeDelta * CLLocationDegrees(sheetFraction) * 0.5
-      let adjustedCenter = CLLocationCoordinate2D(
-        latitude: center.latitude + latOffset,
-        longitude: center.longitude
-      )
-      cameraPosition = .region(MKCoordinateRegion(center: adjustedCenter, span: span))
+      cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
     }
   }
 }
