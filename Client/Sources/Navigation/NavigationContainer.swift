@@ -54,6 +54,7 @@ private struct InnerContainer<Content: View>: View {
 private struct RouterPresentationModifier: ViewModifier {
   @Bindable var router: Router
   @Environment(TrainMapStore.self) private var trainMapStore
+  @Environment(\.showToast) private var showToast
 
   func body(content: Content) -> some View {
     content
@@ -96,13 +97,15 @@ private struct RouterPresentationModifier: ViewModifier {
 
   private func handleAction(_ action: ActionDestination) {
     switch action {
-    case let .startTrip(trainId):
+    case let .startTrip(trainId, fromCode, toCode):
       Task { @MainActor in
         do {
-          try await trainMapStore.startFromDeepLink(trainId: trainId)
+          try await trainMapStore.startFromDeepLink(
+            trainId: trainId, fromCode: fromCode, toCode: toCode)
         } catch {
-          // Intentionally minimal UI: no presentation; just log
-          print("Failed to start trip from deep link: \(error)")
+          let errorMessage = error.localizedDescription
+          router.logger.error("Failed to start trip from deep link: \(errorMessage)")
+          showToast("Gagal memulai perjalanan: \(errorMessage)", type: .error)
         }
       }
     }

@@ -141,97 +141,6 @@ final class TrainMapStore {
 
 // MARK: - Data loading helpers
 extension TrainMapStore {
-  /// Start Live Activity from deep link parameters by resolving journey segments
-  /// and constructing the required `ProjectedTrain` and `TrainJourneyData`.
-  func startFromDeepLink(trainId: String) async throws {
-    // Ensure stations and routes are loaded (attempt to load from cache if empty)
-    if stations.isEmpty || routes.isEmpty {
-      _ = try? loadCachedDataIfAvailable()
-    }
-
-    let journeyService = JourneyService()
-
-    // Fetch segments for the provided train id
-    let rows = try await journeyService.fetchSegmentsForTrain(trainId: trainId)
-
-    guard !rows.isEmpty else {
-      logger.error("No journey segments found for trainId: \(trainId)")
-      return
-    }
-
-    // Build JourneySegments and collect stations along the full journey
-    let stationsById = Dictionary(uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
-    var journeySegments: [JourneySegment] = []
-    var allStationsInJourney: [Station] = []
-
-    for (index, segment) in rows.enumerated() {
-      if let st = stationsById[segment.stationId] {
-        allStationsInJourney.append(st)
-      }
-
-      if index < rows.count - 1 {
-        let next = rows[index + 1]
-        journeySegments.append(
-          JourneySegment(
-            fromStationId: segment.stationId,
-            toStationId: next.stationId,
-            departure: segment.departure,
-            arrival: next.arrival,
-            routeId: next.routeId
-          )
-        )
-      }
-    }
-
-    // Derive front-facing info for ProjectedTrain
-    let first = rows.first!
-    let last = rows.last!
-    let fromStation = stationsById[first.stationId]
-    let toStation = stationsById[last.stationId]
-
-    let projected = ProjectedTrain(
-      id: trainId,
-      code: first.trainCode,
-      name: first.trainName,
-      position: Position(
-        latitude: fromStation?.position.latitude ?? 0,
-        longitude: fromStation?.position.longitude ?? 0
-      ),
-      moving: false,
-      bearing: nil,
-      routeIdentifier: last.routeId,
-      speedKph: nil,
-      fromStation: fromStation,
-      toStation: toStation,
-      segmentDeparture: first.departure,
-      segmentArrival: last.arrival,
-      progress: nil,
-      journeyDeparture: first.departure,
-      journeyArrival: last.arrival
-    )
-
-    // Resolve required user-selected leg details for the new TrainJourneyData
-    guard let resolvedFromStation = fromStation, let resolvedToStation = toStation else {
-      logger.error("Missing station mapping for user-selected leg in TrainJourneyData")
-      return
-    }
-
-    let userSelectedDepartureTime = first.departure
-    let userSelectedArrivalTime = last.arrival
-
-    let journeyData = TrainJourneyData(
-      trainId: trainId,
-      segments: journeySegments,
-      allStations: allStationsInJourney,
-      userSelectedFromStation: resolvedFromStation,
-      userSelectedToStation: resolvedToStation,
-      userSelectedDepartureTime: userSelectedDepartureTime,
-      userSelectedArrivalTime: userSelectedArrivalTime
-    )
-
-    // Persist and start
-    try await selectTrain(projected, journeyData: journeyData)
-  }
   fileprivate func loadCachedData() throws {
     stations = try cacheService.loadCachedStations()
     let routePolylines = try cacheService.loadCachedRoutes()
@@ -305,32 +214,12 @@ extension TrainMapStore {
 
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
     let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
-    let now = Date()
-    let isInProgress =
-      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
     if timeUntilDeparture <= scheduleOffset {
       // Start immediately on device
       logger.info(
         "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
-
-      // TODO: Replace hardcoded seat class with actual user data
-      try await liveActivityService.start(
-        trainName: train.name,
-        from: TrainStation(
-          name: fromStation.name,
-          code: fromStation.code,
-          estimatedTime: departureTime
-        ),
-        destination: TrainStation(
-          name: toStation.name,
-          code: toStation.code,
-          estimatedTime: train.segmentArrival
-        ),
-        // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
-        // seatNumber: "1A",  // TODO: Replace with actual seat number
-        initialJourneyState: isInProgress ? .onBoard : nil
-      )
+      try await executeLiveActivityStart(train: train, journeyData: journeyData)
     } else {
       logger.info(
         "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
@@ -342,6 +231,43 @@ extension TrainMapStore {
         departureTime: departureTime
       )
     }
+  }
+
+  /// Execute Live Activity start and alarm scheduling logic
+  /// This is the core logic that should be executed regardless of timing
+  private func executeLiveActivityStart(
+    train: ProjectedTrain,
+    journeyData: TrainJourneyData
+  ) async throws {
+    guard let fromStation = train.fromStation,
+      let toStation = train.toStation,
+      let departureTime = train.segmentDeparture
+    else {
+      logger.error("Missing required data for Live Activity")
+      return
+    }
+
+    let now = Date()
+    let isInProgress =
+      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+
+    // TODO: Replace hardcoded seat class with actual user data
+    try await liveActivityService.start(
+      trainName: train.name,
+      from: TrainStation(
+        name: fromStation.name,
+        code: fromStation.code,
+        estimatedTime: departureTime
+      ),
+      destination: TrainStation(
+        name: toStation.name,
+        code: toStation.code,
+        estimatedTime: train.segmentArrival
+      ),
+      // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
+      // seatNumber: "1A",  // TODO: Replace with actual seat number
+      initialJourneyState: isInProgress ? .onBoard : nil
+    )
   }
 
   private func queueTripReminderNotification(
@@ -462,6 +388,227 @@ extension TrainMapStore {
   func loadSelectedTrainFromCache() async throws {
     selectedTrain = try cacheService.loadSelectedTrain()
     selectedJourneyData = try cacheService.loadJourneyData()
+  }
+
+  /// Start trip from deep link (notification handler)
+  /// Tries cache first, then falls back to server fetch if needed
+  func startFromDeepLink(trainId: String, fromCode: String, toCode: String) async throws {
+    logger.info(
+      "Starting trip from deep link for trainId: \(trainId), fromCode: \(fromCode), toCode: \(toCode)"
+    )
+
+    // Try cache first (most common case - user just created the journey)
+    do {
+      try await loadSelectedTrainFromCache()
+
+      // Verify cached train matches the trainId from notification
+      if let cachedJourneyData = selectedJourneyData,
+        cachedJourneyData.trainId == trainId,
+        selectedTrain != nil
+      {
+        logger.info("Using cached train data for trainId: \(trainId)")
+
+        // Ensure stations and routes are loaded
+        if stations.isEmpty || routes.isEmpty {
+          if (try? loadCachedDataIfAvailable()) == true {
+            // Cache loaded successfully, check if we still need data
+          }
+          // If still empty, we need to load from server
+          if stations.isEmpty || routes.isEmpty {
+            if let lastUpdatedAt = lastUpdatedAt {
+              try await loadData(at: lastUpdatedAt)
+            } else {
+              // Fallback: try to get lastUpdatedAt from server
+              let timestamp: String = try await convexClient.query(
+                to: "gapeka:getLastUpdatedAt", yielding: String.self
+              )
+              try await loadData(at: timestamp)
+            }
+          }
+        }
+
+        // Re-project the train with current time
+        if let projectedTrain = projectSelectedTrain(now: Date()) {
+          selectedTrain = projectedTrain
+          startProjectionUpdates()
+
+          // Execute Live Activity start (by now it should be <= 10 minutes until departure)
+          try await executeLiveActivityStart(train: projectedTrain, journeyData: cachedJourneyData)
+
+          // Track journey start
+          if let from = projectedTrain.fromStation, let to = projectedTrain.toStation {
+            AnalyticsEventService.shared.trackJourneyStarted(
+              trainId: cachedJourneyData.trainId,
+              trainName: projectedTrain.name,
+              from: from,
+              to: to,
+              userSelectedDeparture: cachedJourneyData.userSelectedDepartureTime,
+              userSelectedArrival: cachedJourneyData.userSelectedArrivalTime,
+              hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
+            )
+          }
+        } else {
+          throw TrainMapError.dataMappingFailed("Failed to project train from cached data")
+        }
+
+        return
+      } else {
+        logger.info("Cached train doesn't match trainId, fetching from server")
+      }
+    } catch {
+      logger.info(
+        "Cache miss or error loading cache: \(error.localizedDescription), fetching from server")
+    }
+
+    // Cache miss or doesn't match - fetch from server
+    logger.info("Fetching train data from server for trainId: \(trainId)")
+
+    // Ensure stations and routes are loaded
+    if stations.isEmpty || routes.isEmpty {
+      if let lastUpdatedAt = lastUpdatedAt {
+        try await loadData(at: lastUpdatedAt)
+      } else {
+        let timestamp: String = try await convexClient.query(
+          to: "gapeka:getLastUpdatedAt", yielding: String.self
+        )
+        try await loadData(at: timestamp)
+      }
+    }
+
+    // Fetch journey segments
+    let journeyService = JourneyService()
+    let segments = try await journeyService.fetchSegmentsForTrain(trainId: trainId)
+
+    guard !segments.isEmpty else {
+      throw TrainMapError.dataMappingFailed("No journey segments found for trainId: \(trainId)")
+    }
+
+    // Build journey segments and collect stations
+    // Use code-based lookup as primary method for station identification
+    let stationsByCode = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
+    let stationsById = Dictionary(uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+
+    // Find stations using code-based lookup (from deep link parameters)
+    guard let fromStation = stationsByCode[fromCode],
+      let toStation = stationsByCode[toCode]
+    else {
+      throw TrainMapError.dataMappingFailed(
+        "Could not find stations for journey using codes: fromCode=\(fromCode), toCode=\(toCode)")
+    }
+
+    // Create a mapping from segment station IDs to Station objects
+    // This handles cases where server station IDs don't match cached station IDs
+    var segmentIdToStation: [String: Station] = [:]
+
+    // Map known stations from deep link
+    if let firstSegment = segments.first {
+      segmentIdToStation[firstSegment.stationId] = fromStation
+    }
+    if let lastSegment = segments.last {
+      segmentIdToStation[lastSegment.stationId] = toStation
+    }
+
+    // For other segments, try to find stations by ID or code
+    for segment in segments {
+      if segmentIdToStation[segment.stationId] == nil {
+        // Try ID lookup first
+        if let station = stationsById[segment.stationId] {
+          segmentIdToStation[segment.stationId] = station
+        } else {
+          // Try to find by matching code in station data
+          // Note: We don't have codes for intermediate stations, so we'll use ID matching
+          // If ID doesn't match, we'll need to rely on the segment having the correct ID
+          // For now, skip stations we can't match - they'll be handled in projection
+        }
+      }
+    }
+
+    var journeySegments: [JourneySegment] = []
+    var allStationsInJourney: [Station] = []
+
+    for (index, segment) in segments.enumerated() {
+      if index < segments.count - 1 {
+        let nextSegment = segments[index + 1]
+        journeySegments.append(
+          JourneySegment(
+            fromStationId: segment.stationId,
+            toStationId: nextSegment.stationId,
+            departure: segment.departure,
+            arrival: nextSegment.arrival,
+            routeId: nextSegment.routeId
+          )
+        )
+      }
+
+      // Add station if we found it
+      if let station = segmentIdToStation[segment.stationId] {
+        allStationsInJourney.append(station)
+      }
+    }
+
+    guard let firstSegment = segments.first else {
+      throw TrainMapError.dataMappingFailed("Invalid journey segments")
+    }
+
+    // Create a comprehensive stationsById dictionary for projection
+    // This maps segment station IDs to Station objects
+    // Use the segmentIdToStation mapping we created, falling back to ID lookup
+    let projectionStationsById: [String: Station] = Dictionary(
+      uniqueKeysWithValues: segmentIdToStation.map { ($0.key, $0.value) }
+    ).merging(stationsById) { (first, _) in first }
+
+    // Build TrainJourneyData
+    let journeyData = TrainJourneyData(
+      trainId: trainId,
+      segments: journeySegments,
+      allStations: allStationsInJourney,
+      userSelectedFromStation: fromStation,
+      userSelectedToStation: toStation,
+      userSelectedDepartureTime: firstSegment.departure,
+      userSelectedArrivalTime: segments.last!.arrival
+    )
+
+    // Build ProjectedTrain
+    let trainJourney = TrainJourney(
+      id: firstSegment.trainCode,
+      trainId: trainId,
+      code: firstSegment.trainCode,
+      name: firstSegment.trainName,
+      segments: journeySegments
+    )
+
+    let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
+    guard
+      let projectedTrain = TrainProjector.projectTrain(
+        now: Date(),
+        journey: trainJourney,
+        stationsById: projectionStationsById,
+        routesById: routesById
+      )
+    else {
+      throw TrainMapError.dataMappingFailed("Failed to project train")
+    }
+
+    // Set selected train and journey data
+    selectedTrain = projectedTrain
+    selectedJourneyData = journeyData
+    startProjectionUpdates()
+
+    // Execute Live Activity start
+    try await executeLiveActivityStart(train: projectedTrain, journeyData: journeyData)
+
+    // Track journey start
+    if let from = projectedTrain.fromStation, let to = projectedTrain.toStation {
+      AnalyticsEventService.shared.trackJourneyStarted(
+        trainId: journeyData.trainId,
+        trainName: projectedTrain.name,
+        from: from,
+        to: to,
+        userSelectedDeparture: journeyData.userSelectedDepartureTime,
+        userSelectedArrival: journeyData.userSelectedArrivalTime,
+        hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
+      )
+    }
   }
 
   private func persistSelectedTrain() async {

@@ -54,9 +54,11 @@ export const sendTripReminder = internalAction({
     destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
-    // Construct the deeplink
+    // Construct the deeplink with station codes
     const deeplink = `kreta://trip/start?trainId=${encodeURIComponent(
       args.trainId
+    )}&fromCode=${encodeURIComponent(args.fromStation.code)}&toCode=${encodeURIComponent(
+      args.destinationStation.code
     )}`;
 
     // Construct notification title and body

@@ -74,13 +74,13 @@ extension FullScreenDestination: Identifiable {
 // MARK: - Action destinations (no UI presentation)
 
 enum ActionDestination: Hashable {
-  case startTrip(trainId: String)
+  case startTrip(trainId: String, fromCode: String, toCode: String)
 }
 
 extension ActionDestination: CustomStringConvertible {
   var description: String {
     switch self {
-    case let .startTrip(trainId): ".startTrip(\(trainId))"
+    case let .startTrip(trainId, fromCode, toCode): ".startTrip(\(trainId), \(fromCode), \(toCode))"
     }
   }
 }
