@@ -52,7 +52,7 @@ struct TrainCard: View {
       }
       .padding(.horizontal)
       .padding(.vertical, 12)
-      .background(.buttonHighlight)
+      .background(.backgroundPrimary)
 
       // Journey details
       HStack(spacing: 10) {

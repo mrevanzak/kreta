@@ -20,7 +20,7 @@ struct StationProgressRow: View {
         if !isFirst {
           Rectangle()
             .fill(lineColor)
-            .frame(width: 2, height: 20)
+            .frame(width: 6, height: 20)
         }
         
         // Station dot
@@ -31,16 +31,12 @@ struct StationProgressRow: View {
             Circle()
               .stroke(dotBorderColor, lineWidth: item.state == .current ? 3 : 2)
           )
-          .shadow(
-            color: item.state == .current ? .blue.opacity(0.3) : .clear,
-            radius: 8
-          )
         
         // Bottom connecting line
         if !isLast {
           Rectangle()
             .fill(lineColor)
-            .frame(width: 2)
+            .frame(width: 6)
             .frame(minHeight: 40)
         }
       }
@@ -49,57 +45,32 @@ struct StationProgressRow: View {
       // Station information
       VStack(alignment: .leading, spacing: 4) {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-          // Station code
-          Text(item.station.code)
-            .font(.system(.title3, design: .rounded, weight: .bold))
-            .foregroundStyle(textColor)
-          
-          // Station name
-          Text(item.station.name)
-            .font(.body)
-            .foregroundStyle(textColor)
-            .lineLimit(1)
+          VStack(alignment: .leading) {
+            // Station code
+            Text(item.station.name)
+              .font(.system(.title, design: .rounded, weight: .bold))
+              .foregroundStyle(textColor)
+            
+            // City name
+            Text(item.station.code)
+              .font(.subheadline)
+              .foregroundStyle(textColor)
+          }
           
           Spacer(minLength: 0)
           
-          // Current indicator
-          if item.state == .current {
-            Text("Sekarang")
-              .font(.caption2.weight(.semibold))
-              .foregroundStyle(.white)
-              .padding(.horizontal, 8)
-              .padding(.vertical, 4)
-              .background(.blue, in: Capsule())
+          // Timing information
+          
+          if let arrivalTime = item.arrivalTime {
+            Text("\(formatTime(arrivalTime))")
+              .font(.subheadline)
+              .foregroundStyle(textColor)
+          } else if let departureTime = item.departureTime {
+            Text("\(formatTime(departureTime))")
+              .font(.subheadline)
+              .foregroundStyle(textColor)
           }
-        }
-        
-        // City name
-        Text(item.station.city ?? "-")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-        
-        // Timing information
-        if let arrivalTime = item.arrivalTime {
-          HStack(spacing: 4) {
-            Image(systemName: "clock")
-              .font(.caption2)
-            Text("Tiba: \(formatTime(arrivalTime))")
-              .font(.caption)
-          }
-          .foregroundStyle(.secondary)
-          .padding(.top, 2)
-        }
-        
-        // Stop indicator for non-stop stations
-        if !item.isStop {
-          HStack(spacing: 4) {
-            Image(systemName: "arrow.right")
-              .font(.caption2)
-            Text("Transit")
-              .font(.caption)
-          }
-          .foregroundStyle(.orange)
-          .padding(.top, 2)
+          
         }
       }
       .padding(.vertical, 8)
@@ -110,33 +81,33 @@ struct StationProgressRow: View {
   
   private var dotSize: CGFloat {
     switch item.state {
-    case .current: return 16
-    case .completed: return item.isStop ? 12 : 8
-    case .upcoming: return item.isStop ? 12 : 8
+    case .current: return 35
+    case .completed: return 35
+    case .upcoming: return 35
     }
   }
   
   private var dotColor: Color {
     switch item.state {
-    case .completed: return .blue
-    case .current: return .blue
-    case .upcoming: return .gray.opacity(0.3)
+    case .completed: return .greenPrimary
+    case .current: return .greenPrimary
+    case .upcoming: return .grayHighlight
     }
   }
   
   private var dotBorderColor: Color {
     switch item.state {
-    case .completed: return .blue.opacity(0.5)
-    case .current: return .blue
-    case .upcoming: return .gray.opacity(0.2)
+    case .completed: return .greenHighlight
+    case .current: return .greenHighlight
+    case .upcoming: return .grayHighlight
     }
   }
   
   private var lineColor: Color {
     switch item.state {
-    case .completed: return .blue
-    case .current: return .blue.opacity(0.5)
-    case .upcoming: return .gray.opacity(0.3)
+    case .completed: return .greenPrimary
+    case .current: return .greenPrimary
+    case .upcoming: return .grayHighlight
     }
   }
   

@@ -58,20 +58,6 @@ struct HomeScreen: View {
   
   // MARK: - Computed Properties
   
-  private var bottomInset: CGFloat {
-    if selectedDetent == .large {
-      return Screen.height * 0.9
-    } else if trainMapStore.selectedTrain != nil {
-      return 200
-    } else {
-      return Screen.height * 0.35
-    }
-  }
-  
-  private var detentHeight: CGFloat {
-    trainMapStore.selectedTrain != nil ? 200 : Screen.height * 0.35
-  }
-  
   private var presentationDetents: Set<PresentationDetent> {
     if trainMapStore.selectedTrain != nil {
       return [.height(200), .large]
@@ -146,7 +132,6 @@ struct HomeScreen: View {
     .padding(.horizontal, 20)
     .padding(.top, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    .background(.backgroundPrimary)
   }
   
   // MARK: - Actions
