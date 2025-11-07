@@ -35,7 +35,7 @@ struct HomeScreen: View {
           }
           .presentationBackgroundInteraction(.enabled)
           .presentationDetents(presentationDetents, selection: $selectedDetent)
-          .presentationDragIndicator(selectedDetent == .large ? .visible : .hidden)
+          .presentationDragIndicator(selectedDetent == .fraction(0.35) ? .hidden : .visible)
           .interactiveDismissDisabled(true)
           .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
           .animation(.easeInOut(duration: 0.3), value: selectedDetent)
@@ -75,6 +75,17 @@ struct HomeScreen: View {
         Text("Perjalanan Kereta")
           .font(.title2).bold()
         Spacer()
+        
+        if let train = trainMapStore.selectedTrain {
+          Button {
+            
+          } label: {
+            Circle().fill(.thinMaterial)
+              .frame(width: 38, height: 38)
+              .overlay(Image(systemName: "square.and.arrow.up").foregroundStyle(.black))
+          }
+        }
+        
         Menu {
           Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
             router.navigate(to: .sheet(.feedback))
