@@ -11,48 +11,51 @@ struct TrainCard: View {
   let train: ProjectedTrain
   let journeyData: TrainJourneyData?
   let onDelete: () -> Void
+  var compactMode: Bool = false
 
   @State private var showingDeleteAlert = false
 
   var body: some View {
     VStack(spacing: 0) {
-      // Header with train name and class
-      ZStack {
-        // Centered title
-        HStack(spacing: 4) {
-          Text(train.name)
-            .fontWeight(.bold)
-            .foregroundStyle(.primary)
-          Text("(\(train.code))")
-            .fontWeight(.bold)
-            .foregroundStyle(.sublime)
+      // Header with train name and delete button (only shown when not in compact mode)
+      if !compactMode {
+        ZStack {
+          // Centered title
+          HStack(spacing: 4) {
+            Text(train.name)
+              .fontWeight(.bold)
+              .foregroundStyle(.primary)
+            Text("(\(train.code))")
+              .fontWeight(.bold)
+              .foregroundStyle(.sublime)
 
-        }
-        .frame(maxWidth: .infinity)
-
-        // Delete button aligned to trailing
-        HStack {
-          Spacer()
-
-          Button(action: {
-            showingDeleteAlert = true
-          }) {
-            Image(systemName: "trash")
-              .foregroundStyle(.red)
           }
-          .alert("Hapus Tracking Kereta?", isPresented: $showingDeleteAlert) {
-            Button("Hapus", role: .destructive) {
-              onDelete()
+          .frame(maxWidth: .infinity)
+
+          // Delete button aligned to trailing
+          HStack {
+            Spacer()
+
+            Button(action: {
+              showingDeleteAlert = true
+            }) {
+              Image(systemName: "trash")
+                .foregroundStyle(.red)
             }
-            Button("Batal", role: .cancel) {}
-          } message: {
-            Text("Kreta akan berhenti melacak \(train.name) (\(train.code))")
+            .alert("Hapus Tracking Kereta?", isPresented: $showingDeleteAlert) {
+              Button("Hapus", role: .destructive) {
+                onDelete()
+              }
+              Button("Batal", role: .cancel) {}
+            } message: {
+              Text("Kreta akan berhenti melacak \(train.name) (\(train.code))")
+            }
           }
         }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+        .background(.backgroundPrimary)
       }
-      .padding(.horizontal)
-      .padding(.vertical, 12)
-      .background(.backgroundPrimary)
 
       // Journey details
       HStack(spacing: 10) {
@@ -106,10 +109,15 @@ struct TrainCard: View {
       }
       .padding(.horizontal)
       .padding(.vertical, 16)
-      .background(.backgroundPrimary)
+      .if(!compactMode) { view in
+        view.background(.backgroundPrimary)
+      }
     }
     .clipShape(RoundedRectangle(cornerRadius: 20))
-    .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+    .if(compactMode) { view in
+      view.shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+    }
+
   }
 
   // MARK: - Computed Properties
@@ -223,7 +231,7 @@ struct TrainCard: View {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
 
-    TrainCard(train: train, journeyData: nil, onDelete: {})
+    TrainCard(train: train, journeyData: nil, onDelete: {}, compactMode: true)
       .padding()
   }
 }

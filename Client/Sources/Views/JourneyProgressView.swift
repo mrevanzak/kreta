@@ -14,44 +14,37 @@ struct JourneyProgressView: View {
   
   @State private var timelineItems: [StationTimelineItem] = []
   @State private var isLoadingTimeline = true
+  @State private var isCardOverContent: Bool = false
   private let trainStopService = TrainStopService()
   
   var body: some View {
-    ScrollView {
-      VStack(spacing: 20) {
-        // Train card at the top
-        TrainCard(
-          train: train,
-          journeyData: journeyData,
-          onDelete: onDelete
-        )
-        
-        // Journey timeline
-        if let journeyData = journeyData {
-          VStack(alignment: .leading, spacing: 12) {
-            // Section header
-            HStack {
-              Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath")
-                .font(.title3)
-                .foregroundStyle(.blue)
-              
-              Text("Perjalanan Kereta")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.primary)
-              
-              Spacer()
-              
-              // Total stations count
-              if !isLoadingTimeline {
-                Text("\(timelineItems.count) Stasiun")
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
-            }
-            .padding(.horizontal, 20)
+    VStack(spacing: 0) {
+      // Train name header - fixed, not scrollable
+      Text("\(train.name)")
+        .font(.title3.weight(.bold))
+        .foregroundStyle(.primary)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 20)
+        .padding(.bottom, 4)
+        .background(.backgroundSecondary)
+      
+      // Scrollable content with floating card
+      ZStack(alignment: .top) {
+        ScrollView {
+          VStack(spacing: 0) {
+            // Top padding to prevent content from hiding under card
+            Color.clear
+              .frame(height: 140)
             
-            Divider()
-              .padding(.horizontal, 20)
+            // Invisible geometry reader to detect scroll position
+            GeometryReader { geometry in
+              Color.clear
+                .preference(
+                  key: ScrollOffsetPreferenceKey.self,
+                  value: geometry.frame(in: .named("scrollView")).minY
+                )
+            }
+            .frame(height: 0)
             
             // Timeline list
             if isLoadingTimeline {
@@ -60,19 +53,51 @@ struct JourneyProgressView: View {
                 .padding()
             } else {
               JourneyTimelineView(items: timelineItems)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 40)
+                .padding(.bottom, 20)
             }
           }
-          .padding(.vertical, 16)
-          .background(.backgroundPrimary)
-          .clipShape(RoundedRectangle(cornerRadius: 20))
-          .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+        }
+        .scrollIndicators(.hidden)
+        .coordinateSpace(name: "scrollView")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+          // When content scrolls up past the card area
+          isCardOverContent = value < 120
+        }
+        .background(.backgroundSecondary)
+        
+        // Floating train card with gradient background
+        VStack(spacing: 0) {
+          // Train card with conditional glass effect
+          TrainCard(
+            train: train,
+            journeyData: journeyData,
+            onDelete: onDelete,
+            compactMode: true
+          )
+          .if(isCardOverContent) { view in
+            view.glassEffect(.regular.tint(.backgroundPrimary.opacity(0.01)), in: .rect(cornerRadius: 20))
+          }
+          .padding(.horizontal, 20)
+          .padding(.top, 12)
+          .padding(.bottom, 20)
+          .background(
+            LinearGradient(
+              colors: [
+                Color.backgroundSecondary,
+                Color.backgroundSecondary.opacity(0.9),
+                Color.backgroundSecondary.opacity(0.7),
+                Color.backgroundSecondary.opacity(0)
+              ],
+              startPoint: .top,
+              endPoint: .bottom
+            )
+          )
+          
+          Spacer()
         }
       }
-      .padding(.horizontal, 20)
-      .padding(.vertical, 16)
     }
-    .background(.backgroundSecondary)
     .task {
       await loadTimeline()
     }

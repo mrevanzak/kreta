@@ -81,9 +81,9 @@ struct StationProgressRow: View {
   
   private var dotSize: CGFloat {
     switch item.state {
-    case .current: return 35
-    case .completed: return 35
-    case .upcoming: return 35
+    case .current: return 27
+    case .completed: return 27
+    case .upcoming: return 27
     }
   }
   
