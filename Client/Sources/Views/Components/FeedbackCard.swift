@@ -46,6 +46,8 @@ struct FeedbackCard: View {
           .foregroundStyle(secondaryTextColor)
       }
 
+      Spacer()
+
       // Right side: vote button
       VStack(spacing: 4) {
         voteButton
@@ -62,7 +64,6 @@ struct FeedbackCard: View {
       cardShape
         .stroke(cardBorderGradient, lineWidth: 1)
     )
-    .frame(maxWidth: .infinity)
     .shadow(color: cardShadowColor, radius: 24, x: 0, y: 12)
   }
 
