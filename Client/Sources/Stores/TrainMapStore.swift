@@ -3,6 +3,7 @@ import ConvexMobile
 import Foundation
 import OSLog
 import Observation
+import UserNotifications
 
 @MainActor
 @Observable
@@ -10,6 +11,7 @@ final class TrainMapStore {
   private nonisolated(unsafe) let convexClient = Dependencies.shared.convexClient
   private let cacheService = TrainMapCacheService()
   private let liveActivityService = TrainLiveActivityService.shared
+  @ObservationIgnored private let notificationCenter = UNUserNotificationCenter.current()
 
   var isLoading: Bool = false
   var selectedMapStyle: MapStyleOption = .hybrid
@@ -32,8 +34,7 @@ final class TrainMapStore {
   // Timestamp for triggering live position updates (must be observable)
   private var projectionTimestamp: Date = Date()
 
-  // Scheduler ID for the scheduled trip reminder notification
-  @ObservationIgnored private var scheduledNotificationId: String?
+  @ObservationIgnored private var scheduledTripReminderRequestId: String?
 
   var liveTrainPosition: ProjectedTrain? {
     guard selectedTrain != nil, selectedJourneyData != nil else { return nil }
@@ -216,6 +217,7 @@ extension TrainMapStore {
     let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
 
     if timeUntilDeparture <= scheduleOffset {
+      cancelPendingTripReminder()
       // Start immediately on device
       logger.info(
         "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
@@ -224,7 +226,7 @@ extension TrainMapStore {
       logger.info(
         "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
 
-      try await queueTripReminderNotification(
+      try await scheduleTripReminderNotification(
         train: train,
         fromStation: fromStation,
         toStation: toStation,
@@ -270,51 +272,92 @@ extension TrainMapStore {
     )
   }
 
-  private func queueTripReminderNotification(
+  private func scheduleTripReminderNotification(
     train: ProjectedTrain,
     fromStation: Station,
     toStation: Station,
     departureTime: Date
   ) async throws {
-    guard let deviceToken = PushRegistrationService.shared.currentToken() else {
-      logger.error("No device token available for queuing trip reminder")
-      throw TrainMapError.missingDeviceToken
+    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
+    let reminderDate = departureTime.addingTimeInterval(-scheduleOffset)
+
+    guard reminderDate > Date() else {
+      logger.info("Trip reminder would fire in the past; skipping local scheduling")
+      return
     }
 
-    var fromEstimatedTime: Double? = nil
-    if let departureTime = train.segmentDeparture {
-      fromEstimatedTime = departureTime.timeIntervalSince1970 * 1000
+    cancelPendingTripReminder()
+
+    let content = UNMutableNotificationContent()
+    content.title = "Perjalanan akan dimulai"
+    content.body =
+      "Kereta \(train.name) akan berangkat dalam 10 menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
+    content.sound = .default
+    content.categoryIdentifier = "TRIP_START_FALLBACK"
+
+    if let deepLink = makeTripReminderDeepLink(
+      trainId: train.id,
+      fromCode: fromStation.code,
+      toCode: toStation.code
+    ) {
+      content.userInfo = ["deeplink": deepLink]
     }
 
-    var destinationEstimatedTime: Double? = nil
-    if let arrivalTime = train.segmentArrival {
-      destinationEstimatedTime = arrivalTime.timeIntervalSince1970 * 1000
-    }
-
-    let schedulerId: String = try await convexClient.mutation(
-      "notifications:scheduleTripReminder",
-      with: [
-        "deviceToken": deviceToken as ConvexEncodable,
-        "trainId": train.id as ConvexEncodable,
-        "trainName": train.name as ConvexEncodable,
-        "departureTime": (departureTime.timeIntervalSince1970 * 1000) as ConvexEncodable,  // Convert seconds to milliseconds
-        "fromStation": [
-          "name": fromStation.name as ConvexEncodable,
-          "code": fromStation.code as ConvexEncodable,
-          "estimatedTime": fromEstimatedTime as ConvexEncodable?,
-        ] as ConvexEncodable,
-        "destinationStation": [
-          "name": toStation.name as ConvexEncodable,
-          "code": toStation.code as ConvexEncodable,
-          "estimatedTime": destinationEstimatedTime as ConvexEncodable?,
-        ] as ConvexEncodable,
-      ],
-      captureTelemetry: true
+    let components = Calendar.current.dateComponents(
+      [.year, .month, .day, .hour, .minute, .second],
+      from: reminderDate
     )
 
-    scheduledNotificationId = schedulerId
+    let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+    let requestId = makeTripReminderIdentifier(for: train.id, departureTime: departureTime)
+    let request = UNNotificationRequest(identifier: requestId, content: content, trigger: trigger)
+
+    try await addNotificationRequest(request)
+    scheduledTripReminderRequestId = requestId
+
     logger.info(
-      "Successfully scheduled trip reminder notification with scheduler ID: \(schedulerId)")
+      "Scheduled local trip reminder notification for train \(train.name) at \(reminderDate.timeIntervalSince1970)"
+    )
+  }
+
+  private func addNotificationRequest(_ request: UNNotificationRequest) async throws {
+    try await withCheckedThrowingContinuation {
+      (continuation: CheckedContinuation<Void, Error>) in
+      notificationCenter.add(request) { error in
+        if let error {
+          continuation.resume(throwing: error)
+        } else {
+          continuation.resume(returning: ())
+        }
+      }
+    }
+  }
+
+  private func cancelPendingTripReminder() {
+    guard let requestId = scheduledTripReminderRequestId else { return }
+    notificationCenter.removePendingNotificationRequests(withIdentifiers: [requestId])
+    notificationCenter.removeDeliveredNotifications(withIdentifiers: [requestId])
+    scheduledTripReminderRequestId = nil
+    logger.info("Cancelled pending local trip reminder notification with identifier \(requestId)")
+  }
+
+  private func makeTripReminderIdentifier(for trainId: String, departureTime: Date) -> String {
+    "trip_reminder_\(trainId)_\(Int(departureTime.timeIntervalSince1970))"
+  }
+
+  private func makeTripReminderDeepLink(trainId: String, fromCode: String, toCode: String)
+    -> String?
+  {
+    var components = URLComponents()
+    components.scheme = "kreta"
+    components.host = "trip"
+    components.path = "/start"
+    components.queryItems = [
+      URLQueryItem(name: "trainId", value: trainId),
+      URLQueryItem(name: "fromCode", value: fromCode),
+      URLQueryItem(name: "toCode", value: toCode),
+    ]
+    return components.url?.absoluteString
   }
 
   func clearSelectedTrain() async {
@@ -366,20 +409,7 @@ extension TrainMapStore {
       }
     }
 
-    // Cancel any pending trip reminders on server
-    if let schedulerId = scheduledNotificationId {
-      do {
-        let _: String = try await convexClient.mutation(
-          "notifications:cancelTripReminder",
-          with: ["schedulerId": schedulerId as ConvexEncodable],
-          captureTelemetry: true
-        )
-        logger.info("Cancelled scheduled trip reminder with scheduler ID: \(schedulerId)")
-        scheduledNotificationId = nil
-      } catch {
-        logger.error("Failed to cancel scheduled trip reminder: \(error)")
-      }
-    }
+    cancelPendingTripReminder()
 
     selectedTrain = nil
     selectedJourneyData = nil
