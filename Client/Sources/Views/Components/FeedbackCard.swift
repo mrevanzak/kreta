@@ -8,18 +8,18 @@
 import SwiftUI
 
 struct FeedbackCard: View {
-  let item: FeedbackItem
-  let store: FeedbackStore
-
+  @Environment(FeedbackStore.self) private var store
   @Environment(\.colorScheme) private var colorScheme
+
   @State private var hasVoted = false
   @State private var localVoteCount: Int
   @State private var isVoting = false
 
-  init(item: FeedbackItem, store: FeedbackStore) {
+  let item: FeedbackItem
+
+  init(item: FeedbackItem, hasVoted: Bool) {
     self.item = item
-    self.store = store
-    _hasVoted = State(initialValue: store.hasUserVoted(feedbackId: item.id))
+    _hasVoted = State(initialValue: hasVoted)
     _localVoteCount = State(initialValue: item.voteCount)
   }
 
@@ -237,7 +237,8 @@ extension Color {
 
   ZStack {
     Color.black.ignoresSafeArea()
-    FeedbackCard(item: item, store: store)
+    FeedbackCard(item: item, hasVoted: false)
       .padding()
+      .environment(store)
   }
 }

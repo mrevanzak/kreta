@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct FeedbackSubmissionSheet: View {
+  @Environment(FeedbackStore.self) private var store
   @Environment(\.dismiss) var dismiss
   @Environment(\.showToast) private var showToast
-
-  let store: FeedbackStore
+  @Environment(\.colorScheme) private var colorScheme
 
   @State private var description = ""
   @State private var email = ""
@@ -21,25 +21,29 @@ struct FeedbackSubmissionSheet: View {
     NavigationStack {
       VStack(alignment: .leading, spacing: 24) {
         VStack(alignment: .leading, spacing: 8) {
-          Text("Describe your feature request")
+          Text("Jelaskan permintaan fitur Anda")
             .font(.headline.weight(.semibold))
             .foregroundStyle(.primary)
 
-          Text("Tell us what feature you'd like to see in the app. Be as detailed as possible.")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
+          Text(
+            "Beritahu kami fitur apa yang ingin Anda lihat di aplikasi. Berikan detail sebanyak mungkin."
+          )
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
         VStack(alignment: .leading, spacing: 12) {
           ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .fill(.white)
-              .shadow(color: .black.opacity(0.03), radius: 12, x: 0, y: 6)
+              .fill(Color(.systemBackground))
+              .shadow(
+                color: colorScheme == .dark ? .black.opacity(0.5) : .black.opacity(0.03),
+                radius: 12, x: 0, y: 6)
 
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .stroke(Color(.systemGray4), lineWidth: 1)
+              .stroke(Color(.separator), lineWidth: 1)
 
             TextEditor(text: $description)
               .frame(minHeight: 200)
@@ -49,25 +53,27 @@ struct FeedbackSubmissionSheet: View {
               .font(.body)
 
             if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-              Text("Example: I'd like to see step count comparisons with previous weeks...")
-                .foregroundStyle(Color(.systemGray3))
-                .font(.body)
-                .padding(EdgeInsets(top: 24, leading: 20, bottom: 0, trailing: 20))
+              Text(
+                "Contoh: Saya ingin melihat perbandingan jumlah langkah dengan minggu sebelumnya..."
+              )
+              .foregroundStyle(colorScheme == .dark ? Color(.systemGray2) : Color(.systemGray3))
+              .font(.body)
+              .padding(EdgeInsets(top: 24, leading: 20, bottom: 0, trailing: 20))
             }
           }
 
-          Text("Email (optional)")
+          Text("Email (opsional)")
             .font(.headline.weight(.semibold))
             .foregroundStyle(.primary)
 
-          TextField("your.email@example.com", text: $email)
+          TextField("email.anda@contoh.com", text: $email)
             .textFieldStyle(FeedbackTextFieldStyle())
             .keyboardType(.emailAddress)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 
           Text(
-            "Your email won't be visible to other users. We'll only use it to follow up on your request."
+            "Email Anda tidak akan terlihat oleh pengguna lain. Kami hanya akan menggunakannya untuk menindaklanjuti permintaan Anda."
           )
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -81,7 +87,7 @@ struct FeedbackSubmissionSheet: View {
           Button {
             submitFeedback()
           } label: {
-            Text(isSubmitting ? "Submitting..." : "Submit Request")
+            Text(isSubmitting ? "Mengirim..." : "Kirim Permintaan")
               .font(.headline.weight(.semibold))
               .frame(maxWidth: .infinity)
               .padding(.vertical, 18)
@@ -97,11 +103,11 @@ struct FeedbackSubmissionSheet: View {
         .padding(.top, 8)
         .padding(.bottom, 20)
         .background(
-          Color(.systemGray6)
+          Color(.systemBackground)
             .ignoresSafeArea(edges: .bottom)
         )
       }
-      .navigationTitle("New Feature Request")
+      .navigationTitle("Permintaan Fitur Baru")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -135,7 +141,6 @@ struct FeedbackSubmissionSheet: View {
     let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
     let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
     let emailValue: String? = trimmedEmail.isEmpty ? nil : trimmedEmail
-    let generatedTitle = deriveTitle(from: trimmedDescription)
 
     Task {
       do {
@@ -146,23 +151,18 @@ struct FeedbackSubmissionSheet: View {
         )
 
         DispatchQueue.main.async {
-          showToast("Feedback submitted successfully!", type: .success)
+          showToast("Umpan balik berhasil dikirim!", type: .success)
           dismiss()
         }
       } catch {
         DispatchQueue.main.async {
-          showToast("Failed to submit feedback: \(error.localizedDescription)", type: .error)
+          showToast("Gagal mengirim umpan balik: \(error.localizedDescription)", type: .error)
           isSubmitting = false
         }
       }
     }
   }
 
-  private func deriveTitle(from description: String) -> String {
-    let firstLine = description.components(separatedBy: .newlines).first ?? description
-    let trimmed = firstLine.trimmingCharacters(in: .whitespacesAndNewlines)
-    return String(trimmed.prefix(80))
-  }
 }
 
 // Custom text field style matching the card-based feedback design
@@ -173,17 +173,18 @@ struct FeedbackTextFieldStyle: TextFieldStyle {
       .padding(.horizontal, 16)
       .background(
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .fill(.white)
-          .shadow(color: .black.opacity(0.03), radius: 12, x: 0, y: 6)
+          .fill(Color(.systemBackground))
+          .shadow(color: Color(.systemGray).opacity(0.1), radius: 12, x: 0, y: 6)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .stroke(Color(.systemGray4), lineWidth: 1)
+          .stroke(Color(.separator), lineWidth: 1)
       )
       .foregroundStyle(.primary)
   }
 }
 
 #Preview {
-  FeedbackSubmissionSheet(store: FeedbackStore())
+  FeedbackSubmissionSheet()
+    .environment(FeedbackStore())
 }

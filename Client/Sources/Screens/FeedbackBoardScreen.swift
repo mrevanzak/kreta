@@ -31,51 +31,55 @@ struct FeedbackBoardScreen: View {
   }
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        LazyVStack(spacing: 16) {
-          if sortedItems.isEmpty {
-            emptyStateView
-          } else {
-            ForEach(sortedItems) { item in
-              FeedbackCard(item: item, store: feedbackStore)
+    Group {
+      NavigationStack {
+        ScrollView {
+          LazyVStack(spacing: 16) {
+            if sortedItems.isEmpty {
+              emptyStateView
+            } else {
+              ForEach(sortedItems) { item in
+                FeedbackCard(item: item, hasVoted: feedbackStore.hasUserVoted(feedbackId: item.id))
+              }
             }
           }
+          .padding(.horizontal, 21)
+          .padding(.vertical, 16)
         }
-        .padding(.horizontal, 21)
-        .padding(.vertical, 16)
-      }
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button {
-            dismiss()
-          } label: {
-            Image(systemName: "xmark")
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button {
+              dismiss()
+            } label: {
+              Image(systemName: "xmark")
+            }
           }
+          ToolbarItem(placement: .primaryAction) {
+            sortMenu
+          }
+        }.overlay(alignment: .bottomTrailing) {
+          Button {
+            showSubmissionSheet = true
+          } label: {
+            Image(systemName: "plus")
+              .font(.title2)
+              .fontWeight(.semibold)
+              .foregroundStyle(.white)
+              .frame(width: 56, height: 56)
+              .background(Color.blue, in: Circle())
+              .shadow(
+                color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.15), radius: 14, y: 6)
+          }
+          .padding(.trailing, 28)
         }
-        ToolbarItem(placement: .primaryAction) {
-          sortMenu
-        }
-      }.overlay(alignment: .bottomTrailing) {
-        Button {
-          showSubmissionSheet = true
-        } label: {
-          Image(systemName: "plus")
-            .font(.title2)
-            .fontWeight(.semibold)
-            .foregroundStyle(.white)
-            .frame(width: 56, height: 56)
-            .background(Color.blue, in: Circle())
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.15), radius: 14, y: 6)
-        }
-        .padding(.trailing, 28)
+      }
+      .sheet(isPresented: $showSubmissionSheet) {
+        FeedbackSubmissionSheet()
+          .presentationDetents([.large])
+          .presentationDragIndicator(.hidden)
       }
     }
-    .sheet(isPresented: $showSubmissionSheet) {
-      FeedbackSubmissionSheet(store: feedbackStore)
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
-    }
+    .environment(feedbackStore)
   }
 
   private var sortMenu: some View {
