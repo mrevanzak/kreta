@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 struct PulsatingArcShape: Shape {
@@ -33,6 +34,7 @@ struct TrainArriveScreen: View {
   let stationName: String
 
   @Environment(\.dismiss) var dismiss
+  @Environment(\.requestReview) private var requestReview
 
   @State private var pulse: Bool = false
 
@@ -100,7 +102,11 @@ struct TrainArriveScreen: View {
           AnalyticsEventService.shared.trackJourneyCompletedMinimal(
             destinationCode: stationCode, destinationName: stationName,
             completionType: "arrival_screen")
-          dismiss()
+          Task { @MainActor in
+            dismiss()
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            requestReview()
+          }
         } label: {
           Text("Sip!")
             .font(.system(size: 28, weight: .semibold))
