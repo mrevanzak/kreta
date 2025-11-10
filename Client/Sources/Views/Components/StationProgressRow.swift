@@ -96,7 +96,7 @@ struct StationProgressRow: View {
               )
               .offset(
                 x: 1.5, // Center horizontally on the line
-                y: dotSize + (geometry.size.height * currentProgress) - 22 // Position after dot + progress
+                y: dotSize + (geometry.size.height * currentProgress) - 23 // Position after dot + progress
               )
               .zIndex(100) // Ensure marker is always on top
           }

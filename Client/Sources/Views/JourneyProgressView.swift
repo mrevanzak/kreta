@@ -112,10 +112,10 @@ struct JourneyProgressView: View {
       await loadTimeline()
       startTimer()
     }
-    .onChange(of: train.fromStation?.id) { _, _ in
-      Task {
-        await loadTimeline()
-      }
+    .onChange(of: train.fromStation?.id) { _, newFromStationId in
+      // Don't reload timeline from API - just update states locally
+      // All schedule data is already loaded, we just need to update which station is current
+      updateCurrentStation(newFromStationId: newFromStationId)
     }
     .onDisappear {
       stopTimer()
@@ -156,6 +156,42 @@ struct JourneyProgressView: View {
       }
       
       return updatedItem
+    }
+  }
+  
+  private func updateCurrentStation(newFromStationId: String?) {
+    // Update station states locally without API call
+    // All schedule data is already loaded, we just need to update which station is current
+    guard let newFromStationId = newFromStationId else { return }
+    
+    var foundCurrent = false
+    timelineItems = timelineItems.map { item in
+      // Determine if this is the new current station
+      let isCurrent = item.station.id == newFromStationId && !foundCurrent
+      if isCurrent { foundCurrent = true }
+      
+      // Determine new state based on position relative to current station
+      let newState: StationTimelineItem.StationState
+      if foundCurrent && !isCurrent {
+        newState = .upcoming
+      } else if isCurrent {
+        newState = .current
+      } else {
+        newState = .completed
+      }
+      
+      // Only create new item if state changed
+      guard newState != item.state else { return item }
+      
+      return StationTimelineItem(
+        id: item.id,
+        station: item.station,
+        arrivalTime: item.arrivalTime,
+        departureTime: item.departureTime,
+        state: newState,
+        isStop: item.isStop,
+        progressToNext: item.progressToNext
+      )
     }
   }
   
