@@ -23,66 +23,69 @@ struct StationProgressRow: View {
   var body: some View {
     HStack(alignment: .top, spacing: 16) {
       // Timeline indicator (dot and lines)
-      VStack(spacing: 0) {
-        // Station dot
-        Circle()
-          .fill(dotColor)
-          .frame(width: dotSize, height: dotSize)
-          .overlay(
-            Circle()
-              .stroke(dotBorderColor, lineWidth: item.state == .current ? 3 : 2)
-          )
-        
-        // Bottom connecting line with progress
-        if !isLast {
-          ZStack(alignment: .top) {
-            // Background (gray for all)
-            Rectangle()
-              .fill(Color.grayHighlight)
-              .frame(width: 6)
-            
-            // Progress overlay (green for completed/current)
-            if item.state == .completed {
+      ZStack(alignment: .top) {
+        VStack(spacing: 0) {
+          // Station dot
+          Circle()
+            .fill(dotColor)
+            .frame(width: dotSize, height: dotSize)
+            .overlay(
+              Circle()
+                .stroke(dotBorderColor, lineWidth: item.state == .current ? 3 : 2)
+            )
+          
+          // Bottom connecting line with progress
+          if !isLast {
+            ZStack(alignment: .top) {
+              // Background (gray for all)
               Rectangle()
-                .fill(.highlight)
+                .fill(Color.grayHighlight)
                 .frame(width: 6)
-            } else if item.state == .current && currentProgress > 0 {
-              GeometryReader { geometry in
+              
+              // Progress overlay (green for completed/current)
+              if item.state == .completed {
                 Rectangle()
                   .fill(.highlight)
-                  .frame(width: 6, height: geometry.size.height * currentProgress)
+                  .frame(width: 6)
+              } else if item.state == .current && currentProgress > 0 {
+                GeometryReader { geometry in
+                  Rectangle()
+                    .fill(.highlight)
+                    .frame(width: 6, height: geometry.size.height * currentProgress)
+                }
               }
             }
-            
-            // Train marker following progress
-            if item.state == .current && currentProgress > 0 {
-              GeometryReader { geometry in
-                Image(systemName: "tram.fill")
-                  .font(.system(size: 19, weight: .bold))
-                  .foregroundStyle(.lessDark)
-                  .background(
-                    Circle()
-                      .fill(
-                        LinearGradient(
-                          gradient: Gradient(colors: [
-                            Color(hex: "#EAFFBD"), // Light green
-                            Color(hex: "#A8EA02")  // Lime green
-                          ]),
-                          startPoint: .topLeading,
-                          endPoint: .bottomTrailing
-                        )
-                      )
-                      .frame(width: 38, height: 38)
-                  )
-                  .offset(
-                    x: -8, // Center horizontally on the line (24/2 - 6/2 = 9)
-                    y: (geometry.size.height * currentProgress) - 12 // Center vertically
-                  )
-              }
-            }
-            
+            .frame(width: 6)
+            .frame(minHeight: 90)
           }
-          .frame(width: 6)
+        }
+        
+        // Train marker following progress (on top of everything)
+        if item.state == .current && currentProgress > 0 && !isLast {
+          GeometryReader { geometry in
+            Image(systemName: "tram.fill")
+              .font(.system(size: 19, weight: .bold))
+              .foregroundStyle(.lessDark)
+              .background(
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      gradient: Gradient(colors: [
+                        Color(hex: "#EAFFBD"), // Light green
+                        Color(hex: "#A8EA02")  // Lime green
+                      ]),
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  )
+                  .frame(width: 38, height: 38)
+              )
+              .offset(
+                x: 1.5, // Center horizontally on the line
+                y: dotSize + (geometry.size.height * currentProgress) - 22 // Position after dot + progress
+              )
+              .zIndex(100) // Ensure marker is always on top
+          }
           .frame(minHeight: 90)
         }
       }
@@ -115,6 +118,7 @@ struct StationProgressRow: View {
       }
       .offset(y: -10)
     }
+    .zIndex(item.state == .current ? 10 : 0) // Elevate entire row when current to keep marker on top
   }
   
   // MARK: - Computed Properties
