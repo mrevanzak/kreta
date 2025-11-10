@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Portal
 
 struct TrainCard: View {
   let train: ProjectedTrain
@@ -23,6 +24,7 @@ struct TrainCard: View {
           // Centered title
           HStack(spacing: 4) {
             Text(train.name)
+              .portal(id: "trainName", .source)
               .fontWeight(.bold)
               .foregroundStyle(.primary)
             Text("(\(train.code))")
@@ -115,7 +117,7 @@ struct TrainCard: View {
     }
     .clipShape(RoundedRectangle(cornerRadius: 20))
     .if(compactMode) { view in
-      view.shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+      view.shadow(color: .black.opacity(0.25), radius: 4, y: 4)
     }
 
   }

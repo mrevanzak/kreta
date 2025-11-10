@@ -1,5 +1,5 @@
 {
-  "originHash" : "9aae1727e56f5a588a61ec1177a9e2858c1b5cc5ad87d27727abe45de161a2b1",
+  "originHash" : "7dbc61b8442a1eaddc1f2933d260e0284120c4bd13f9c09f2b46d90bf1dd5505",
   "pins" : [
     {
       "identity" : "calendarview",
@@ -47,12 +47,39 @@
       }
     },
     {
+      "identity" : "logoutloud",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Aeastr/LogOutLoud.git",
+      "state" : {
+        "revision" : "8b1fb61045d78bd674e4061805e5e6cc69d06950",
+        "version" : "2.1.2"
+      }
+    },
+    {
+      "identity" : "obfuscate",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Aeastr/Obfuscate.git",
+      "state" : {
+        "revision" : "03bc039fefebf4150cfa594cc68dc83dede068ff",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "popups",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Mijick/Popups",
       "state" : {
         "revision" : "3aa55233eda7bbcbd98b52a6f63d5a7e1955189a",
         "version" : "4.0.5"
+      }
+    },
+    {
+      "identity" : "portal",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Aeastr/Portal.git",
+      "state" : {
+        "revision" : "d097cf13b4f6a25e258183931fa147be5474c66e",
+        "version" : "4.2.6"
       }
     },
     {
@@ -80,6 +107,24 @@
       "state" : {
         "revision" : "f4f28a0b358011089e4538059d443eccff183382",
         "version" : "24.25.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
+        "version" : "1.6.4"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     }
   ],

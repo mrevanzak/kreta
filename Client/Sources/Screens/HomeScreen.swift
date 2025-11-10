@@ -1,5 +1,6 @@
 import MapKit
 import SwiftUI
+import Portal
 
 // MARK: - Main Map Screen
 
@@ -10,49 +11,73 @@ struct HomeScreen: View {
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
   @State private var selectedDetent: PresentationDetent = .height(200)
+  private var isPortalActive: Binding<Bool> {
+    Binding(
+      get: { selectedDetent == .large },
+      set: { active in
+        selectedDetent = active ? .large : .height(200)
+      }
+    )
+  }
   
   var body: some View {
-    Group {
-      TrainMapView()
-        .sheet(isPresented: .constant(true)) {
-          // Bottom card or full journey view
-          Group {
-            if selectedDetent == .large, let train = trainMapStore.selectedTrain {
-              // Full journey progress view
-              let displayTrain = trainMapStore.liveTrainPosition ?? train
-              JourneyProgressView(
-                train: displayTrain,
-                journeyData: trainMapStore.selectedJourneyData,
-                onDelete: {
-                  deleteTrain()
-                  selectedDetent = .height(200)
-                }
-              )
-            } else {
-              // Compact view with train card or add button
-              compactBottomSheet
+    PortalContainer {
+      Group {
+        TrainMapView()
+          .sheet(isPresented: .constant(true)) {
+            // Bottom card or full journey view
+            Group {
+              if selectedDetent == .large, let train = trainMapStore.selectedTrain {
+                // Full journey progress view
+                let displayTrain = trainMapStore.liveTrainPosition ?? train
+                JourneyProgressView(
+                  train: displayTrain,
+                  journeyData: trainMapStore.selectedJourneyData,
+                  onDelete: {
+                    deleteTrain()
+                    selectedDetent = .height(200)
+                  }
+                )
+              } else {
+                // Compact view with train card or add button
+                compactBottomSheet
+              }
             }
-          }
-          .presentationBackgroundInteraction(.enabled)
-          .presentationDetents(presentationDetents, selection: $selectedDetent)
-          .presentationDragIndicator(selectedDetent == .fraction(0.35) ? .hidden : .visible)
-          .interactiveDismissDisabled(true)
-          .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
-          .animation(.easeInOut(duration: 0.3), value: selectedDetent)
-          .onChange(of: trainMapStore.selectedTrain) { oldValue, newValue in
-            // Reset to compact when train changes or is removed
-            if newValue == nil {
-              selectedDetent = .fraction(0.35)
-            } else if oldValue?.id != newValue?.id {
-              selectedDetent = .height(200)
+            .presentationBackgroundInteraction(.enabled)
+            .presentationDetents(presentationDetents, selection: $selectedDetent)
+            .presentationDragIndicator(selectedDetent == .fraction(0.35) ? .hidden : .visible)
+            .interactiveDismissDisabled(true)
+            .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
+            .animation(.easeInOut(duration: 0.3), value: selectedDetent)
+            .onChange(of: trainMapStore.selectedTrain) { oldValue, newValue in
+              // Reset to compact when train changes or is removed
+              if newValue == nil {
+                selectedDetent = .fraction(0.35)
+              } else if oldValue?.id != newValue?.id {
+                selectedDetent = .height(200)
+              }
             }
+            .routerPresentation(router: router)
           }
-          .routerPresentation(router: router)
+      }
+      .environment(trainMapStore)
+      .portalTransition(
+        id: "trainName",
+        isActive: isPortalActive, // <- use the computed Binding
+        animation: .spring(response: 0.2, dampingFraction: 0.8),
+        completionCriteria: .removed
+      ) {
+        if let train = trainMapStore.liveTrainPosition ?? trainMapStore.selectedTrain {
+          if isPortalActive.wrappedValue {
+            Text(train.name)
+              .font(.title3.weight(.bold))
+              .frame(width: 250)
+          }
         }
-    }
-    .environment(trainMapStore)
-    .task {
-      try? await trainMapStore.loadSelectedTrainFromCache()
+      }
+      .task {
+        try? await trainMapStore.loadSelectedTrainFromCache()
+      }
     }
   }
   

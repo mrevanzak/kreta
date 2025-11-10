@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		4E428AD12EAEF22D008DC212 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 4E428AD02EAEF22D008DC212 /* MijickCalendarView */; };
+		4EAA41862EC1792700C01006 /* Portal in Frameworks */ = {isa = PBXBuildFile; productRef = 4EAA41852EC1792700C01006 /* Portal */; };
+		4EAA41882EC1792700C01006 /* PortalFlowingHeader in Frameworks */ = {isa = PBXBuildFile; productRef = 4EAA41872EC1792700C01006 /* PortalFlowingHeader */; };
+		4EAA418A2EC1792700C01006 /* PortalPrivate in Frameworks */ = {isa = PBXBuildFile; productRef = 4EAA41892EC1792700C01006 /* PortalPrivate */; };
+		4EAA418C2EC1792700C01006 /* PortalView in Frameworks */ = {isa = PBXBuildFile; productRef = 4EAA418B2EC1792700C01006 /* PortalView */; };
 		8D0FC8B32C90E03100767285 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */ = {isa = PBXBuildFile; productRef = 8D20503E2CACC09C0088CFAF /* JWTDecode */; };
 		8D3EE22F2C92698B004E4B6D /* (null) in Sources */ = {isa = PBXBuildFile; };
@@ -111,13 +115,17 @@
 				C57893C42E93769300375616 /* ConvexMobile in Frameworks */,
 				8D5B74462CAF70C200AA4BAC /* JWTDecode in Frameworks */,
 				8D8021832CFCF28E006C709C /* StripeFinancialConnections in Frameworks */,
+				4EAA41882EC1792700C01006 /* PortalFlowingHeader in Frameworks */,
 				8D80217F2CFCF28E006C709C /* StripeApplePay in Frameworks */,
 				C51929E32EAB3AC30036AE74 /* MijickPopups in Frameworks */,
+				4EAA418C2EC1792700C01006 /* PortalView in Frameworks */,
 				8D8021852CFCF28E006C709C /* StripeIdentity in Frameworks */,
+				4EAA41862EC1792700C01006 /* Portal in Frameworks */,
 				C58000012EB9CAD80032530C /* Sentry in Frameworks */,
 				8D20503F2CACC09C0088CFAF /* JWTDecode in Frameworks */,
 				8D8021812CFCF28E006C709C /* StripeCardScan in Frameworks */,
 				8D80218B2CFCF28F006C709C /* StripePaymentsUI in Frameworks */,
+				4EAA418A2EC1792700C01006 /* PortalPrivate in Frameworks */,
 				C5CC99BD2EB446F600E46229 /* PostHog in Frameworks */,
 				8D80217D2CFCF28E006C709C /* Stripe in Frameworks */,
 				C5AB85282EB3770D009E242A /* (null) in Frameworks */,
@@ -219,6 +227,10 @@
 				C5CC973F2EB3C0BE00E46229 /* Disk */,
 				C5CC99BC2EB446F600E46229 /* PostHog */,
 				C58000002EB9CAD80032530C /* Sentry */,
+				4EAA41852EC1792700C01006 /* Portal */,
+				4EAA41872EC1792700C01006 /* PortalFlowingHeader */,
+				4EAA41892EC1792700C01006 /* PortalPrivate */,
+				4EAA418B2EC1792700C01006 /* PortalView */,
 			);
 			productName = "hello-market-client";
 			productReference = 8DDE5FB12C8A7D9300A0DBE0 /* kreta.app */;
@@ -310,6 +322,7 @@
 				C5CC973E2EB3C0BE00E46229 /* XCRemoteSwiftPackageReference "Disk" */,
 				C5CC99BB2EB446F600E46229 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				C580FFFF2EB9CAD80032530C /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */,
 			);
 			productRefGroup = 8DDE5FB22C8A7D9300A0DBE0 /* Products */;
 			projectDirPath = "";
@@ -549,7 +562,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Preview Content\"";
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = S3AP74B5TH;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -572,7 +585,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.biru;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -643,7 +656,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = S3AP74B5TH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Widget;
@@ -656,7 +669,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.Widget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.kreta.kreta.biru.Widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -716,7 +729,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5U7DSB32K6;
+				DEVELOPMENT_TEAM = S3AP74B5TH;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
@@ -813,6 +826,14 @@
 				minimumVersion = 1.1.1;
 			};
 		};
+		4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Aeastr/Portal.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.2.6;
+			};
+		};
 		8D20503D2CACC09C0088CFAF /* XCRemoteSwiftPackageReference "JWTDecode.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/auth0/JWTDecode.swift.git";
@@ -884,6 +905,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E428ACF2EAEF22D008DC212 /* XCRemoteSwiftPackageReference "CalendarView" */;
 			productName = MijickCalendarView;
+		};
+		4EAA41852EC1792700C01006 /* Portal */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */;
+			productName = Portal;
+		};
+		4EAA41872EC1792700C01006 /* PortalFlowingHeader */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */;
+			productName = PortalFlowingHeader;
+		};
+		4EAA41892EC1792700C01006 /* PortalPrivate */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */;
+			productName = PortalPrivate;
+		};
+		4EAA418B2EC1792700C01006 /* PortalView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4EAA41842EC1792700C01006 /* XCRemoteSwiftPackageReference "Portal" */;
+			productName = PortalView;
 		};
 		8D20503E2CACC09C0088CFAF /* JWTDecode */ = {
 			isa = XCSwiftPackageProductDependency;

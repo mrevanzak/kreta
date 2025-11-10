@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Portal
 
 struct JourneyProgressView: View {
   let train: ProjectedTrain
@@ -17,11 +18,14 @@ struct JourneyProgressView: View {
   @State private var isCardOverContent: Bool = false
   private let trainStopService = TrainStopService()
   
+  @Environment(\.colorScheme) private var colorScheme
+  
   var body: some View {
     VStack(spacing: 0) {
       // Train name header - fixed, not scrollable
       Text("\(train.name)")
         .font(.title3.weight(.bold))
+        .portal(id: "trainName", .destination)
         .foregroundStyle(.primary)
         .frame(maxWidth: .infinity)
         .padding(.top, 20)
@@ -76,7 +80,12 @@ struct JourneyProgressView: View {
             compactMode: true
           )
           .if(isCardOverContent) { view in
-            view.glassEffect(.regular.tint(.backgroundPrimary.opacity(0.01)), in: .rect(cornerRadius: 20))
+            view.glassEffect(
+              .regular.tint(
+                colorScheme == .dark ? .whiteHighlight.opacity(0.1) : .gray.opacity(0.1)
+              ),
+              in: .rect(cornerRadius: 20)
+            )
           }
           .padding(.horizontal, 20)
           .padding(.top, 12)
