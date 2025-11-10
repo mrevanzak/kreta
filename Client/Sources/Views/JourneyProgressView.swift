@@ -16,6 +16,7 @@ struct JourneyProgressView: View {
   @State private var timelineItems: [StationTimelineItem] = []
   @State private var isLoadingTimeline = true
   @State private var isCardOverContent: Bool = false
+  @State private var timer: Timer?
   private let trainStopService = TrainStopService()
   
   @Environment(\.colorScheme) private var colorScheme
@@ -109,15 +110,58 @@ struct JourneyProgressView: View {
     }
     .task {
       await loadTimeline()
+      startTimer()
     }
     .onChange(of: train.fromStation?.id) { _, _ in
       Task {
         await loadTimeline()
       }
     }
+    .onDisappear {
+      stopTimer()
+    }
   }
   
   // MARK: - Helper Methods
+  
+  private func startTimer() {
+    stopTimer()
+    timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+      Task {
+        await updateTimelineProgress()
+      }
+    }
+  }
+  
+  private func stopTimer() {
+    timer?.invalidate()
+    timer = nil
+  }
+  
+  private func updateTimelineProgress() async {
+    // Recalculate progress for all items
+    timelineItems = timelineItems.map { item in
+      var updatedItem = item
+      
+      // Recalculate progress to next station
+      if let progressToNext = item.progressToNext {
+        // Find the index to get next station
+        if let currentIndex = timelineItems.firstIndex(where: { $0.id == item.id }),
+           currentIndex < timelineItems.count - 1 {
+          let nextItem = timelineItems[currentIndex + 1]
+          let currentDeparture = item.departureTime ?? item.arrivalTime
+          let nextArrival = nextItem.arrivalTime
+          
+          updatedItem.progressToNext = StationTimelineItem.calculateProgress(
+            from: currentDeparture,
+            to: nextArrival
+          )
+        }
+      }
+      
+      return updatedItem
+    }
+  }
   
   private func loadTimeline() async {
     isLoadingTimeline = true

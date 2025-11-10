@@ -60,7 +60,8 @@ struct JourneyTimelineView: View {
       arrivalTime: nil,
       departureTime: Date().addingTimeInterval(-3600),
       state: .completed,
-      isStop: true
+      isStop: true,
+      progressToNext: 1.0
     ),
     StationTimelineItem(
       id: "2",
@@ -68,7 +69,8 @@ struct JourneyTimelineView: View {
       arrivalTime: Date().addingTimeInterval(-1800),
       departureTime: Date().addingTimeInterval(-1680),
       state: .completed,
-      isStop: true
+      isStop: true,
+      progressToNext: 1.0
     ),
     StationTimelineItem(
       id: "3",
@@ -76,7 +78,8 @@ struct JourneyTimelineView: View {
       arrivalTime: Date().addingTimeInterval(300),
       departureTime: Date().addingTimeInterval(420),
       state: .current,
-      isStop: true
+      isStop: true,
+      progressToNext: 0.4
     ),
     StationTimelineItem(
       id: "4",
@@ -84,7 +87,8 @@ struct JourneyTimelineView: View {
       arrivalTime: Date().addingTimeInterval(3600),
       departureTime: nil,
       state: .upcoming,
-      isStop: true
+      isStop: true,
+      progressToNext: nil
     ),
   ]
   

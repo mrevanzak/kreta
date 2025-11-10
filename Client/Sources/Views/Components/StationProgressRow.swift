@@ -11,18 +11,13 @@ struct StationProgressRow: View {
   let item: StationTimelineItem
   let isFirst: Bool
   let isLast: Bool
-
+  
+  @State private var currentProgress: Double = 0.0
+  
   var body: some View {
     HStack(alignment: .top, spacing: 16) {
       // Timeline indicator (dot and lines)
       VStack(spacing: 0) {
-        // Top connecting line
-        if !isFirst {
-          Rectangle()
-            .fill(lineColor)
-            .frame(width: 6, height: 20)
-        }
-
         // Station dot
         Circle()
           .fill(dotColor)
@@ -31,13 +26,30 @@ struct StationProgressRow: View {
             Circle()
               .stroke(dotBorderColor, lineWidth: item.state == .current ? 3 : 2)
           )
-
-        // Bottom connecting line
+        
+        // Bottom connecting line with progress
         if !isLast {
-          Rectangle()
-            .fill(lineColor)
-            .frame(width: 6)
-            .frame(minHeight: 40)
+          ZStack(alignment: .top) {
+            // Background (gray for all)
+            Rectangle()
+              .fill(Color.grayHighlight)
+              .frame(width: 6)
+            
+            // Progress overlay (green for completed/current)
+            if item.state == .completed {
+              Rectangle()
+                .fill(.highlight)
+                .frame(width: 6)
+            } else if item.state == .current && currentProgress > 0 {
+              GeometryReader { geometry in
+                Rectangle()
+                  .fill(.highlight)
+                  .frame(width: 6, height: geometry.size.height * currentProgress)
+              }
+            }
+          }
+          .frame(width: 6)
+          .frame(minHeight: 80)
         }
       }
       .frame(width: 24)
@@ -48,7 +60,7 @@ struct StationProgressRow: View {
           VStack(alignment: .leading) {
             // Station code
             Text(item.station.name)
-              .font(.system(.title, design: .rounded, weight: .bold))
+              .font(.system(.title2, design: .rounded, weight: .bold))
               .foregroundStyle(textColor)
 
             // City name
@@ -75,15 +87,21 @@ struct StationProgressRow: View {
       }
       .padding(.vertical, 8)
     }
+    .onAppear {
+      updateProgress()
+    }
+    .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+      updateProgress()
+    }
   }
 
   // MARK: - Computed Properties
 
   private var dotSize: CGFloat {
     switch item.state {
-    case .current: return 27
-    case .completed: return 27
-    case .upcoming: return 27
+    case .current: return 25
+    case .completed: return 25
+    case .upcoming: return 25
     }
   }
 
@@ -121,6 +139,16 @@ struct StationProgressRow: View {
   private func formatTime(_ date: Date) -> String {
     date.formatted(.dateTime.hour().minute())
   }
+  
+  private func updateProgress() {
+    if item.state == .completed {
+      currentProgress = 1.0
+    } else if item.state == .current {
+      currentProgress = item.progressToNext ?? 0.0
+    } else {
+      currentProgress = 0.0
+    }
+  }
 }
 
 // MARK: - Preview
@@ -141,7 +169,8 @@ struct StationProgressRow: View {
         arrivalTime: nil,
         departureTime: Date(),
         state: .completed,
-        isStop: true
+        isStop: true,
+        progressToNext: 1.0
       ),
       isFirst: true,
       isLast: false
@@ -159,7 +188,8 @@ struct StationProgressRow: View {
         arrivalTime: Date().addingTimeInterval(1800),
         departureTime: Date().addingTimeInterval(1920),
         state: .current,
-        isStop: true
+        isStop: true,
+        progressToNext: 0.6
       ),
       isFirst: false,
       isLast: false
@@ -177,7 +207,8 @@ struct StationProgressRow: View {
         arrivalTime: Date().addingTimeInterval(7200),
         departureTime: nil,
         state: .upcoming,
-        isStop: true
+        isStop: true,
+        progressToNext: nil
       ),
       isFirst: false,
       isLast: true

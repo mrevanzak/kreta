@@ -17,11 +17,37 @@ struct StationTimelineItem: Identifiable {
   let departureTime: Date?
   let state: StationState
   let isStop: Bool // Whether train stops at this station
+  var progressToNext: Double? // Progress from this station to next (0.0 - 1.0)
   
   enum StationState {
     case completed // Train has passed this station
     case current // Train is currently at or approaching this station
     case upcoming // Train hasn't reached this station yet
+  }
+  
+  /// Calculate progress between two stations based on current time
+  static func calculateProgress(from departure: Date?, to arrival: Date?) -> Double? {
+    guard let departure = departure, let arrival = arrival else {
+      return nil
+    }
+    
+    let now = Date()
+    
+    // If before departure, progress is 0
+    if now < departure {
+      return 0.0
+    }
+    
+    // If after arrival, progress is 1
+    if now >= arrival {
+      return 1.0
+    }
+    
+    // Calculate progress between 0 and 1
+    let totalDuration = arrival.timeIntervalSince(departure)
+    let elapsed = now.timeIntervalSince(departure)
+    
+    return min(max(elapsed / totalDuration, 0.0), 1.0)
   }
 }
 
@@ -61,6 +87,17 @@ extension StationTimelineItem {
         let arrivalDate = stop.arrivalTime.flatMap { parseTimeString($0) }
         let departureDate = stop.departureTime.flatMap { parseTimeString($0) }
         
+        // Calculate progress to next station
+        var progressToNext: Double? = nil
+        if index < schedule.stops.count - 1 {
+          let nextStop = schedule.stops[index + 1]
+          let nextArrival = nextStop.arrivalTime.flatMap { parseTimeString($0) }
+          
+          // Use departure time of current station and arrival time of next station
+          let currentDeparture = departureDate ?? arrivalDate
+          progressToNext = calculateProgress(from: currentDeparture, to: nextArrival)
+        }
+        
         // Create station model
         let station = Station(
           id: stop.stationId,
@@ -77,7 +114,8 @@ extension StationTimelineItem {
             arrivalTime: arrivalDate,
             departureTime: departureDate,
             state: state,
-            isStop: true // All items from trainStops are actual stops
+            isStop: true, // All items from trainStops are actual stops
+            progressToNext: progressToNext
           )
         )
       }
