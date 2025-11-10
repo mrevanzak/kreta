@@ -33,19 +33,13 @@ struct FeedbackBoardScreen: View {
   var body: some View {
     Group {
       NavigationStack {
-        ScrollView {
-          LazyVStack(spacing: 16) {
-            if sortedItems.isEmpty {
-              emptyStateView
-            } else {
-              ForEach(sortedItems) { item in
-                FeedbackCard(item: item, hasVoted: feedbackStore.hasUserVoted(feedbackId: item.id))
-              }
-            }
-          }
-          .padding(.horizontal, 21)
-          .padding(.vertical, 16)
+        List(sortedItems) {
+          FeedbackCard(item: $0, hasVoted: feedbackStore.hasUserVoted(feedbackId: $0.id))
+            .listRowSeparator(.hidden, edges: .all)
+            .listRowBackground(Color.clear)
         }
+        .listStyle(.plain)
+        .listRowSpacing(2)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button {
@@ -57,7 +51,17 @@ struct FeedbackBoardScreen: View {
           ToolbarItem(placement: .primaryAction) {
             sortMenu
           }
-        }.overlay(alignment: .bottomTrailing) {
+        }
+        .overlay {
+          if sortedItems.isEmpty {
+            ContentUnavailableView(
+              "Belum ada masukkan",
+              systemImage: "bubble.left.and.bubble.right",
+              description: Text("Ayo tulis ide/masukkan kamu disini!")
+            )
+          }
+        }
+        .overlay(alignment: .bottomTrailing) {
           Button {
             showSubmissionSheet = true
           } label: {
@@ -80,6 +84,7 @@ struct FeedbackBoardScreen: View {
       }
     }
     .environment(feedbackStore)
+    .presentationBackground(.ultraThickMaterial)
   }
 
   private var sortMenu: some View {
@@ -108,24 +113,6 @@ struct FeedbackBoardScreen: View {
     }
   }
 
-  private var emptyStateView: some View {
-    VStack(spacing: 16) {
-      Image(systemName: "bubble.left.and.bubble.right")
-        .font(.system(size: 64))
-        .foregroundStyle(secondaryContentColor)
-
-      Text("No feedback yet")
-        .font(.title3)
-        .foregroundStyle(primaryContentColor)
-
-      Text("Be the first to share your ideas!")
-        .font(.subheadline)
-        .foregroundStyle(secondaryContentColor)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 64)
-  }
-
   private var primaryContentColor: Color {
     colorScheme == .dark ? .white : .black.opacity(0.9)
   }
@@ -137,5 +124,8 @@ struct FeedbackBoardScreen: View {
 }
 
 #Preview {
-  FeedbackBoardScreen()
+  Color.clear
+    .sheet(isPresented: .constant(true)) {
+      view(for: .feedback)
+    }
 }
