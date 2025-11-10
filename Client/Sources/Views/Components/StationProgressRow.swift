@@ -15,9 +15,23 @@ struct StationProgressRow: View {
   private var currentProgress: Double {
     switch item.state {
     case .completed: return 1.0
-    case .current: return item.progressToNext ?? 0.0
+    case .current:
+      // If progress is nil or 0, show marker at station (not departed yet)
+      // Otherwise show actual progress
+      if let progress = item.progressToNext, progress > 0 {
+        return progress
+      } else {
+        return 0.0 // Keep marker visible at the station
+      }
     case .upcoming: return 0.0
     }
+  }
+  
+  // Whether to show the train marker
+  private var shouldShowMarker: Bool {
+    // Show marker for current station (even before departure)
+    // and only if there's a next station
+    return item.state == .current && !isLast
   }
   
   var body: some View {
@@ -61,7 +75,7 @@ struct StationProgressRow: View {
         }
         
         // Train marker following progress (on top of everything)
-        if item.state == .current && currentProgress > 0 && !isLast {
+        if shouldShowMarker {
           GeometryReader { geometry in
             Image(systemName: "tram.fill")
               .font(.system(size: 19, weight: .bold))

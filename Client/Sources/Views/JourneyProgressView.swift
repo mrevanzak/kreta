@@ -137,11 +137,12 @@ struct JourneyProgressView: View {
   }
   
   private func updateTimelineProgress() {
-    // Recalculate progress for all items on main thread
+    // Only update progress values, don't rebuild timeline
+    // This prevents jarring refreshes when train arrives at stations
     timelineItems = timelineItems.map { item in
       var updatedItem = item
       
-      // Recalculate progress to next station
+      // Recalculate progress to next station for all items
       if let currentIndex = timelineItems.firstIndex(where: { $0.id == item.id }),
          currentIndex < timelineItems.count - 1 {
         let nextItem = timelineItems[currentIndex + 1]
