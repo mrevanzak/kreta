@@ -53,47 +53,72 @@ struct StationProgressRow: View {
                   .frame(width: 6, height: geometry.size.height * currentProgress)
               }
             }
+            
+            // Train marker following progress
+            if item.state == .current && currentProgress > 0 {
+              GeometryReader { geometry in
+                Image(systemName: "tram.fill")
+                  .font(.system(size: 19, weight: .bold))
+                  .foregroundStyle(.lessDark)
+                  .background(
+                    Circle()
+                      .fill(
+                        LinearGradient(
+                          gradient: Gradient(colors: [
+                            Color(hex: "#EAFFBD"), // Light green
+                            Color(hex: "#A8EA02")  // Lime green
+                          ]),
+                          startPoint: .topLeading,
+                          endPoint: .bottomTrailing
+                        )
+                      )
+                      .frame(width: 38, height: 38)
+                  )
+                  .offset(
+                    x: -8, // Center horizontally on the line (24/2 - 6/2 = 9)
+                    y: (geometry.size.height * currentProgress) - 12 // Center vertically
+                  )
+              }
+            }
+            
           }
           .frame(width: 6)
-          .frame(minHeight: 80)
+          .frame(minHeight: 90)
         }
       }
       .frame(width: dotSize)
-
+      
       // Station information
-      VStack(alignment: .leading, spacing: 4) {
-        // Station name
-        Text(item.station.name)
-          .font(.system(.title2, design: .rounded, weight: .bold))
-          .foregroundStyle(textColor)
-
-        // City and time row
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-          // City name
+      HStack {
+        VStack (alignment: .leading, spacing: 4) {
+          Text(item.station.name)
+            .font(.system(.title2, design: .rounded, weight: .bold))
+            .foregroundStyle(textColor)
+          
           Text(item.station.code)
             .font(.subheadline)
             .foregroundStyle(textColor)
-
-          Spacer(minLength: 0)
-
-          // Timing information
-          if let arrivalTime = item.arrivalTime {
-            Text("\(formatTime(arrivalTime))")
-              .font(.subheadline)
-              .foregroundStyle(textColor)
-          } else if let departureTime = item.departureTime {
-            Text("\(formatTime(departureTime))")
-              .font(.subheadline)
-              .foregroundStyle(textColor)
-          }
         }
+        
+        Spacer()
+        
+        if let arrivalTime = item.arrivalTime {
+          Text("\(formatTime(arrivalTime))")
+            .font(.subheadline)
+            .foregroundStyle(textColor)
+        } else if let departureTime = item.departureTime {
+          Text("\(formatTime(departureTime))")
+            .font(.subheadline)
+            .foregroundStyle(textColor)
+        }
+        
       }
       .offset(y: -10)
     }
   }
-
+  
   // MARK: - Computed Properties
-
+  
   private var dotSize: CGFloat {
     switch item.state {
     case .current: return 25
@@ -101,7 +126,7 @@ struct StationProgressRow: View {
     case .upcoming: return 25
     }
   }
-
+  
   private var dotColor: Color {
     switch item.state {
     case .completed: return .highlight
@@ -109,7 +134,7 @@ struct StationProgressRow: View {
     case .upcoming: return .grayHighlight
     }
   }
-
+  
   private var dotBorderColor: Color {
     switch item.state {
     case .completed: return .highlight
@@ -117,7 +142,7 @@ struct StationProgressRow: View {
     case .upcoming: return .grayHighlight
     }
   }
-
+  
   private var lineColor: Color {
     switch item.state {
     case .completed: return .highlight
@@ -125,14 +150,14 @@ struct StationProgressRow: View {
     case .upcoming: return .grayHighlight
     }
   }
-
+  
   private var textColor: Color {
     switch item.state {
     case .completed, .current: return .primary
     case .upcoming: return .secondary
     }
   }
-
+  
   private func formatTime(_ date: Date) -> String {
     date.formatted(.dateTime.hour().minute())
   }
@@ -147,7 +172,7 @@ struct StationProgressRow: View {
     position: Position(latitude: -6.1774, longitude: 106.8306),
     city: "Jakarta Pusat"
   )
-
+  
   VStack(spacing: 0) {
     StationProgressRow(
       item: StationTimelineItem(
@@ -162,7 +187,7 @@ struct StationProgressRow: View {
       isFirst: true,
       isLast: false
     )
-
+    
     StationProgressRow(
       item: StationTimelineItem(
         id: "2",
@@ -181,7 +206,7 @@ struct StationProgressRow: View {
       isFirst: false,
       isLast: false
     )
-
+    
     StationProgressRow(
       item: StationTimelineItem(
         id: "3",
