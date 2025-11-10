@@ -373,10 +373,11 @@ extension AddTrainView {
         return stations
       }
 
-      return stations.filter {
-        $0.name.localizedCaseInsensitiveContains(searchText)
-          || $0.code.localizedCaseInsensitiveContains(searchText)
-      }
+        return stations.filter { station in
+          station.name.localizedCaseInsensitiveContains(searchText)
+            || station.code.localizedCaseInsensitiveContains(searchText)
+            || (station.city?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
     }
     
     var searchableTrains: [JourneyService.AvailableTrainItem] {
