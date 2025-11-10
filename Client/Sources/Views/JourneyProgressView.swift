@@ -127,9 +127,7 @@ struct JourneyProgressView: View {
   private func startTimer() {
     stopTimer()
     timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-      Task {
-        await updateTimelineProgress()
-      }
+      updateTimelineProgress()
     }
   }
   
@@ -138,25 +136,22 @@ struct JourneyProgressView: View {
     timer = nil
   }
   
-  private func updateTimelineProgress() async {
-    // Recalculate progress for all items
+  private func updateTimelineProgress() {
+    // Recalculate progress for all items on main thread
     timelineItems = timelineItems.map { item in
       var updatedItem = item
       
       // Recalculate progress to next station
-      if let progressToNext = item.progressToNext {
-        // Find the index to get next station
-        if let currentIndex = timelineItems.firstIndex(where: { $0.id == item.id }),
-           currentIndex < timelineItems.count - 1 {
-          let nextItem = timelineItems[currentIndex + 1]
-          let currentDeparture = item.departureTime ?? item.arrivalTime
-          let nextArrival = nextItem.arrivalTime
-          
-          updatedItem.progressToNext = StationTimelineItem.calculateProgress(
-            from: currentDeparture,
-            to: nextArrival
-          )
-        }
+      if let currentIndex = timelineItems.firstIndex(where: { $0.id == item.id }),
+         currentIndex < timelineItems.count - 1 {
+        let nextItem = timelineItems[currentIndex + 1]
+        let currentDeparture = item.departureTime ?? item.arrivalTime
+        let nextArrival = nextItem.arrivalTime
+        
+        updatedItem.progressToNext = StationTimelineItem.calculateProgress(
+          from: currentDeparture,
+          to: nextArrival
+        )
       }
       
       return updatedItem

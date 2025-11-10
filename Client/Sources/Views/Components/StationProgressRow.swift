@@ -12,7 +12,13 @@ struct StationProgressRow: View {
   let isFirst: Bool
   let isLast: Bool
   
-  @State private var currentProgress: Double = 0.0
+  private var currentProgress: Double {
+    switch item.state {
+    case .completed: return 1.0
+    case .current: return item.progressToNext ?? 0.0
+    case .upcoming: return 0.0
+    }
+  }
   
   var body: some View {
     HStack(alignment: .top, spacing: 16) {
@@ -52,27 +58,25 @@ struct StationProgressRow: View {
           .frame(minHeight: 80)
         }
       }
-      .frame(width: 24)
+      .frame(width: dotSize)
 
       // Station information
       VStack(alignment: .leading, spacing: 4) {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-          VStack(alignment: .leading) {
-            // Station code
-            Text(item.station.name)
-              .font(.system(.title2, design: .rounded, weight: .bold))
-              .foregroundStyle(textColor)
+        // Station name
+        Text(item.station.name)
+          .font(.system(.title2, design: .rounded, weight: .bold))
+          .foregroundStyle(textColor)
 
-            // City name
-            Text(item.station.code)
-              .font(.subheadline)
-              .foregroundStyle(textColor)
-          }
+        // City and time row
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+          // City name
+          Text(item.station.code)
+            .font(.subheadline)
+            .foregroundStyle(textColor)
 
           Spacer(minLength: 0)
 
           // Timing information
-
           if let arrivalTime = item.arrivalTime {
             Text("\(formatTime(arrivalTime))")
               .font(.subheadline)
@@ -82,16 +86,9 @@ struct StationProgressRow: View {
               .font(.subheadline)
               .foregroundStyle(textColor)
           }
-
         }
       }
-      .padding(.vertical, 8)
-    }
-    .onAppear {
-      updateProgress()
-    }
-    .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-      updateProgress()
+      .offset(y: -10)
     }
   }
 
@@ -138,16 +135,6 @@ struct StationProgressRow: View {
 
   private func formatTime(_ date: Date) -> String {
     date.formatted(.dateTime.hour().minute())
-  }
-  
-  private func updateProgress() {
-    if item.state == .completed {
-      currentProgress = 1.0
-    } else if item.state == .current {
-      currentProgress = item.progressToNext ?? 0.0
-    } else {
-      currentProgress = 0.0
-    }
   }
 }
 
