@@ -19,103 +19,71 @@ struct FeedbackSubmissionSheet: View {
 
   var body: some View {
     NavigationStack {
-      VStack(alignment: .leading, spacing: 24) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Jelaskan permintaan fitur Anda")
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.primary)
+      VStack(alignment: .leading, spacing: 12) {
+        Text(
+          "Tulis ide/masukkan kamu disini!"
+        )
+        .font(.headline.weight(.semibold))
+        .foregroundStyle(.primary)
 
-          Text(
-            "Beritahu kami fitur apa yang ingin Anda lihat di aplikasi. Berikan detail sebanyak mungkin."
-          )
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        ZStack(alignment: .topLeading) {
+          RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color(.systemBackground))
+            .shadow(
+              color: colorScheme == .dark ? .black.opacity(0.5) : .black.opacity(0.03),
+              radius: 12, x: 0, y: 6)
 
-        VStack(alignment: .leading, spacing: 12) {
-          ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .fill(Color(.systemBackground))
-              .shadow(
-                color: colorScheme == .dark ? .black.opacity(0.5) : .black.opacity(0.03),
-                radius: 12, x: 0, y: 6)
+          RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .stroke(Color(.separator), lineWidth: 1)
 
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .stroke(Color(.separator), lineWidth: 1)
+          TextEditor(text: $description)
+            .frame(minHeight: 200)
+            .padding(EdgeInsets(top: 18, leading: 16, bottom: 18, trailing: 16))
+            .scrollContentBackground(.hidden)
+            .foregroundColor(.primary)
+            .font(.body)
 
-            TextEditor(text: $description)
-              .frame(minHeight: 200)
-              .padding(EdgeInsets(top: 18, leading: 16, bottom: 18, trailing: 16))
-              .scrollContentBackground(.hidden)
-              .foregroundColor(.primary)
-              .font(.body)
-
-            if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-              Text(
-                "Contoh: Saya ingin melihat perbandingan jumlah langkah dengan minggu sebelumnya..."
-              )
-              .foregroundStyle(colorScheme == .dark ? Color(.systemGray2) : Color(.systemGray3))
-              .font(.body)
-              .padding(EdgeInsets(top: 24, leading: 20, bottom: 0, trailing: 20))
-            }
+          if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text(
+              "Contoh: Saya ingin melihat perbandingan jumlah langkah dengan minggu sebelumnya..."
+            )
+            .foregroundStyle(colorScheme == .dark ? Color(.systemGray2) : Color(.systemGray3))
+            .font(.body)
+            .padding(EdgeInsets(top: 24, leading: 20, bottom: 0, trailing: 20))
           }
-
-          Text("Email (opsional)")
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.primary)
-
-          TextField("email.anda@contoh.com", text: $email)
-            .textFieldStyle(FeedbackTextFieldStyle())
-            .keyboardType(.emailAddress)
-            .textInputAutocapitalization(.never)
-            .disableAutocorrection(true)
-
-          Text(
-            "Email Anda tidak akan terlihat oleh pengguna lain. Kami hanya akan menggunakannya untuk menindaklanjuti permintaan Anda."
-          )
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
         }
+
+        Text("Email (opsional)")
+          .font(.headline.weight(.semibold))
+          .foregroundStyle(.primary)
+
+        TextField("email.anda@contoh.com", text: $email)
+          .textFieldStyle(FeedbackTextFieldStyle())
+          .keyboardType(.emailAddress)
+          .textInputAutocapitalization(.never)
+          .disableAutocorrection(true)
+
+        Text(
+          "Email Anda tidak akan terlihat oleh pengguna lain. Kami hanya akan menggunakannya untuk menindaklanjuti permintaan Anda."
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
       }
       .padding(.horizontal, 24)
-      .padding(.bottom, 32)
-      .safeAreaInset(edge: .bottom) {
-        VStack {
-          Button {
-            submitFeedback()
-          } label: {
-            Text(isSubmitting ? "Mengirim..." : "Kirim Permintaan")
-              .font(.headline.weight(.semibold))
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 18)
-              .foregroundStyle(buttonForegroundColor)
-              .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                  .fill(buttonBackgroundColor)
-              )
-          }
-          .disabled(isSubmitDisabled || isSubmitting)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
-        .padding(.bottom, 20)
-        .background(
-          Color(.systemBackground)
-            .ignoresSafeArea(edges: .bottom)
-        )
-      }
-      .navigationTitle("Permintaan Fitur Baru")
-      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(role: .close) {
             dismiss()
           } label: {
             Image(systemName: "xmark")
           }
+        }
+
+        ToolbarItemGroup(placement: .keyboard) {
+          Spacer()
+          Button(isSubmitting ? "Mengirim..." : "Kirim Permintaan", action: submitFeedback)
+            .disabled(isSubmitDisabled || isSubmitting)
         }
       }
     }

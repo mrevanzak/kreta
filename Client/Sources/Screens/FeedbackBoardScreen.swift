@@ -37,18 +37,20 @@ struct FeedbackBoardScreen: View {
           FeedbackCard(item: $0, hasVoted: feedbackStore.hasUserVoted(feedbackId: $0.id))
             .listRowSeparator(.hidden, edges: .all)
             .listRowBackground(Color.clear)
+            .transition(.opacity.combined(with: .move(edge: .top)))
         }
         .listStyle(.plain)
         .listRowSpacing(2)
+        .animation(.smooth(duration: 0.35), value: sortedItems.map(\.id))
         .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button(role: .close) {
               dismiss()
             } label: {
               Image(systemName: "xmark")
             }
           }
-          ToolbarItem(placement: .primaryAction) {
+          ToolbarItem(placement: .navigationBarLeading) {
             sortMenu
           }
         }
@@ -70,7 +72,7 @@ struct FeedbackBoardScreen: View {
               .fontWeight(.semibold)
               .foregroundStyle(.white)
               .frame(width: 56, height: 56)
-              .background(Color.blue, in: Circle())
+              .background(Color.highlight, in: Circle())
               .shadow(
                 color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.15), radius: 14, y: 6)
           }
@@ -92,7 +94,9 @@ struct FeedbackBoardScreen: View {
       Section("Sort by") {
         ForEach(SortOption.allCases, id: \.self) { option in
           Button {
-            sortOption = option
+            withAnimation(.smooth(duration: 0.35)) {
+              sortOption = option
+            }
           } label: {
             Label(option.displayName, systemImage: sortOption == option ? "checkmark" : "")
           }
@@ -102,7 +106,9 @@ struct FeedbackBoardScreen: View {
       Section("Order") {
         ForEach(SortOrder.allCases, id: \.self) { order in
           Button {
-            sortOrder = order
+            withAnimation(.smooth(duration: 0.35)) {
+              sortOrder = order
+            }
           } label: {
             Label(order.displayName, systemImage: sortOrder == order ? "checkmark" : "")
           }

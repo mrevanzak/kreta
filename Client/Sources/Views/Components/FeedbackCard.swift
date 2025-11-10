@@ -56,7 +56,7 @@ struct FeedbackCard: View {
       cardShape
         .stroke(cardBorderGradient, lineWidth: 1)
     )
-    .shadow(color: cardShadowColor, radius: 8, x: 0, y: 12)
+    .shadow(color: cardShadowColor, radius: 8, x: 0, y: 4)
   }
 
   private var statusTag: some View {
