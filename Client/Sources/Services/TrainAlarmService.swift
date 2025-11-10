@@ -193,7 +193,7 @@ final class TrainAlarmService: @unchecked Sendable {
     let attributes = AlarmAttributes<TrainAlarmMetadata>(
       presentation: AlarmPresentation(alert: alert),
       metadata: metadata,
-      tintColor: .kretaPrimary
+      tintColor: .highlight
     )
 
     return AlarmManager.AlarmConfiguration(

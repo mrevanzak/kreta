@@ -14,6 +14,8 @@ struct FeedbackCard: View {
   @State private var hasVoted = false
   @State private var localVoteCount: Int
   @State private var isVoting = false
+  @State private var buttonScale: CGFloat = 1.0
+  @State private var iconRotation: Double = 0
 
   let item: FeedbackItem
 
@@ -24,37 +26,27 @@ struct FeedbackCard: View {
   }
 
   var body: some View {
-    HStack(alignment: .top, spacing: 16) {
-      // Left side: content
-      VStack(alignment: .leading, spacing: 12) {
+    VStack(spacing: 16) {
+      HStack(alignment: .top, spacing: 16) {
         // Title
         Text(item.description)
           .font(.headline)
-          .foregroundStyle(primaryTextColor)
+          .lineLimit(nil)
 
-        statusTag
+        Spacer()
 
-        // // Description
-        // Text(item.description)
-        //   .font(.subheadline)
-        //   .foregroundStyle(secondaryTextColor)
-        //   .lineLimit(3)
+        voteButton
+      }
 
+      HStack {
         // Timestamp
         Text(item.relativeTime)
           .font(.caption)
-          .foregroundStyle(secondaryTextColor)
-      }
+          .foregroundStyle(.sublime)
 
-      Spacer()
+        Spacer()
 
-      // Right side: vote button
-      VStack(spacing: 4) {
-        voteButton
-
-        Text("\(localVoteCount)")
-          .font(.caption2)
-          .foregroundStyle(secondaryTextColor)
+        statusTag
       }
     }
     .padding(20)
@@ -64,7 +56,7 @@ struct FeedbackCard: View {
       cardShape
         .stroke(cardBorderGradient, lineWidth: 1)
     )
-    .shadow(color: cardShadowColor, radius: 24, x: 0, y: 12)
+    .shadow(color: cardShadowColor, radius: 8, x: 0, y: 12)
   }
 
   private var statusTag: some View {
@@ -81,18 +73,35 @@ struct FeedbackCard: View {
     Button {
       handleVoteToggle()
     } label: {
-      Image(systemName: hasVoted ? "triangle.fill" : "triangle")
-        .font(.title3.weight(.semibold))
-        .foregroundStyle(hasVoted ? voteAccentColor : secondaryTextColor)
-        .frame(width: 36, height: 40)
-        .background(
-          cardActionBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+      VStack(spacing: 8) {
+        Image(systemName: hasVoted ? "hand.thumbsup.fill" : "hand.thumbsup")
+          .foregroundStyle(hasVoted ? .highlight : .sublime)
+          .rotationEffect(.degrees(iconRotation))
+          .animation(.spring(response: 0.4, dampingFraction: 0.6), value: iconRotation)
+        Text("\(localVoteCount)")
+          .font(.caption2)
+          .foregroundStyle(.sublime)
+      }
+      .frame(width: 44, height: 44)
     }
+    .scaleEffect(buttonScale)
+    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: buttonScale)
     .disabled(isVoting)
   }
 
   private func handleVoteToggle() {
     guard !isVoting else { return }
+
+    // Trigger tap animation
+    buttonScale = 0.85
+    iconRotation = hasVoted ? -15 : 15
+
+    // Reset animations after a brief delay
+    Task { @MainActor in
+      try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
+      buttonScale = 1.0
+      iconRotation = 0
+    }
 
     // Optimistic update
     isVoting = true
@@ -128,14 +137,6 @@ struct FeedbackCard: View {
 
   private var cardShape: RoundedRectangle {
     RoundedRectangle(cornerRadius: 24, style: .continuous)
-  }
-
-  private var primaryTextColor: Color {
-    colorScheme == .dark ? .white : .black.opacity(0.9)
-  }
-
-  private var secondaryTextColor: Color {
-    colorScheme == .dark ? .white.opacity(0.6) : .black.opacity(0.55)
   }
 
   private var cardGlassBackground: some View {
@@ -177,49 +178,6 @@ struct FeedbackCard: View {
 
   private var cardShadowColor: Color {
     colorScheme == .dark ? .black.opacity(0.45) : .black.opacity(0.12)
-  }
-
-  private var cardActionBackground: LinearGradient {
-    LinearGradient(
-      colors: [
-        Color.blue.opacity(colorScheme == .dark ? 0.35 : 0.4),
-        Color.cyan.opacity(colorScheme == .dark ? 0.45 : 0.5),
-      ],
-      startPoint: .topLeading,
-      endPoint: .bottomTrailing
-    )
-  }
-
-  private var voteAccentColor: Color {
-    colorScheme == .dark ? .cyan : .blue
-  }
-}
-
-// Helper extension for hex colors
-extension Color {
-  init(hex: String) {
-    let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-    var int: UInt64 = 0
-    Scanner(string: hex).scanHexInt64(&int)
-    let a: UInt64
-    let r: UInt64
-    let g: UInt64
-    let b: UInt64
-    switch hex.count {
-    case 6:  // RGB
-      (a, r, g, b) = (255, (int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
-    case 8:  // ARGB
-      (a, r, g, b) = ((int >> 24) & 0xFF, (int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
-    default:
-      (a, r, g, b) = (255, 0, 0, 0)
-    }
-    self.init(
-      .sRGB,
-      red: Double(r) / 255,
-      green: Double(g) / 255,
-      blue: Double(b) / 255,
-      opacity: Double(a) / 255
-    )
   }
 }
 

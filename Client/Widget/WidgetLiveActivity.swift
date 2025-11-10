@@ -20,13 +20,13 @@ struct BeforeBoardingView: View {
         .resizable()
         .scaledToFit()
         .frame(width: 56, height: 56)
-        .foregroundColor(.kretaPrimary)
+        .foregroundColor(.highlight)
 
       VStack(alignment: .leading, spacing: 6) {
         Text(context.attributes.trainName)
           .font(.title2)
           .bold()
-          .foregroundColor(.kretaPrimary)
+          .foregroundColor(.highlight)
           .lineLimit(2)
           .minimumScaleFactor(0.6)
 
@@ -90,7 +90,7 @@ struct PrepareToDropOffView: View {
           .labelReservedIconWidth(24)
           .font(.body)
           .bold()
-          .foregroundColor(.kretaPrimary)
+          .foregroundColor(.highlight)
 
         Label {
           Text(context.attributes.destination.name)
@@ -108,7 +108,7 @@ struct PrepareToDropOffView: View {
         .resizable()
         .scaledToFit()
         .frame(width: 56, height: 56)
-        .foregroundColor(.kretaPrimary)
+        .foregroundColor(.highlight)
     }
   }
 }
@@ -147,7 +147,7 @@ struct BeforeBoardingSmallView: View {
         Text(context.attributes.trainName)
           .font(.body)
           .bold()
-          .foregroundColor(.kretaPrimary)
+          .foregroundColor(.highlight)
           .lineLimit(1)
           .minimumScaleFactor(0.8)
 
@@ -191,7 +191,7 @@ struct PrepareToDropOffSmallView: View {
         Text("Segera Turun!")
           .font(.footnote)
           .bold()
-          .foregroundColor(.kretaPrimary)
+          .foregroundColor(.highlight)
           .lineLimit(1)
 
         Text(context.attributes.destination.name)
@@ -206,7 +206,7 @@ struct PrepareToDropOffSmallView: View {
         .resizable()
         .scaledToFit()
         .frame(width: 36, height: 36)
-        .foregroundColor(.kretaPrimary)
+        .foregroundColor(.highlight)
 
     }
     .padding(.horizontal)
@@ -227,7 +227,7 @@ struct ActivitySmallView: View {
           Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
             .font(.title3)
             .bold()
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
 
           ProgressView(
             timerInterval: Date()...destinationEstimatedArrival,
@@ -236,7 +236,7 @@ struct ActivitySmallView: View {
             currentValueLabel: {
             }
           )
-          .tint(.kretaPrimary)
+          .tint(.highlight)
           .progressViewStyle(.linear)
           .padding(.bottom, 8)
 
@@ -291,10 +291,10 @@ struct ActivityProgressView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 12, height: 12)
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         }
       )
-      .tint(.kretaPrimary)
+      .tint(.highlight)
       .progressViewStyle(.circular)
       .frame(width: 24, height: 24)
     }
@@ -355,7 +355,7 @@ struct TrainExpandedBottomView: View {
             label: { EmptyView() },
             currentValueLabel: { EmptyView() }
           )
-          .tint(.kretaPrimary)
+          .tint(.highlight)
           .progressViewStyle(.linear)
         }
 
@@ -376,7 +376,7 @@ struct TrainExpandedBottomView: View {
             )
             .font(.callout)
             .bold()
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
             .multilineTextAlignment(.center)
           }
         }
@@ -425,20 +425,20 @@ struct WidgetLiveActivity: Widget {
         switch context.state.journeyState {
         case .beforeBoarding:
           Image(systemName: "tram.circle.fill")
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         case .onBoard:
           HStack(alignment: .center, spacing: 8) {
             ActivityProgressView(context: context)
             Text(context.attributes.destination.code)
               .padding(.horizontal, 8)
               .padding(.vertical, 4)
-              .background(Color.kretaPrimary)
+              .background(Color.highlight)
               .clipShape(Capsule())
               .foregroundColor(Color(.systemBackground))
           }
         case .prepareToDropOff:
           Image(systemName: "figure.walk.circle.fill")
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         }
 
       } compactTrailing: {
@@ -446,7 +446,7 @@ struct WidgetLiveActivity: Widget {
         case .beforeBoarding:
           if let departureTime = context.attributes.from.estimatedTime {
             Text(timerInterval: Date()...departureTime, showsHours: true)
-              .foregroundColor(.kretaPrimary)
+              .foregroundColor(.highlight)
               .multilineTextAlignment(.trailing)
               .frame(width: 64)
           }
@@ -455,24 +455,24 @@ struct WidgetLiveActivity: Widget {
             .estimatedTime
           {
             Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
-              .foregroundColor(.kretaPrimary)
+              .foregroundColor(.highlight)
               .multilineTextAlignment(.trailing)
               .frame(width: 64)
           }
         case .prepareToDropOff:
           Text("Turun")
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         }
       } minimal: {
         switch context.state.journeyState {
         case .beforeBoarding:
           Image(systemName: "tram.circle.fill")
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         case .onBoard:
           ActivityProgressView(context: context)
         case .prepareToDropOff:
           Image(systemName: "figure.walk.circle.fill")
-            .foregroundColor(.kretaPrimary)
+            .foregroundColor(.highlight)
         }
       }
       .widgetURL(URL(string: "kreta://train"))

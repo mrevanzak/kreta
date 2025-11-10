@@ -11,7 +11,7 @@ struct StationProgressRow: View {
   let item: StationTimelineItem
   let isFirst: Bool
   let isLast: Bool
-  
+
   var body: some View {
     HStack(alignment: .top, spacing: 16) {
       // Timeline indicator (dot and lines)
@@ -22,7 +22,7 @@ struct StationProgressRow: View {
             .fill(lineColor)
             .frame(width: 6, height: 20)
         }
-        
+
         // Station dot
         Circle()
           .fill(dotColor)
@@ -31,7 +31,7 @@ struct StationProgressRow: View {
             Circle()
               .stroke(dotBorderColor, lineWidth: item.state == .current ? 3 : 2)
           )
-        
+
         // Bottom connecting line
         if !isLast {
           Rectangle()
@@ -41,7 +41,7 @@ struct StationProgressRow: View {
         }
       }
       .frame(width: 24)
-      
+
       // Station information
       VStack(alignment: .leading, spacing: 4) {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -50,17 +50,17 @@ struct StationProgressRow: View {
             Text(item.station.name)
               .font(.system(.title, design: .rounded, weight: .bold))
               .foregroundStyle(textColor)
-            
+
             // City name
             Text(item.station.code)
               .font(.subheadline)
               .foregroundStyle(textColor)
           }
-          
+
           Spacer(minLength: 0)
-          
+
           // Timing information
-          
+
           if let arrivalTime = item.arrivalTime {
             Text("\(formatTime(arrivalTime))")
               .font(.subheadline)
@@ -70,15 +70,15 @@ struct StationProgressRow: View {
               .font(.subheadline)
               .foregroundStyle(textColor)
           }
-          
+
         }
       }
       .padding(.vertical, 8)
     }
   }
-  
+
   // MARK: - Computed Properties
-  
+
   private var dotSize: CGFloat {
     switch item.state {
     case .current: return 27
@@ -86,38 +86,38 @@ struct StationProgressRow: View {
     case .upcoming: return 27
     }
   }
-  
+
   private var dotColor: Color {
     switch item.state {
-    case .completed: return .greenPrimary
-    case .current: return .greenPrimary
+    case .completed: return .highlight
+    case .current: return .highlight
     case .upcoming: return .grayHighlight
     }
   }
-  
+
   private var dotBorderColor: Color {
     switch item.state {
-    case .completed: return .greenHighlight
-    case .current: return .greenHighlight
+    case .completed: return .highlight
+    case .current: return .highlight
     case .upcoming: return .grayHighlight
     }
   }
-  
+
   private var lineColor: Color {
     switch item.state {
-    case .completed: return .greenPrimary
-    case .current: return .greenPrimary
+    case .completed: return .highlight
+    case .current: return .highlight
     case .upcoming: return .grayHighlight
     }
   }
-  
+
   private var textColor: Color {
     switch item.state {
     case .completed, .current: return .primary
     case .upcoming: return .secondary
     }
   }
-  
+
   private func formatTime(_ date: Date) -> String {
     date.formatted(.dateTime.hour().minute())
   }
@@ -132,7 +132,7 @@ struct StationProgressRow: View {
     position: Position(latitude: -6.1774, longitude: 106.8306),
     city: "Jakarta Pusat"
   )
-  
+
   VStack(spacing: 0) {
     StationProgressRow(
       item: StationTimelineItem(
@@ -146,7 +146,7 @@ struct StationProgressRow: View {
       isFirst: true,
       isLast: false
     )
-    
+
     StationProgressRow(
       item: StationTimelineItem(
         id: "2",
@@ -164,7 +164,7 @@ struct StationProgressRow: View {
       isFirst: false,
       isLast: false
     )
-    
+
     StationProgressRow(
       item: StationTimelineItem(
         id: "3",
