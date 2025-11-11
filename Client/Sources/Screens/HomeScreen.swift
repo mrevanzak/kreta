@@ -6,6 +6,7 @@ import Portal
 
 struct HomeScreen: View {
   @Environment(Router.self) private var router
+  @Environment(\.colorScheme) private var colorScheme
   @State private var trainMapStore = TrainMapStore()
   
   @State private var isFollowing: Bool = true
@@ -17,6 +18,32 @@ struct HomeScreen: View {
       set: { active in
         selectedDetent = active ? .large : .height(200)
       }
+    )
+  }
+  
+  var gradient: LinearGradient {
+    let colors: [Color]
+    
+    if colorScheme == .dark {
+      // Dark mode gradient
+      colors = [
+        .black.opacity(0.5),
+        .white,
+        .black.opacity(0.5)
+      ]
+    } else {
+      // Light mode gradient
+      colors = [
+        .clear,
+        .white,
+        .clear,
+      ]
+    }
+    
+    return LinearGradient(
+      colors: colors,
+      startPoint: UnitPoint(x: 0.0, y: 0.0),
+      endPoint: UnitPoint(x: 1.0, y: 1.0)
     )
   }
   
@@ -99,8 +126,8 @@ struct HomeScreen: View {
   @ViewBuilder
   private func minimalTrainView(train: ProjectedTrain) -> some View {
     let destinationStation = trainMapStore.selectedJourneyData?.userSelectedToStation.code
-      ?? train.toStation?.code
-      ?? "Tujuan"
+    ?? train.toStation?.code
+    ?? "Tujuan"
     
     VStack(alignment: .leading,spacing: 4) {
       Text("\(train.name) Menuju \(destinationStation)")
@@ -119,7 +146,7 @@ struct HomeScreen: View {
   @ViewBuilder
   private var compactBottomSheet: some View {
     VStack(alignment: .leading, spacing: 10) {
-      HStack {
+      HStack() {
         Text("Perjalanan Kereta")
           .font(.title2).bold()
         Spacer()
@@ -128,10 +155,23 @@ struct HomeScreen: View {
           Button {
             
           } label: {
-            Circle().fill(.thinMaterial)
-              .frame(width: 38, height: 38)
-              .overlay(Image(systemName: "square.and.arrow.up").foregroundStyle(.black))
+            Image(systemName: "square.and.arrow.up")
+              .foregroundStyle(.textSecondary)
+              .frame(width: 26)
+              .overlay (
+                Circle()
+                  .strokeBorder ( self.gradient , lineWidth: 1)
+                  .opacity ( 1 * 1.2 )
+                  .frame(width: 34, height: 34)
+              )
+            
+              .background (
+                Circle()
+                  .strokeBorder(.gray.opacity( 0.2 ), lineWidth: 1)
+                  .frame(width: 34, height: 34)
+              )
           }
+          .padding(.trailing, 8)
         }
         
         Menu {
@@ -139,9 +179,21 @@ struct HomeScreen: View {
             router.navigate(to: .sheet(.feedback))
           }
         } label: {
-          Circle().fill(.thinMaterial)
-            .frame(width: 38, height: 38)
-            .overlay(Image(systemName: "ellipsis").foregroundStyle(.black))
+          Image(systemName: "ellipsis")
+            .foregroundStyle(.textSecondary)
+            .frame(width: 26)
+            .overlay (
+              Circle()
+                .strokeBorder ( self.gradient , lineWidth: 1)
+                .opacity ( 1 * 1.2 )
+                .frame(width: 34, height: 34)
+            )
+          
+            .background (
+              Circle()
+                .strokeBorder(.gray.opacity( 0.2 ), lineWidth: 1)
+                .frame(width: 34, height: 34)
+            )
         }
       }
       
