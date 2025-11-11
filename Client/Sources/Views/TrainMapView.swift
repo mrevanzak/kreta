@@ -10,6 +10,10 @@ struct TrainMapView: View {
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var visibleRegionSpan: MKCoordinateSpan?
 
+  private var isTrackingTrain: Bool {
+    mapStore.liveTrainPosition != nil
+  }
+
   var body: some View {
     ZStack(alignment: .topTrailing) {
       Map(position: $cameraPosition) {
@@ -21,12 +25,23 @@ struct TrainMapView: View {
               .stroke(.blue, lineWidth: 3)
           }
         }
-        if isStationZoomVisible {
+        if isTrackingTrain || (!isTrackingTrain && isStationZoomVisible) {
           ForEach(filteredStations) { station in
             Annotation(station.name, coordinate: station.coordinate) {
               ZStack {
-                Circle().fill(.white).frame(width: 10, height: 10)
-                Circle().stroke(.blue, lineWidth: 2).frame(width: 14, height: 14)
+                Circle()
+                  .fill(Color.blue)
+                  .frame(width: 32, height: 32)
+                  .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 1)
+                Circle()
+                  .strokeBorder(Color.white.opacity(0.9), lineWidth: 2)
+                  .frame(width: 32, height: 32)
+                Text(station.code)
+                  .font(.system(size: 12, weight: .bold, design: .rounded))
+                  .foregroundStyle(.white)
+                  .minimumScaleFactor(0.6)
+                  .lineLimit(1)
+                  .padding(.horizontal, 4)
               }
             }
           }
@@ -123,21 +138,18 @@ struct TrainMapView: View {
     return mapStore.routes.filter { routeIds.contains($0.id) }
   }
 
-    private var filteredStations: [Station] {
-      guard let jd = mapStore.selectedJourneyData else {
-        return mapStore.stations
-      }
-
-      // Get stop station IDs derived from segment times only
-      let stopIds = Set(jd.stopStationIds(dwellThreshold: 30)) // tweak threshold if needed
-
-      // Match against Station.id first, then fallback to code
-      return mapStore.stations.filter { st in
-        let key = st.id ?? st.code
-        return stopIds.contains(key)
-      }
+  private var filteredStations: [Station] {
+    guard let jd = mapStore.selectedJourneyData else {
+      return mapStore.stations
     }
 
+    let stopIds = Set(jd.stopStationIds(dwellThreshold: 30))
+
+    return mapStore.stations.filter { st in
+      let key = st.id ?? st.code
+      return stopIds.contains(key)
+    }
+  }
 
   private var filteredTrains: [ProjectedTrain] {
     guard let selectedTrain = mapStore.selectedTrain else { return [] }
