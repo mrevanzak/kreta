@@ -457,28 +457,29 @@ extension TrainMapStore {
           }
         }
 
-        // Re-project the train with current time
-        if let projectedTrain = projectSelectedTrain(now: Date()) {
-          selectedTrain = projectedTrain
-          startProjectionUpdates()
+        // Use cached train directly - it was already projected when the journey was created
+        // and remains valid. Re-projecting risks station ID lookup failures.
+        guard let cachedTrain = selectedTrain else {
+          throw TrainMapError.dataMappingFailed("Cached train data is missing")
+        }
+        
+        // Live updates will work via liveTrainPosition computed property
+        startProjectionUpdates()
 
-          // Execute Live Activity start (by now it should be <= 10 minutes until departure)
-          try await executeLiveActivityStart(train: projectedTrain, journeyData: cachedJourneyData)
+        // Execute Live Activity start (by now it should be <= 10 minutes until departure)
+        try await executeLiveActivityStart(train: cachedTrain, journeyData: cachedJourneyData)
 
-          // Track journey start
-          if let from = projectedTrain.fromStation, let to = projectedTrain.toStation {
-            AnalyticsEventService.shared.trackJourneyStarted(
-              trainId: cachedJourneyData.trainId,
-              trainName: projectedTrain.name,
-              from: from,
-              to: to,
-              userSelectedDeparture: cachedJourneyData.userSelectedDepartureTime,
-              userSelectedArrival: cachedJourneyData.userSelectedArrivalTime,
-              hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
-            )
-          }
-        } else {
-          throw TrainMapError.dataMappingFailed("Failed to project train from cached data")
+        // Track journey start using cached train data
+        if let from = cachedTrain.fromStation, let to = cachedTrain.toStation {
+          AnalyticsEventService.shared.trackJourneyStarted(
+            trainId: cachedJourneyData.trainId,
+            trainName: cachedTrain.name,
+            from: from,
+            to: to,
+            userSelectedDeparture: cachedJourneyData.userSelectedDepartureTime,
+            userSelectedArrival: cachedJourneyData.userSelectedArrivalTime,
+            hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
+          )
         }
 
         return
@@ -580,12 +581,28 @@ extension TrainMapStore {
       throw TrainMapError.dataMappingFailed("Invalid journey segments")
     }
 
-    // Create a comprehensive stationsById dictionary for projection
-    // This maps segment station IDs to Station objects
-    // Use the segmentIdToStation mapping we created, falling back to ID lookup
-    let projectionStationsById: [String: Station] = Dictionary(
-      uniqueKeysWithValues: segmentIdToStation.map { ($0.key, $0.value) }
-    ).merging(stationsById) { (first, _) in first }
+    // Create a comprehensive stationsById dictionary for projection using multi-strategy approach
+    // This ensures robustness when segment IDs use different formats (server IDs vs codes)
+    let projectionStationsById: [String: Station] = {
+      var combined: [String: Station] = [:]
+      
+      // Include segment-specific mappings first (highest priority)
+      for (key, station) in segmentIdToStation {
+        combined[key] = station
+      }
+      
+      // Add global station mappings by ID
+      for station in stations where station.id != nil {
+        combined[station.id!] = station
+      }
+      
+      // Add global station mappings by code (fallback)
+      for station in stations {
+        combined[station.code] = station
+      }
+      
+      return combined
+    }()
 
     // Build TrainJourneyData
     let journeyData = TrainJourneyData(
@@ -608,6 +625,14 @@ extension TrainMapStore {
     )
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
+    
+    // Log station lookup diagnostics for debugging
+    logger.debug("""
+      Server fallback: Projecting train with \(projectionStationsById.count) stations mapped. \
+      First segment: \(journeySegments.first?.fromStationId ?? "none") → \
+      \(journeySegments.first?.toStationId ?? "none")
+      """)
+    
     guard
       let projectedTrain = TrainProjector.projectTrain(
         now: Date(),
@@ -660,17 +685,45 @@ extension TrainMapStore {
   private func projectSelectedTrain(now: Date = Date()) -> ProjectedTrain? {
     guard let selectedTrain, let selectedJourneyData else { return nil }
 
-    let stationsById = Dictionary(
-      uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+    // Build comprehensive station lookup with multi-strategy approach
+    // This ensures TrainProjector can find all stations referenced by JourneySegment IDs
+    var stationsById: [String: Station] = [:]
+    
+    // Strategy 1: Map by station.id (primary key)
+    for station in stations where station.id != nil {
+      stationsById[station.id!] = station
+    }
+    
+    // Strategy 2: Map by station.code (fallback for code-based lookups)
+    for station in stations {
+      stationsById[station.code] = station
+    }
+    
+    // Strategy 3: Include journey-specific stations from TrainJourneyData.allStations
+    for station in selectedJourneyData.allStations {
+      if let id = station.id {
+        stationsById[id] = station
+      }
+      stationsById[station.code] = station
+    }
+    
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
 
+    // Use trainId from journeyData, not selectedTrain.id (which may be journey ID)
     let trainJourney = TrainJourney(
-      id: selectedTrain.id,
-      trainId: selectedTrain.id,
+      id: selectedJourneyData.trainId,
+      trainId: selectedJourneyData.trainId,
       code: selectedTrain.code,
       name: selectedTrain.name,
       segments: selectedJourneyData.segments
     )
+
+    // Log station lookup diagnostics for debugging
+    logger.debug("""
+      Projecting train with \(stationsById.count) stations mapped. \
+      First segment: \(selectedJourneyData.segments.first?.fromStationId ?? "none") → \
+      \(selectedJourneyData.segments.first?.toStationId ?? "none")
+      """)
 
     return TrainProjector.projectTrain(
       now: now,
