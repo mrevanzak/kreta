@@ -32,17 +32,6 @@ struct AddTrainView: View {
   private func headerView() -> some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack {
-        // Back button when calendar is shown (only in date step)
-        if viewModel.showCalendar && viewModel.currentStep == .date {
-          Button {
-            viewModel.hideCalendar()
-          } label: {
-            Image(systemName: "chevron.left")
-              .font(.title3)
-              .foregroundStyle(.primary)
-          }
-        }
-
         VStack(alignment: .leading) {
           Text("Tambah Perjalanan Kereta")
             .font(.title2.weight(.bold))
@@ -184,6 +173,9 @@ struct AddTrainView: View {
       ),
       onDateSelected: { date in
         viewModel.selectDate(date)
+      },
+      onBack: {
+        viewModel.hideCalendar()
       }
     )
   }
