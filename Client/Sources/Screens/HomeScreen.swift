@@ -75,7 +75,7 @@ struct HomeScreen: View {
             }
             .presentationBackgroundInteraction(.enabled)
             .presentationDetents(presentationDetents, selection: $selectedDetent)
-            .presentationDragIndicator(selectedDetent == .fraction(0.35) ? .hidden : .visible)
+            .presentationDragIndicator(trainMapStore.selectedTrain == nil ? .hidden : .visible)
             .interactiveDismissDisabled(true)
             .animation(.easeInOut(duration: 0.3), value: trainMapStore.selectedTrain?.id)
             .animation(.easeInOut(duration: 0.3), value: selectedDetent)
