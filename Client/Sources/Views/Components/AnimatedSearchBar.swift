@@ -128,18 +128,6 @@ struct AnimatedSearchBar: View {
 
       TextField("Stasiun / Kota", text: $searchText)
         .textFieldStyle(.plain)
-
-      if !searchText.isEmpty {
-        Button {
-          searchText = ""
-        } label: {
-          Image(systemName: "xmark.circle.fill")
-            .font(.caption)
-            .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(.secondary)
-        }
-        .buttonStyle(.plain)
-      }
     }
     .padding(.horizontal, 8)
     .padding(.vertical, 10)
@@ -172,13 +160,6 @@ struct AnimatedSearchBar: View {
         .foregroundStyle(.sublime)
         .opacity(isClearing ? 0 : 1)
         .scaleEffect(isClearing ? 0.5 : 1)
-
-      Image(systemName: "xmark.circle.fill")
-        .font(.caption)
-        .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(.sublime)
-        .opacity(isClearing ? 0 : 1)
-        .scaleEffect(isClearing ? 0.5 : 1)
     }
     .foregroundStyle(.primary)
     .padding(.horizontal, 8)
@@ -198,15 +179,8 @@ struct AnimatedSearchBar: View {
         .foregroundStyle(.sublime)
         .lineLimit(1)
         .minimumScaleFactor(1)
-      
-      Spacer()
-      
-      Image(systemName: "xmark.circle.fill")
-        .font(.caption)
-        .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(.sublime)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
+    .frame(maxWidth: .infinity, alignment: .center)
     .padding(.horizontal, 8)
     .padding(.vertical, 10)
     .background(.componentFill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
