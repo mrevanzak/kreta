@@ -38,6 +38,9 @@ struct HomeScreen: View {
                     selectedDetent = .height(200)
                   }
                 )
+              } else if selectedDetent == .height(80), let train = trainMapStore.selectedTrain {
+                // Minimal view with train name and destination
+                minimalTrainView(train: trainMapStore.liveTrainPosition ?? train)
               } else {
                 // Compact view with train card or add button
                 compactBottomSheet
@@ -85,13 +88,33 @@ struct HomeScreen: View {
   
   private var presentationDetents: Set<PresentationDetent> {
     if trainMapStore.selectedTrain != nil {
-      return [.height(200), .large]
+      return [.height(80), .height(200), .large]
     } else {
       return [.fraction(0.35)]
     }
   }
   
   // MARK: - Subviews
+  
+  @ViewBuilder
+  private func minimalTrainView(train: ProjectedTrain) -> some View {
+    let destinationStation = trainMapStore.selectedJourneyData?.userSelectedToStation.code
+      ?? train.toStation?.code
+      ?? "Tujuan"
+    
+    VStack(alignment: .leading,spacing: 4) {
+      Text("\(train.name) Menuju \(destinationStation)")
+        .font(.title2.weight(.bold))
+        .foregroundStyle(.primary)
+      
+      Text(formatRemainingTime(train: train))
+        .font(.subheadline)
+        .foregroundStyle(Color(hex: "818181"))
+    }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, 12)
+    .padding(.horizontal)
+  }
   
   @ViewBuilder
   private var compactBottomSheet: some View {
@@ -171,6 +194,46 @@ struct HomeScreen: View {
   }
   
   // MARK: - Actions
+  
+  private func formatRemainingTime(train: ProjectedTrain) -> String {
+    // Use journey data if available for user-selected times
+    let departure = trainMapStore.selectedJourneyData?.userSelectedDepartureTime ?? train.journeyDeparture
+    let arrival = trainMapStore.selectedJourneyData?.userSelectedArrivalTime ?? train.journeyArrival
+    
+    guard let departure = departure, let arrival = arrival else {
+      return "Waktu tidak tersedia"
+    }
+    
+    let now = Date()
+    
+    // Check if train hasn't departed yet
+    if now < departure {
+      return "Kereta belum berangkat"
+    }
+    
+    // Check if train has already arrived
+    if now >= arrival {
+      return "Sudah Tiba"
+    }
+    
+    // Calculate time remaining until arrival (mirrors TrainCard logic)
+    let timeInterval = arrival.timeIntervalSince(now)
+    let totalMinutes = Int(timeInterval / 60)
+    
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
+    
+    // Return only the time string without "Tiba Dalam"
+    if hours > 0 && minutes > 0 {
+      return "\(hours) Jam \(minutes) Menit"
+    } else if hours > 0 {
+      return "\(hours) Jam"
+    } else if minutes > 0 {
+      return "\(minutes) Menit"
+    } else {
+      return "Tiba Sebentar Lagi"
+    }
+  }
   
   private func deleteTrain() {
     Task { @MainActor in
