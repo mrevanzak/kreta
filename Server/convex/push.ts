@@ -34,6 +34,7 @@ export const triggerPush = action({
       subtitle: args.subtitle,
       body: args.body,
     };
+    note.aps["interruption-level"] = "time-sensitive";
     return await provider.sendNotification(note, args.deviceToken);
   },
 });
@@ -152,6 +153,7 @@ export const sendTripReminderPush = internalAction({
       trainId: args.trainId,
     } as Record<string, unknown>;
     note.aps.category = "TRIP_START_FALLBACK";
+    note.aps["interruption-level"] = "time-sensitive";
 
     return await provider.sendNotification(note, args.deviceToken);
   },
@@ -189,6 +191,7 @@ export const sendArrivalPush = internalAction({
       stationName: args.stationName,
     } as Record<string, unknown>;
     note.aps.category = "ARRIVAL_ALERT";
+    note.aps["interruption-level"] = "time-sensitive";
 
     return await provider.sendNotification(note, args.deviceToken);
   },

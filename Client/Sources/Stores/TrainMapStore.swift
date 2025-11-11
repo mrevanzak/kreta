@@ -230,7 +230,8 @@ extension TrainMapStore {
         train: train,
         fromStation: fromStation,
         toStation: toStation,
-        departureTime: departureTime
+        departureTime: departureTime,
+        scheduleOffset: scheduleOffset
       )
     }
   }
@@ -276,9 +277,9 @@ extension TrainMapStore {
     train: ProjectedTrain,
     fromStation: Station,
     toStation: Station,
-    departureTime: Date
+    departureTime: Date,
+    scheduleOffset: TimeInterval
   ) async throws {
-    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
     let reminderDate = departureTime.addingTimeInterval(-scheduleOffset)
 
     guard reminderDate > Date() else {
@@ -294,6 +295,7 @@ extension TrainMapStore {
       "Kereta \(train.name) akan berangkat dalam 10 menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
     content.sound = .default
     content.categoryIdentifier = "TRIP_START_FALLBACK"
+    content.interruptionLevel = .timeSensitive
 
     if let deepLink = makeTripReminderDeepLink(
       trainId: train.id,
@@ -462,7 +464,7 @@ extension TrainMapStore {
         guard let cachedTrain = selectedTrain else {
           throw TrainMapError.dataMappingFailed("Cached train data is missing")
         }
-        
+
         // Live updates will work via liveTrainPosition computed property
         startProjectionUpdates()
 
@@ -585,22 +587,22 @@ extension TrainMapStore {
     // This ensures robustness when segment IDs use different formats (server IDs vs codes)
     let projectionStationsById: [String: Station] = {
       var combined: [String: Station] = [:]
-      
+
       // Include segment-specific mappings first (highest priority)
       for (key, station) in segmentIdToStation {
         combined[key] = station
       }
-      
+
       // Add global station mappings by ID
       for station in stations where station.id != nil {
         combined[station.id!] = station
       }
-      
+
       // Add global station mappings by code (fallback)
       for station in stations {
         combined[station.code] = station
       }
-      
+
       return combined
     }()
 
@@ -625,14 +627,15 @@ extension TrainMapStore {
     )
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
-    
+
     // Log station lookup diagnostics for debugging
-    logger.debug("""
+    logger.debug(
+      """
       Server fallback: Projecting train with \(projectionStationsById.count) stations mapped. \
       First segment: \(journeySegments.first?.fromStationId ?? "none") → \
       \(journeySegments.first?.toStationId ?? "none")
       """)
-    
+
     guard
       let projectedTrain = TrainProjector.projectTrain(
         now: Date(),
@@ -688,17 +691,17 @@ extension TrainMapStore {
     // Build comprehensive station lookup with multi-strategy approach
     // This ensures TrainProjector can find all stations referenced by JourneySegment IDs
     var stationsById: [String: Station] = [:]
-    
+
     // Strategy 1: Map by station.id (primary key)
     for station in stations where station.id != nil {
       stationsById[station.id!] = station
     }
-    
+
     // Strategy 2: Map by station.code (fallback for code-based lookups)
     for station in stations {
       stationsById[station.code] = station
     }
-    
+
     // Strategy 3: Include journey-specific stations from TrainJourneyData.allStations
     for station in selectedJourneyData.allStations {
       if let id = station.id {
@@ -706,7 +709,7 @@ extension TrainMapStore {
       }
       stationsById[station.code] = station
     }
-    
+
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
 
     // Use trainId from journeyData, not selectedTrain.id (which may be journey ID)
@@ -719,7 +722,8 @@ extension TrainMapStore {
     )
 
     // Log station lookup diagnostics for debugging
-    logger.debug("""
+    logger.debug(
+      """
       Projecting train with \(stationsById.count) stations mapped. \
       First segment: \(selectedJourneyData.segments.first?.fromStationId ?? "none") → \
       \(selectedJourneyData.segments.first?.toStationId ?? "none")
