@@ -35,41 +35,58 @@ struct JourneyProgressView: View {
       
       // Scrollable content with floating card
       ZStack(alignment: .top) {
-        ScrollView {
-          VStack(spacing: 0) {
-            // Top padding to prevent content from hiding under card
-            Color.clear
-              .frame(height: 140)
-            
-            // Invisible geometry reader to detect scroll position
-            GeometryReader { geometry in
+        ZStack(alignment: .bottom) {
+          ScrollView {
+            VStack(spacing: 0) {
+              // Top padding to prevent content from hiding under card
               Color.clear
-                .preference(
-                  key: ScrollOffsetPreferenceKey.self,
-                  value: geometry.frame(in: .named("scrollView")).minY
-                )
-            }
-            .frame(height: 0)
-            
-            // Timeline list
-            if isLoadingTimeline {
-              ProgressView()
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-            } else {
-              JourneyTimelineView(items: timelineItems)
-                .padding(.horizontal, 40)
-                .padding(.bottom, 20)
+                .frame(height: 140)
+              
+              // Invisible geometry reader to detect scroll position
+              GeometryReader { geometry in
+                Color.clear
+                  .preference(
+                    key: ScrollOffsetPreferenceKey.self,
+                    value: geometry.frame(in: .named("scrollView")).minY
+                  )
+              }
+              .frame(height: 0)
+              
+              // Timeline list
+              if isLoadingTimeline {
+                ProgressView()
+                  .frame(maxWidth: .infinity, alignment: .center)
+                  .padding()
+              } else {
+                JourneyTimelineView(items: timelineItems)
+                  .padding(.horizontal, 40)
+                  .padding(.bottom, 20)
+              }
             }
           }
+          .scrollIndicators(.hidden)
+          .coordinateSpace(name: "scrollView")
+          .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            // When content scrolls up past the card area
+            isCardOverContent = value < 120
+          }
+          .background(.backgroundSecondary)
+          
+          // Bottom gradient fade
+          LinearGradient(
+            colors: [
+              Color.backgroundSecondary.opacity(0),
+              Color.backgroundSecondary.opacity(0.7),
+              Color.backgroundSecondary.opacity(0.9),
+              Color.backgroundSecondary
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+          .frame(height: 80)
+          .frame(maxWidth: .infinity)
+          .allowsHitTesting(false)
         }
-        .scrollIndicators(.hidden)
-        .coordinateSpace(name: "scrollView")
-        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-          // When content scrolls up past the card area
-          isCardOverContent = value < 120
-        }
-        .background(.backgroundSecondary)
         
         // Floating train card with gradient background
         VStack(spacing: 0) {
@@ -108,6 +125,7 @@ struct JourneyProgressView: View {
         }
       }
     }
+    .ignoresSafeArea(edges: .bottom)
     .task {
       await loadTimeline()
       startTimer()
