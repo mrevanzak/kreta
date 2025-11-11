@@ -101,7 +101,21 @@ struct HomeScreen: View {
           if isPortalActive.wrappedValue {
             Text(train.name)
               .font(.title3.weight(.bold))
-              .frame(width: 250)
+              .fixedSize(horizontal: true, vertical: false)
+          }
+        }
+      }
+      .portalTransition(
+        id: "trainCode",
+        isActive: isPortalActive, // <- use the computed Binding
+        animation: .spring(response: 0.2, dampingFraction: 0.8),
+        completionCriteria: .removed
+      ) {
+        if let train = trainMapStore.liveTrainPosition ?? trainMapStore.selectedTrain {
+          if isPortalActive.wrappedValue {
+            Text("(\(train.code))")
+              .fontWeight(.bold)
+              .foregroundStyle(.sublime)
           }
         }
       }

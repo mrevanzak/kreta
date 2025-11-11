@@ -24,14 +24,22 @@ struct JourneyProgressView: View {
   var body: some View {
     VStack(spacing: 0) {
       // Train name header - fixed, not scrollable
-      Text("\(train.name)")
-        .font(.title3.weight(.bold))
-        .portal(id: "trainName", .destination)
-        .foregroundStyle(.primary)
-        .frame(maxWidth: .infinity)
-        .padding(.top, 20)
-        .padding(.bottom, 4)
-        .background(.backgroundSecondary)
+      HStack {
+        Text("\(train.name)")
+          .font(.title3.weight(.bold))
+          .foregroundStyle(.primary)
+          .portal(id: "trainName", .destination)
+        
+        Text("(\(train.code))")
+          .fontWeight(.bold)
+          .foregroundStyle(.sublime)
+          .portal(id: "trainCode", .destination)
+
+      }
+      .padding(.top, 20)
+      .padding(.bottom, 4)
+      .frame(maxWidth: .infinity)
+      .background(.backgroundPrimary)
       
       // Scrollable content with floating card
       ZStack(alignment: .top) {
@@ -70,15 +78,15 @@ struct JourneyProgressView: View {
             // When content scrolls up past the card area
             isCardOverContent = value < 120
           }
-          .background(.backgroundSecondary)
+          .background(.backgroundPrimary)
           
           // Bottom gradient fade
           LinearGradient(
             colors: [
-              Color.backgroundSecondary.opacity(0),
-              Color.backgroundSecondary.opacity(0.7),
-              Color.backgroundSecondary.opacity(0.9),
-              Color.backgroundSecondary
+              Color.backgroundPrimary.opacity(0),
+              Color.backgroundPrimary.opacity(0.7),
+              Color.backgroundPrimary.opacity(0.9),
+              Color.backgroundPrimary
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -111,10 +119,10 @@ struct JourneyProgressView: View {
           .background(
             LinearGradient(
               colors: [
-                Color.backgroundSecondary,
-                Color.backgroundSecondary.opacity(0.9),
-                Color.backgroundSecondary.opacity(0.7),
-                Color.backgroundSecondary.opacity(0)
+                Color.backgroundPrimary,
+                Color.backgroundPrimary.opacity(0.9),
+                Color.backgroundPrimary.opacity(0.7),
+                Color.backgroundPrimary.opacity(0)
               ],
               startPoint: .top,
               endPoint: .bottom
