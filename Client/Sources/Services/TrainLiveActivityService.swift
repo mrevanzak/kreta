@@ -140,6 +140,16 @@ final class TrainLiveActivityService: @unchecked Sendable {
     Task {
       await scheduleServerArrivalAlert(trainName: trainName, destination: destination)
     }
+
+    Task {
+      await scheduleServerStateUpdates(
+        activityId: activityId,
+        trainName: trainName,
+        origin: activity.attributes.from,
+        destination: destination,
+        arrivalLeadMinutes: Double(alarmOffsetMinutes)
+      )
+    }
   }
 
   @MainActor
@@ -162,6 +172,39 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   private func findActivity(with activityId: String) -> Activity<TrainActivityAttributes>? {
     Activity<TrainActivityAttributes>.activities.first { $0.id == activityId }
+  }
+
+  @MainActor
+  func refreshInForeground(currentDate: Date = Date()) async {
+    logger.info("Refreshing Live Activities after foreground entry")
+
+    for activity in Activity<TrainActivityAttributes>.activities {
+      var currentState = activity.content.state.journeyState
+
+      if currentState == .beforeBoarding,
+        let departureTime = activity.attributes.from.estimatedTime,
+        departureTime <= currentDate
+      {
+        logger.debug(
+          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to onBoard"
+        )
+        await transitionToOnBoard(activityId: activity.id)
+        currentState = .onBoard
+      }
+
+      if currentState != .prepareToDropOff,
+        let arrivalTime = activity.attributes.destination.estimatedTime,
+        arrivalTime <= currentDate
+      {
+        logger.debug(
+          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to prepareToDropOff"
+        )
+        await transitionToPrepareToDropOff(activityId: activity.id)
+        currentState = .prepareToDropOff
+      }
+
+      await rescheduleAlarmIfNeeded(for: activity)
+    }
   }
 
   @MainActor
@@ -363,7 +406,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       return
     }
 
-    let arrivalMs = Int(arrivalTime.timeIntervalSince1970 * 1000)
+    let arrivalMs = Double(arrivalTime.timeIntervalSince1970 * 1000)
 
     do {
       let _: String = try await convexClient.mutation(
@@ -385,6 +428,52 @@ final class TrainLiveActivityService: @unchecked Sendable {
     } catch {
       logger.error(
         "Failed to schedule server arrival alert: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  private func scheduleServerStateUpdates(
+    activityId: String,
+    trainName: String,
+    origin: TrainStation,
+    destination: TrainStation,
+    arrivalLeadMinutes: Double
+  ) async {
+    let departureTimeMs = origin.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
+    let arrivalTimeMs = destination.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
+
+    guard departureTimeMs != nil || arrivalTimeMs != nil else {
+      logger.debug(
+        "No schedule metadata for activity \(activityId, privacy: .public); skipping server state scheduling"
+      )
+      return
+    }
+
+    struct ScheduleResponse: Decodable {
+      let departureScheduled: Bool
+      let arrivalScheduled: Bool
+    }
+
+    let arrivalLeadMs = max(0, arrivalLeadMinutes) * 60 * 1000
+
+    do {
+      let response: ScheduleResponse = try await convexClient.mutation(
+        "liveActivities:scheduleStateUpdates",
+        with: [
+          "activityId": activityId,
+          "trainName": trainName,
+          "departureTime": departureTimeMs,
+          "arrivalTime": arrivalTimeMs,
+          "arrivalLeadTimeMs": arrivalLeadMs,
+        ],
+        captureTelemetry: true
+      )
+      logger.info(
+        "Server scheduling for activity \(activityId, privacy: .public) -> departure: \(response.departureScheduled), arrival: \(response.arrivalScheduled)"
+      )
+    } catch {
+      logger.error(
+        "Failed to schedule server state updates for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+      )
     }
   }
 

@@ -11,6 +11,7 @@
 import type * as feedback from "../feedback.js";
 import type * as gapeka from "../gapeka.js";
 import type * as journeys from "../journeys.js";
+import type * as liveActivities from "../liveActivities.js";
 import type * as notifications from "../notifications.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   gapeka: typeof gapeka;
   journeys: typeof journeys;
+  liveActivities: typeof liveActivities;
   notifications: typeof notifications;
   push: typeof push;
   registrations: typeof registrations;

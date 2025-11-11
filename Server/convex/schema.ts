@@ -19,6 +19,17 @@ export default defineSchema({
     .index("by_activityId", ["activityId"])
     .index("by_deviceToken", ["deviceToken"]),
 
+  liveActivitySchedules: defineTable({
+    activityId: v.string(),
+    trainName: v.string(),
+    departureTime: v.union(v.number(), v.null()),
+    arrivalTime: v.union(v.number(), v.null()),
+    arrivalLeadTimeMs: v.number(),
+    departureSchedulerId: v.union(v.id("_scheduled_functions"), v.null()),
+    arrivalSchedulerId: v.union(v.id("_scheduled_functions"), v.null()),
+    updatedAt: v.number(),
+  }).index("by_activityId", ["activityId"]),
+
   liveActivityStartTokens: defineTable({
     deviceToken: v.string(),
     token: v.string(),
