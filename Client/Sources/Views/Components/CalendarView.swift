@@ -108,6 +108,9 @@ struct UICalendarViewRepresentable: UIViewRepresentable {
     calendarView.calendar = .current
     calendarView.locale = Locale(identifier: "id_ID")
     calendarView.fontDesign = .rounded
+    
+    // Customize tint color for chevrons and selected date
+    calendarView.tintColor = UIColor(Color.highlight)
 
     container.addSubview(calendarView)
     NSLayoutConstraint.activate([
