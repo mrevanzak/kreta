@@ -51,7 +51,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
     destination: TrainStation,
     // seatClass: SeatClass,
     // seatNumber: String,
-    initialJourneyState: JourneyState? = nil
+    initialJourneyState: JourneyState? = nil,
+    alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async throws -> Activity<TrainActivityAttributes> {
     let activity = try await createActivity(
       trainName: trainName,
@@ -62,7 +63,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
       initialJourneyState: initialJourneyState
     )
 
-    await setupActivityMonitoring(for: activity, destination: destination, trainName: trainName)
+    await setupActivityMonitoring(
+      for: activity,
+      destination: destination,
+      trainName: trainName,
+      alarmOffsetMinutes: alarmOffsetMinutes
+    )
 
     return activity
   }
@@ -98,11 +104,11 @@ final class TrainLiveActivityService: @unchecked Sendable {
   private func setupActivityMonitoring(
     for activity: Activity<TrainActivityAttributes>,
     destination: TrainStation,
-    trainName: String
+    trainName: String,
+    alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async {
     let activityId = activity.id
     let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
-    let alarmOffsetMinutes = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
     logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
     logger.debug("Activity ID: \(activityId, privacy: .public)")
@@ -483,7 +489,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     hasStartedGlobalMonitoring = true
 
     Task { await monitorExistingActivities() }
-    Task { await monitorActivityUpdates() }
     Task { await monitorPushToStartTokens() }
     Task { await monitorAlarmUpdates() }
   }
@@ -504,12 +509,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     guard !hasAlarm else { return }
 
     await scheduleAlarmIfEnabled(for: activity)
-  }
-
-  private func monitorActivityUpdates() async {
-    for await activity in Activity<TrainActivityAttributes>.activityUpdates {
-      await monitorPushTokens(for: activity)
-    }
   }
 
   // MARK: - Token Registration

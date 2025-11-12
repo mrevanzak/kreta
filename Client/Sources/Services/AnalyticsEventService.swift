@@ -280,6 +280,27 @@ final class AnalyticsEventService: @unchecked Sendable {
     )
   }
 
+  func trackAlarmConfigured(
+    offsetMinutes: Int,
+    isValid: Bool,
+    validationFailureReason: String?
+  ) {
+    var properties: [String: Any] = [
+      "alarm_offset_minutes": offsetMinutes,
+      "is_valid": isValid,
+      "configured_at": iso8601String(Date()),
+    ]
+    
+    if let reason = validationFailureReason {
+      properties["validation_failure_reason"] = reason
+    }
+    
+    telemetry.track(
+      event: "alarm_configured",
+      properties: properties
+    )
+  }
+
   // MARK: - Technical
 
   func trackDeepLinkOpened(urlString: String, params: [String: String]) {

@@ -181,13 +181,21 @@ extension TrainMapStore {
 
 // MARK: - Selected train management
 extension TrainMapStore {
-  func selectTrain(_ train: ProjectedTrain, journeyData: TrainJourneyData) async throws {
+  func selectTrain(
+    _ train: ProjectedTrain,
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
+  ) async throws {
     selectedTrain = train
     selectedJourneyData = journeyData
     startProjectionUpdates()
 
     // Start Live Activity
-    try await startLiveActivityForTrain(train: train, journeyData: journeyData)
+    try await startLiveActivityForTrain(
+      train: train,
+      journeyData: journeyData,
+      alarmOffsetMinutes: alarmOffsetMinutes
+    )
 
     // Track journey start
     if let from = train.fromStation, let to = train.toStation {
@@ -203,9 +211,54 @@ extension TrainMapStore {
     }
   }
 
-  private func startLiveActivityForTrain(train: ProjectedTrain, journeyData: TrainJourneyData)
-    async throws
-  {
+  /// Validate if the alarm offset is appropriate for the journey timing
+  func validateAlarmTiming(
+    offsetMinutes: Int,
+    departureTime: Date,
+    arrivalTime: Date
+  ) -> AlarmValidationResult {
+    let now = Date()
+    let minutesUntilDeparture = Int(departureTime.timeIntervalSince(now) / 60)
+    let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
+    let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
+
+    // Check 1: Journey hasn't departed yet
+    if departureTime <= now {
+      return .invalid(
+        .alarmTimeInPast(
+          minutesUntilDeparture: minutesUntilDeparture,
+          requestedOffset: offsetMinutes
+        ))
+    }
+
+    // Check 2: Alarm time must be in the future
+    if alarmTime <= now {
+      return .invalid(
+        .alarmTimeInPast(
+          minutesUntilDeparture: minutesUntilDeparture,
+          requestedOffset: offsetMinutes
+        ))
+    }
+
+    // Check 3: Journey duration must be sufficient (offset + 10 minute buffer)
+    let minimumRequiredDuration = offsetMinutes + 10
+    if journeyDurationMinutes < minimumRequiredDuration {
+      return .invalid(
+        .journeyTooShort(
+          journeyDuration: journeyDurationMinutes,
+          requestedOffset: offsetMinutes,
+          minimumRequired: minimumRequiredDuration
+        ))
+    }
+
+    return .valid()
+  }
+
+  private func startLiveActivityForTrain(
+    train: ProjectedTrain,
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
+  ) async throws {
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
       let departureTime = train.segmentDeparture
@@ -225,7 +278,11 @@ extension TrainMapStore {
       // Start immediately on device
       logger.info(
         "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
-      try await executeLiveActivityStart(train: train, journeyData: journeyData)
+      try await executeLiveActivityStart(
+        train: train,
+        journeyData: journeyData,
+        alarmOffsetMinutes: alarmOffsetMinutes
+      )
     } else {
       logger.info(
         "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
@@ -244,7 +301,8 @@ extension TrainMapStore {
   /// This is the core logic that should be executed regardless of timing
   private func executeLiveActivityStart(
     train: ProjectedTrain,
-    journeyData: TrainJourneyData
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
   ) async throws {
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
@@ -273,7 +331,8 @@ extension TrainMapStore {
       ),
       // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
       // seatNumber: "1A",  // TODO: Replace with actual seat number
-      initialJourneyState: isInProgress ? .onBoard : nil
+      initialJourneyState: isInProgress ? .onBoard : nil,
+      alarmOffsetMinutes: alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
     )
   }
 
