@@ -116,7 +116,9 @@ struct HomeScreen: View {
         id: "trainCode",
         isActive: isPortalActive,  // <- use the computed Binding
       ) {
-        if isPortalActive.wrappedValue {
+        if isPortalActive.wrappedValue,
+          let train = trainMapStore.liveTrainPosition ?? trainMapStore.selectedTrain
+        {
           Text("(\(train.code))")
             .fontWeight(.bold)
             .foregroundStyle(.sublime)
