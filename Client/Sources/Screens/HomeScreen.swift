@@ -12,8 +12,8 @@ struct HomeScreen: View {
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
   @State private var selectedDetent: PresentationDetent = .height(200)
-  @State private var showInstaView: Bool = false // Added state for InstaView
-  
+  @State private var showInstaView: Bool = false  // Added state for InstaView
+
   private var isPortalActive: Binding<Bool> {
     Binding(
       get: { selectedDetent == .large },
@@ -116,16 +116,15 @@ struct HomeScreen: View {
         id: "trainCode",
         isActive: isPortalActive,  // <- use the computed Binding
       ) {
-          if isPortalActive.wrappedValue {
-            Text("(\(train.code))")
-              .fontWeight(.bold)
-              .foregroundStyle(.sublime)
-          }
+        if isPortalActive.wrappedValue {
+          Text("(\(train.code))")
+            .fontWeight(.bold)
+            .foregroundStyle(.sublime)
         }
       }
-      .task {
-        try? await trainMapStore.loadSelectedTrainFromCache()
-      }
+    }
+    .task {
+      try? await trainMapStore.loadSelectedTrainFromCache()
     }
   }
 
@@ -178,17 +177,17 @@ struct HomeScreen: View {
               Circle()
                 .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
                 .frame(width: 44, height: 44)
-              
+
               Circle()
                 .strokeBorder(self.gradient, lineWidth: 1)
                 .opacity(1 * 1.2)
                 .frame(width: 44, height: 44)
-              
+
               Image(systemName: "square.and.arrow.up")
                 .foregroundStyle(.textSecondary)
             }
-            .frame(width: 44, height: 44) // Larger tap area
-            .contentShape(Circle()) // Make entire area tappable
+            .frame(width: 44, height: 44)  // Larger tap area
+            .contentShape(Circle())  // Make entire area tappable
           }
           .padding(.trailing, 4)
         }
@@ -203,22 +202,28 @@ struct HomeScreen: View {
           Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
             router.navigate(to: .sheet(.feedback))
           }
+
+          #if DEBUG
+            Button("Alarm Debug", systemImage: "list.bullet") {
+              router.navigate(to: .sheet(.alarmDebug))
+            }
+          #endif
         } label: {
           ZStack {
             Circle()
               .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
               .frame(width: 44, height: 44)
-            
+
             Circle()
               .strokeBorder(self.gradient, lineWidth: 1)
               .opacity(1 * 1.2)
               .frame(width: 44, height: 44)
-            
+
             Image(systemName: "ellipsis")
               .foregroundStyle(.textSecondary)
           }
-          .frame(width: 44, height: 44) // Larger tap area
-          .contentShape(Circle()) // Make entire area tappable
+          .frame(width: 44, height: 44)  // Larger tap area
+          .contentShape(Circle())  // Make entire area tappable
         }
       }
 
@@ -332,4 +337,5 @@ struct HomeScreen: View {
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
   }
+
 }
