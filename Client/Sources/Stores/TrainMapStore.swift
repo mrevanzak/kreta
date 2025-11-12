@@ -705,7 +705,8 @@ extension TrainMapStore {
         now: Date(),
         journey: trainJourney,
         stationsById: projectionStationsById,
-        routesById: routesById
+        routesById: routesById,
+        selectedDate: Date() // Deep link trips use today's date
       )
     else {
       throw TrainMapError.dataMappingFailed("Failed to project train")
@@ -797,7 +798,8 @@ extension TrainMapStore {
       now: now,
       journey: trainJourney,
       stationsById: stationsById,
-      routesById: routesById
+      routesById: routesById,
+      selectedDate: selectedJourneyData.selectedDate
     )
   }
 }
