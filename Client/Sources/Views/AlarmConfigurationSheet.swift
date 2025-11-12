@@ -90,10 +90,12 @@ struct AlarmConfigurationSheet: View {
       Text("Atur Pengingat Kedatangan")
         .font(.title2.weight(.bold))
 
-      Text("Kamu akan menerima alarm sebelum tiba di tujuan. Pilih berapa menit sebelum kedatangan:")
-        .font(.body)
-        .foregroundStyle(.secondary)
-        .multilineTextAlignment(.center)
+      Text(
+        "Kamu akan menerima alarm sebelum tiba di tujuan. Pilih berapa menit sebelum kedatangan:"
+      )
+      .font(.body)
+      .foregroundStyle(.secondary)
+      .multilineTextAlignment(.center)
     }
     .padding(.top)
   }
@@ -105,7 +107,7 @@ struct AlarmConfigurationSheet: View {
         .foregroundStyle(.secondary)
 
       Picker("Offset Alarm", selection: $selectedOffset) {
-        ForEach(5...60, id: \.self) { minutes in
+        ForEach(1...60, id: \.self) { minutes in
           Text("\(minutes) menit")
             .tag(minutes)
         }
@@ -192,7 +194,8 @@ struct AlarmConfigurationSheet: View {
     onValidate: { offset in
       // Mock validation
       if offset > 30 {
-        return .invalid(.journeyTooShort(journeyDuration: 25, requestedOffset: offset, minimumRequired: 40))
+        return .invalid(
+          .journeyTooShort(journeyDuration: 25, requestedOffset: offset, minimumRequired: 40))
       }
       return .valid()
     },
@@ -201,4 +204,3 @@ struct AlarmConfigurationSheet: View {
     }
   )
 }
-
