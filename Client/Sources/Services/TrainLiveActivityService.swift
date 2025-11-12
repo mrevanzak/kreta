@@ -662,8 +662,23 @@ final class TrainLiveActivityService: @unchecked Sendable {
   private func monitorPushTokens(activityId: String) async {
     guard let activity = findActivity(with: activityId) else { return }
 
+    // CRITICAL: Register the current token if it exists before monitoring for changes.
+    // pushTokenUpdates only emits when the token CHANGES, not the initial value.
+    if let currentToken = activity.pushToken {
+      logger.info(
+        "Registering existing push token for activity \(activityId, privacy: .public)")
+      let token = currentToken.hexEncodedString()
+      await registerLiveActivityToken(activityId: activityId, token: token)
+    } else {
+      logger.warning(
+        "Activity \(activityId, privacy: .public) has no push token yet, waiting for updates"
+      )
+    }
+
+    // Continue monitoring for token changes
     for await tokenData in activity.pushTokenUpdates {
       if Task.isCancelled { break }
+      logger.info("Received push token update for activity \(activityId, privacy: .public)")
       let token = tokenData.hexEncodedString()
       await registerLiveActivityToken(activityId: activityId, token: token)
     }
@@ -701,8 +716,20 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func monitorPushToStartTokens() async {
+    // CRITICAL: Register the current push-to-start token if it exists.
+    // pushToStartTokenUpdates only emits when the token CHANGES, not the initial value.
+    if let currentToken = Activity<TrainActivityAttributes>.pushToStartToken {
+      logger.info("Registering existing push-to-start token")
+      let token = currentToken.hexEncodedString()
+      await registerLiveActivityStartToken(token: token)
+    } else {
+      logger.warning("No push-to-start token available yet, waiting for updates")
+    }
+
+    // Continue monitoring for token changes
     for await tokenData in Activity<TrainActivityAttributes>.pushToStartTokenUpdates {
       if Task.isCancelled { break }
+      logger.info("Received push-to-start token update")
       let token = tokenData.hexEncodedString()
       await registerLiveActivityStartToken(token: token)
     }
