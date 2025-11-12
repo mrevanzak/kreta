@@ -9,6 +9,10 @@ struct TrainMapView: View {
   @State var focusTrigger: Bool = false
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var visibleRegionSpan: MKCoordinateSpan?
+  @State private var trainStops: [TrainStopService.TrainStop] = []
+  @State private var isLoadingStops: Bool = false
+
+  private let trainStopService = TrainStopService()
 
   private var isTrackingTrain: Bool {
     mapStore.liveTrainPosition != nil
@@ -83,6 +87,17 @@ struct TrainMapView: View {
       }
     }
 
+    // Load train stops when selected train changes
+    .onChange(of: mapStore.selectedTrain) { _, newTrain in
+      if let train = newTrain {
+        Task {
+          await loadTrainStops(for: train)
+        }
+      } else {
+        trainStops = []
+      }
+    }
+
     // Follow live position updates
     .onChange(of: mapStore.liveTrainPosition) { _, newPosition in
       if let position = newPosition {
@@ -90,7 +105,7 @@ struct TrainMapView: View {
       }
     }
 
-    // External “focus” poke from the sheet button
+    // External "focus" poke from the sheet button
     .onChange(of: focusTrigger) { _, newValue in
       if newValue {
         isFollowing = true
@@ -113,13 +128,41 @@ struct TrainMapView: View {
           }
         }
       }
+      
+      // Load train stops if there's already a selected train
+      if let train = mapStore.selectedTrain {
+        Task {
+          await loadTrainStops(for: train)
+        }
+      }
     }
 
-    // Auto-reset the trigger after it’s consumed so it’s fire-once
+    // Auto-reset the trigger after it's consumed so it's fire-once
     .task(id: focusTrigger) {
       if focusTrigger {
         focusTrigger = false
       }
+    }
+  }
+
+  // MARK: - Train Stop Loading
+
+  private func loadTrainStops(for train: ProjectedTrain) async {
+    isLoadingStops = true
+    defer { isLoadingStops = false }
+
+    do {
+      if let schedule = try await trainStopService.getTrainSchedule(trainCode: train.code) {
+        trainStops = schedule.stops
+        print("🚂 Loaded \(trainStops.count) stops for train \(train.code)")
+      } else {
+        trainStops = []
+        print("🚂 No schedule found for train \(train.code)")
+      }
+    } catch {
+      print("🚂 Failed to load train stops: \(error)")
+      trainStops = []
+      showToast("Failed to load train stops")
     }
   }
 
@@ -139,6 +182,16 @@ struct TrainMapView: View {
   }
 
   private var filteredStations: [Station] {
+    // If we have train stops from the service, use those
+    if !trainStops.isEmpty {
+      return mapStore.stations.filter { station in
+        trainStops.contains { stop in
+          stop.stationId == station.id || stop.stationCode == station.code
+        }
+      }
+    }
+    
+    // Fallback to journey data if available
     guard let jd = mapStore.selectedJourneyData else {
       return mapStore.stations
     }
