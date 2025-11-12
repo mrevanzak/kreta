@@ -14,6 +14,9 @@ struct AddTrainView: View {
 
   @State private var viewModel: ViewModel = ViewModel()
   @State private var isSearchBarOverContent: Bool = false
+  @State private var showAlarmConfiguration = false
+  @State private var pendingTrain: ProjectedTrain?
+  @State private var pendingJourneyData: TrainJourneyData?
 
   var body: some View {
     VStack(spacing: 0) {
@@ -25,6 +28,29 @@ struct AddTrainView: View {
       viewModel.bootstrap(allStations: store.stations)
     }
     .background(.backgroundPrimary)
+    .sheet(isPresented: $showAlarmConfiguration) {
+      if let train = pendingTrain, let journeyData = pendingJourneyData {
+        AlarmConfigurationSheet(
+          defaultOffset: AlarmPreferences.shared.defaultAlarmOffsetMinutes,
+          onValidate: { offset in
+            return store.validateAlarmTiming(
+              offsetMinutes: offset,
+              departureTime: journeyData.userSelectedDepartureTime,
+              arrivalTime: journeyData.userSelectedArrivalTime
+            )
+          },
+          onContinue: { selectedOffset in
+            Task {
+              await handleAlarmConfigured(
+                offset: selectedOffset,
+                train: train,
+                journeyData: journeyData
+              )
+            }
+          }
+        )
+      }
+    }
   }
 
   // MARK: - Private Views
@@ -335,13 +361,65 @@ struct AddTrainView: View {
 
   private func handleTrainSelection(_ train: ProjectedTrain) async {
     let journeyData = viewModel.trainJourneyData[train.id]
-    if let journeyData = journeyData {
-      do {
-        try await store.selectTrain(train, journeyData: journeyData)
-        dismiss()
-      } catch {
-        showToast("Failed to select train: \(error)")
-      }
+    guard let journeyData = journeyData else { return }
+
+    // Check if this is the first time user is starting a journey
+    if !AlarmPreferences.shared.hasCompletedInitialSetup {
+      // Store pending train and journey data
+      pendingTrain = train
+      pendingJourneyData = journeyData
+      // Show alarm configuration sheet
+      showAlarmConfiguration = true
+    } else {
+      // Use existing preference
+      await proceedWithTrainSelection(
+        train: train,
+        journeyData: journeyData,
+        alarmOffsetMinutes: nil
+      )
+    }
+  }
+
+  private func handleAlarmConfigured(
+    offset: Int,
+    train: ProjectedTrain,
+    journeyData: TrainJourneyData
+  ) async {
+    // Save the configured offset
+    AlarmPreferences.shared.defaultAlarmOffsetMinutes = offset
+    
+    // Mark initial setup as complete
+    AlarmPreferences.shared.markInitialSetupComplete()
+    
+    // Track alarm configuration
+    AnalyticsEventService.shared.trackAlarmConfigured(
+      offsetMinutes: offset,
+      isValid: true,
+      validationFailureReason: nil
+    )
+    
+    // Proceed with train selection
+    await proceedWithTrainSelection(
+      train: train,
+      journeyData: journeyData,
+      alarmOffsetMinutes: offset
+    )
+  }
+
+  private func proceedWithTrainSelection(
+    train: ProjectedTrain,
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int?
+  ) async {
+    do {
+      try await store.selectTrain(
+        train,
+        journeyData: journeyData,
+        alarmOffsetMinutes: alarmOffsetMinutes
+      )
+      dismiss()
+    } catch {
+      showToast("Failed to select train: \(error)")
     }
   }
 }

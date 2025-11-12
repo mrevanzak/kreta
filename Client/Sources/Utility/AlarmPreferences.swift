@@ -10,6 +10,7 @@ final class AlarmPreferences: @unchecked Sendable {
   private enum Keys {
     static let defaultAlarmEnabled = "alarm.defaultEnabled"
     static let defaultAlarmOffsetMinutes = "alarm.defaultOffsetMinutes"
+    static let hasCompletedInitialSetup = "alarm.hasCompletedInitialSetup"
     static func alarmEnabled(activityId: String) -> String { "alarm.enabled.\(activityId)" }
     static func alarmOffsetMinutes(activityId: String) -> String {
       "alarm.offsetMinutes.\(activityId)"
@@ -46,9 +47,25 @@ final class AlarmPreferences: @unchecked Sendable {
     }
   }
 
+  /// Whether the user has completed the initial alarm setup
+  var hasCompletedInitialSetup: Bool {
+    get {
+      userDefaults.bool(forKey: Keys.hasCompletedInitialSetup)
+    }
+    set {
+      userDefaults.set(newValue, forKey: Keys.hasCompletedInitialSetup)
+    }
+  }
+
+  /// Mark the initial alarm setup as complete
+  func markInitialSetupComplete() {
+    hasCompletedInitialSetup = true
+  }
+
   /// Clear all global defaults (resets to hardcoded defaults)
   func clearGlobalDefaults() {
     userDefaults.removeObject(forKey: Keys.defaultAlarmEnabled)
     userDefaults.removeObject(forKey: Keys.defaultAlarmOffsetMinutes)
+    userDefaults.removeObject(forKey: Keys.hasCompletedInitialSetup)
   }
 }

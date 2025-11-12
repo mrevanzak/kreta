@@ -257,8 +257,20 @@ enum TrainProjector {
     now: Date,
     journey: TrainJourney,
     stationsById: [String: Station],
-    routesById: [String: Route]
+    routesById: [String: Route],
+    selectedDate: Date = Date() // Date the journey is scheduled for
   ) -> ProjectedTrain? {
+    // Check if journey date has arrived yet
+    let calendar = Calendar.current
+    let journeyDay = calendar.startOfDay(for: selectedDate)
+    let today = calendar.startOfDay(for: now)
+    
+    // If journey is scheduled for a future date (after today), don't project yet
+    if journeyDay > today {
+      return nil
+    }
+    
+    // Journey date has arrived (is today or in the past) - proceed with projection
     // Extract current time-of-day in milliseconds since midnight
     let nowTimeComponents = timeComponents(from: now)
     let nowMs = nowTimeComponents.millisecond
