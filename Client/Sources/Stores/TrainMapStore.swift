@@ -388,8 +388,13 @@ extension TrainMapStore {
 
     let content = UNMutableNotificationContent()
     content.title = "Perjalanan akan dimulai"
+    let minutes = scheduleOffset / 60
+    let minutesText =
+      minutes.truncatingRemainder(dividingBy: 1) == 0
+      ? String(format: "%.0f", minutes)
+      : String(format: "%.1f", minutes)
     content.body =
-      "Kereta \(train.name) akan berangkat dalam \(scheduleOffset / 60) menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
+      "Kereta \(train.name) akan berangkat dalam \(minutesText) menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
     content.sound = .default
     content.categoryIdentifier = "TRIP_START_FALLBACK"
     content.interruptionLevel = .timeSensitive
