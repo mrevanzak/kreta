@@ -178,13 +178,13 @@ final class TrainAlarmService: @unchecked Sendable {
     metadata: TrainAlarmMetadata
   ) -> AlarmManager.AlarmConfiguration<TrainAlarmMetadata> {
     let stopButton = AlarmButton(
-      text: LocalizedStringResource("Berhenti"),
+      text: LocalizedStringResource("Siap"),
       textColor: .white,
       systemImageName: "stop.circle.fill"
     )
 
     let alert = AlarmPresentation.Alert(
-      title: LocalizedStringResource("Segera Turun!"),
+      title: LocalizedStringResource("Segera turun di stasiun \(metadata.destinationName)!"),
       stopButton: stopButton,
       secondaryButton: nil,
       secondaryButtonBehavior: nil
