@@ -84,10 +84,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                       trainName: "Jayabaya",
                       from: TrainStation(
                         name: "Malang", code: "ML",
-                        estimatedTime: Date().addingTimeInterval(30)),
+                        estimatedTime: Date().addingTimeInterval(180)),
                       destination: TrainStation(
                         name: "Pasar Senen", code: "PSE",
-                        estimatedTime: Date().addingTimeInterval(120)),
+                        estimatedTime: Date().addingTimeInterval(240)),
                       //                      seatClass: SeatClass.economy(number: 9),
                       //                      seatNumber: "20C"
                     )
