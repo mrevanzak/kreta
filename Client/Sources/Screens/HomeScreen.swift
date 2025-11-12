@@ -1,6 +1,6 @@
 import MapKit
-import SwiftUI
 import Portal
+import SwiftUI
 
 // MARK: - Main Map Screen
 
@@ -8,7 +8,7 @@ struct HomeScreen: View {
   @Environment(Router.self) private var router
   @Environment(\.colorScheme) private var colorScheme
   @State private var trainMapStore = TrainMapStore()
-  
+
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
   @State private var selectedDetent: PresentationDetent = .height(200)
@@ -22,16 +22,16 @@ struct HomeScreen: View {
       }
     )
   }
-  
+
   var gradient: LinearGradient {
     let colors: [Color]
-    
+
     if colorScheme == .dark {
       // Dark mode gradient
       colors = [
         .black.opacity(0.5),
         .white,
-        .black.opacity(0.5)
+        .black.opacity(0.5),
       ]
     } else {
       // Light mode gradient
@@ -41,14 +41,14 @@ struct HomeScreen: View {
         .clear,
       ]
     }
-    
+
     return LinearGradient(
       colors: colors,
       startPoint: UnitPoint(x: 0.0, y: 0.0),
       endPoint: UnitPoint(x: 1.0, y: 1.0)
     )
   }
-  
+
   var body: some View {
     PortalContainer {
       Group {
@@ -100,7 +100,7 @@ struct HomeScreen: View {
       .environment(trainMapStore)
       .portalTransition(
         id: "trainName",
-        isActive: isPortalActive,
+        isActive: isPortalActive,  // <- use the computed Binding
         animation: .spring(response: 0.2, dampingFraction: 0.8),
         completionCriteria: .removed
       ) {
@@ -114,11 +114,8 @@ struct HomeScreen: View {
       }
       .portalTransition(
         id: "trainCode",
-        isActive: isPortalActive,
-        animation: .spring(response: 0.2, dampingFraction: 0.8),
-        completionCriteria: .removed
+        isActive: isPortalActive,  // <- use the computed Binding
       ) {
-        if let train = trainMapStore.liveTrainPosition ?? trainMapStore.selectedTrain {
           if isPortalActive.wrappedValue {
             Text("(\(train.code))")
               .fontWeight(.bold)
@@ -131,9 +128,9 @@ struct HomeScreen: View {
       }
     }
   }
-  
+
   // MARK: - Computed Properties
-  
+
   private var presentationDetents: Set<PresentationDetent> {
     if trainMapStore.selectedTrain != nil {
       return [.height(80), .height(200), .large]
@@ -141,20 +138,21 @@ struct HomeScreen: View {
       return [.fraction(0.35)]
     }
   }
-  
+
   // MARK: - Subviews
-  
+
   @ViewBuilder
   private func minimalTrainView(train: ProjectedTrain) -> some View {
-    let destinationStation = trainMapStore.selectedJourneyData?.userSelectedToStation.code
-    ?? train.toStation?.code
-    ?? "Tujuan"
-    
-    VStack(alignment: .leading,spacing: 4) {
+    let destinationStation =
+      trainMapStore.selectedJourneyData?.userSelectedToStation.code
+      ?? train.toStation?.code
+      ?? "Tujuan"
+
+    VStack(alignment: .leading, spacing: 4) {
       Text("\(train.name) Menuju \(destinationStation)")
         .font(.title2.weight(.bold))
         .foregroundStyle(.primary)
-      
+
       Text(formatRemainingTime(train: train))
         .font(.subheadline)
         .foregroundStyle(Color(hex: "818181"))
@@ -163,16 +161,16 @@ struct HomeScreen: View {
     .padding(.vertical, 12)
     .padding(.horizontal)
   }
-  
+
   @ViewBuilder
   private var compactBottomSheet: some View {
     VStack(alignment: .leading, spacing: 10) {
-      HStack() {
+      HStack {
         Text("Perjalanan Kereta")
           .font(.title2).bold()
         Spacer()
-        
-        if let train = trainMapStore.selectedTrain {
+
+        if trainMapStore.selectedTrain != nil {
           Button {
             router.navigate(to: .sheet(.shareJourney))
           } label: {
@@ -194,8 +192,14 @@ struct HomeScreen: View {
           }
           .padding(.trailing, 4)
         }
-        
+
         Menu {
+          if trainMapStore.selectedTrain != nil, trainMapStore.selectedJourneyData != nil {
+            Button("Atur Alarm Kedatangan", systemImage: "bell.badge") {
+              router.navigate(to: .sheet(.alarmConfiguration))
+            }
+          }
+
           Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
             router.navigate(to: .sheet(.feedback))
           }
@@ -217,7 +221,7 @@ struct HomeScreen: View {
           .contentShape(Circle()) // Make entire area tappable
         }
       }
-      
+
       // Show train if available, otherwise show add button
       if let train = trainMapStore.selectedTrain {
         // Use live projected train if available, otherwise use original
@@ -265,37 +269,38 @@ struct HomeScreen: View {
     .padding(.top, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
-  
+
   // MARK: - Actions
-  
+
   private func formatRemainingTime(train: ProjectedTrain) -> String {
     // Use journey data if available for user-selected times
-    let departure = trainMapStore.selectedJourneyData?.userSelectedDepartureTime ?? train.journeyDeparture
+    let departure =
+      trainMapStore.selectedJourneyData?.userSelectedDepartureTime ?? train.journeyDeparture
     let arrival = trainMapStore.selectedJourneyData?.userSelectedArrivalTime ?? train.journeyArrival
-    
+
     guard let departure = departure, let arrival = arrival else {
       return "Waktu tidak tersedia"
     }
-    
+
     let now = Date()
-    
+
     // Check if train hasn't departed yet
     if now < departure {
       return "Kereta belum berangkat"
     }
-    
+
     // Check if train has already arrived
     if now >= arrival {
       return "Sudah Tiba"
     }
-    
+
     // Calculate time remaining until arrival (mirrors TrainCard logic)
     let timeInterval = arrival.timeIntervalSince(now)
     let totalMinutes = Int(timeInterval / 60)
-    
+
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
-    
+
     // Return only the time string without "Tiba Dalam"
     if hours > 0 && minutes > 0 {
       return "\(hours) Jam \(minutes) Menit"
@@ -307,23 +312,23 @@ struct HomeScreen: View {
       return "Tiba Sebentar Lagi"
     }
   }
-  
+
   private func deleteTrain() {
     Task { @MainActor in
       await trainMapStore.clearSelectedTrain()
     }
   }
-  
+
   @ViewBuilder
   func navigationView(for destination: SheetDestination, from router: Router)
-  -> some View
+    -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
   }
-  
+
   @ViewBuilder
   func navigationView(for destination: FullScreenDestination, from router: Router)
-  -> some View
+    -> some View
   {
     NavigationContainer(parentRouter: router) { view(for: destination) }
   }

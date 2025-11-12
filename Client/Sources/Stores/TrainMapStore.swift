@@ -218,7 +218,7 @@ extension TrainMapStore {
     arrivalTime: Date
   ) -> AlarmValidationResult {
     let now = Date()
-    let minutesUntilDeparture = Int(departureTime.timeIntervalSince(now) / 60)
+    let minutesUntilArrival = Int(arrivalTime.timeIntervalSince(now) / 60)
     let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
     let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
 
@@ -226,7 +226,7 @@ extension TrainMapStore {
     if departureTime <= now {
       return .invalid(
         .alarmTimeInPast(
-          minutesUntilDeparture: minutesUntilDeparture,
+          minutesUntilArrival: minutesUntilArrival,
           requestedOffset: offsetMinutes
         ))
     }
@@ -235,7 +235,7 @@ extension TrainMapStore {
     if alarmTime <= now {
       return .invalid(
         .alarmTimeInPast(
-          minutesUntilDeparture: minutesUntilDeparture,
+          minutesUntilArrival: minutesUntilArrival,
           requestedOffset: offsetMinutes
         ))
     }
@@ -252,6 +252,40 @@ extension TrainMapStore {
     }
 
     return .valid()
+  }
+
+  func applyAlarmConfiguration(
+    offsetMinutes: Int,
+    validationResult: AlarmValidationResult?
+  ) async {
+    AlarmPreferences.shared.defaultAlarmOffsetMinutes = offsetMinutes
+    AlarmPreferences.shared.markInitialSetupComplete()
+
+    let failureReasonDescription = validationResult?.reason
+      .map(analyticsReasonDescription(for:))
+
+    AnalyticsEventService.shared.trackAlarmConfigured(
+      offsetMinutes: offsetMinutes,
+      isValid: validationResult?.isValid ?? true,
+      validationFailureReason: failureReasonDescription
+    )
+
+    await liveActivityService.refreshAlarmConfiguration(
+      alarmOffsetMinutes: offsetMinutes
+    )
+  }
+
+  private func analyticsReasonDescription(
+    for reason: AlarmValidationResult.AlarmValidationFailureReason
+  ) -> String {
+    switch reason {
+    case let .alarmTimeInPast(minutesUntilArrival, requestedOffset):
+      return
+        "alarm_time_in_past(minutes_until_arrival:\(minutesUntilArrival), requested_offset:\(requestedOffset))"
+    case let .journeyTooShort(journeyDuration, requestedOffset, minimumRequired):
+      return
+        "journey_too_short(journey_duration:\(journeyDuration), requested_offset:\(requestedOffset), minimum_required:\(minimumRequired))"
+    }
   }
 
   private func startLiveActivityForTrain(
@@ -317,7 +351,7 @@ extension TrainMapStore {
       (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
     // TODO: Replace hardcoded seat class with actual user data
-    try await liveActivityService.start(
+    _ = try await liveActivityService.start(
       trainName: train.name,
       from: TrainStation(
         name: fromStation.name,
@@ -355,7 +389,7 @@ extension TrainMapStore {
     let content = UNMutableNotificationContent()
     content.title = "Perjalanan akan dimulai"
     content.body =
-      "Kereta \(train.name) akan berangkat dalam 10 menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
+      "Kereta \(train.name) akan berangkat dalam \(scheduleOffset / 60) menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
     content.sound = .default
     content.categoryIdentifier = "TRIP_START_FALLBACK"
     content.interruptionLevel = .timeSensitive
@@ -678,7 +712,7 @@ extension TrainMapStore {
       userSelectedToStation: toStation,
       userSelectedDepartureTime: firstSegment.departure,
       userSelectedArrivalTime: segments.last!.arrival,
-      selectedDate: Date() // Deep link trips use today's date
+      selectedDate: Date()  // Deep link trips use today's date
     )
 
     // Build ProjectedTrain
@@ -706,7 +740,7 @@ extension TrainMapStore {
         journey: trainJourney,
         stationsById: projectionStationsById,
         routesById: routesById,
-        selectedDate: Date() // Deep link trips use today's date
+        selectedDate: Date()  // Deep link trips use today's date
       )
     else {
       throw TrainMapError.dataMappingFailed("Failed to project train")

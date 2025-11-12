@@ -28,7 +28,7 @@ struct TrainJourneyData: Codable, Equatable {
   let userSelectedToStation: Station
   let userSelectedDepartureTime: Date
   let userSelectedArrivalTime: Date
-  let selectedDate: Date // The date user selected for the journey
+  let selectedDate: Date  // The date user selected for the journey
 }
 
 // MARK: - Logiks
@@ -82,7 +82,7 @@ extension AddTrainView {
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
-    var trainSearchText: String = "" // Separate search for train filtering
+    var trainSearchText: String = ""  // Separate search for train filtering
     var showCalendar: Bool = false
     var isLoadingConnections: Bool = false
     var isLoadingTrains: Bool = false
@@ -149,24 +149,24 @@ extension AddTrainView {
           departureStationId: departureId,
           arrivalStationId: arrivalId
         )
-        
+
         // Convert TrainRouteJourney to AvailableTrainItem
         // Note: We still need to call the existing API to get the full journey data with routes
         var items: [JourneyService.AvailableTrainItem] = []
-        
-        for route in trainRoutes {
+
+        for _ in trainRoutes {
           // Fetch full journey data for trains that actually stop at both stations
           let fullItems = try await journeyService.fetchProjectedForRoute(
             departureStationId: departureId,
             arrivalStationId: arrivalId
           )
-          
+
           // Filter to only include the trains from trainStopService
           let validTrainIds = Set(trainRoutes.map { $0.trainId })
           items = fullItems.filter { validTrainIds.contains($0.trainId) }
-          break // Only need to fetch once
+          break  // Only need to fetch once
         }
-        
+
         filteredTrains = items
       } catch {
         print("Failed to fetch available trains: \(error)")
@@ -385,18 +385,18 @@ extension AddTrainView {
         return stations
       }
 
-        return stations.filter { station in
-          station.name.localizedCaseInsensitiveContains(searchText)
-            || station.code.localizedCaseInsensitiveContains(searchText)
-            || (station.city?.localizedCaseInsensitiveContains(searchText) ?? false)
-        }
+      return stations.filter { station in
+        station.name.localizedCaseInsensitiveContains(searchText)
+          || station.code.localizedCaseInsensitiveContains(searchText)
+          || (station.city?.localizedCaseInsensitiveContains(searchText) ?? false)
+      }
     }
-    
+
     var searchableTrains: [JourneyService.AvailableTrainItem] {
       if trainSearchText.isEmpty {
         return filteredTrains
       }
-      
+
       return filteredTrains.filter { item in
         item.name.localizedCaseInsensitiveContains(trainSearchText)
           || item.code.localizedCaseInsensitiveContains(trainSearchText)
@@ -471,11 +471,11 @@ extension AddTrainView {
       let calendar = Calendar.current
       let components = calendar.dateComponents([.hour, .minute], from: time)
       let startOfDay = calendar.startOfDay(for: targetDate)
-      
+
       guard let hour = components.hour, let minute = components.minute else {
         return time
       }
-      
+
       return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay) ?? time
     }
   }

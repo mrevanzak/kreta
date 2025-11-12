@@ -7,7 +7,7 @@ struct AlarmValidationResult {
   let reason: AlarmValidationFailureReason?
 
   enum AlarmValidationFailureReason {
-    case alarmTimeInPast(minutesUntilDeparture: Int, requestedOffset: Int)
+    case alarmTimeInPast(minutesUntilArrival: Int, requestedOffset: Int)
     case journeyTooShort(journeyDuration: Int, requestedOffset: Int, minimumRequired: Int)
   }
 
@@ -150,9 +150,9 @@ struct AlarmConfigurationSheet: View {
   private var alertMessage: some View {
     if let reason = validationResult?.reason {
       switch reason {
-      case .alarmTimeInPast(let minutesUntilDeparture, let requestedOffset):
+      case .alarmTimeInPast(let minutesUntilArrival, let requestedOffset):
         Text(
-          "Kereta berangkat dalam \(minutesUntilDeparture) menit, alarm \(requestedOffset) menit tidak akan berbunyi. Ubah pengaturan alarm atau lanjutkan tanpa alarm?"
+          "Kereta tiba dalam \(minutesUntilArrival) menit, alarm \(requestedOffset) menit tidak akan berbunyi. Ubah pengaturan alarm atau lanjutkan tanpa alarm?"
         )
 
       case .journeyTooShort(let journeyDuration, let requestedOffset, let minimumRequired):

@@ -34,12 +34,14 @@ enum SheetDestination: Hashable, CustomStringConvertible {
   case feedback
   case addTrain
   case shareJourney  // Add this new case
+  case alarmConfiguration
 
   var description: String {
     switch self {
     case .feedback: ".feedback"
     case .addTrain: ".addTrain"
     case .shareJourney: ".shareJourney"  // Add this
+    case .alarmConfiguration: ".alarmConfiguration"
     }
   }
 }
@@ -50,6 +52,7 @@ extension SheetDestination: Identifiable {
     case .feedback: "feedback"
     case .addTrain: "addTrain"
     case .shareJourney: "shareJourney"  // Add this
+    case .alarmConfiguration: "alarmConfiguration"
     }
   }
 }
