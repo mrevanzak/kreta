@@ -12,6 +12,8 @@ struct HomeScreen: View {
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
   @State private var selectedDetent: PresentationDetent = .height(200)
+  @State private var showInstaView: Bool = false // Added state for InstaView
+  
   private var isPortalActive: Binding<Bool> {
     Binding(
       get: { selectedDetent == .large },
@@ -89,11 +91,16 @@ struct HomeScreen: View {
             }
             .routerPresentation(router: router)
           }
+          // InstaView Sheet
+          .sheet(isPresented: $showInstaView) {
+            InstaView()
+              .environment(trainMapStore)
+          }
       }
       .environment(trainMapStore)
       .portalTransition(
         id: "trainName",
-        isActive: isPortalActive, // <- use the computed Binding
+        isActive: isPortalActive,
         animation: .spring(response: 0.2, dampingFraction: 0.8),
         completionCriteria: .removed
       ) {
@@ -107,7 +114,7 @@ struct HomeScreen: View {
       }
       .portalTransition(
         id: "trainCode",
-        isActive: isPortalActive, // <- use the computed Binding
+        isActive: isPortalActive,
         animation: .spring(response: 0.2, dampingFraction: 0.8),
         completionCriteria: .removed
       ) {
@@ -167,7 +174,7 @@ struct HomeScreen: View {
         
         if let train = trainMapStore.selectedTrain {
           Button {
-            
+            router.navigate(to: .sheet(.shareJourney))
           } label: {
             Image(systemName: "square.and.arrow.up")
               .foregroundStyle(.textSecondary)

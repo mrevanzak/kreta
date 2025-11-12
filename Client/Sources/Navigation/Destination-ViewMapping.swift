@@ -22,6 +22,10 @@ func view(for destination: SheetDestination) -> some View {
     case .addTrain:
       AddTrainView()
         .presentationDragIndicator(.visible)
+    case .shareJourney:
+      InstaView()
+        .presentationDetents([.large])  // Changed from [.medium, .large] to just [.large]
+        .presentationDragIndicator(.visible)
     }
   }
 }
