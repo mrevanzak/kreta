@@ -2,6 +2,12 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  appConfig: defineTable({
+    configKey: v.string(),
+    value: v.number(),
+    updatedAt: v.number(),
+  }).index("by_configKey", ["configKey"]),
+
   devices: defineTable({
     token: v.string(),
     userId: v.union(v.string(), v.null()),

@@ -1,7 +1,7 @@
 import { internalAction, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { stationValidator } from "./validators";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 
 // Schedule an arrival alert 2 minutes before arrival time
@@ -14,7 +14,9 @@ export const scheduleArrivalAlert = mutation({
     destinationStation: stationValidator,
   },
   handler: async (ctx, args) => {
-    const notificationTimeMs = args.arrivalTime - 2 * 60 * 1000;
+    const offset = await ctx.runQuery(internal.appConfig.getArrivalAlert);
+
+    const notificationTimeMs = args.arrivalTime - offset * 1000;
     const nowMs = Date.now();
 
     if (notificationTimeMs <= nowMs) {

@@ -11,6 +11,7 @@ final class TrainMapStore {
   private nonisolated(unsafe) let convexClient = Dependencies.shared.convexClient
   private let cacheService = TrainMapCacheService()
   private let liveActivityService = TrainLiveActivityService.shared
+  private let configStore = ConfigStore.shared
   @ObservationIgnored private let notificationCenter = UNUserNotificationCenter.current()
 
   var isLoading: Bool = false
@@ -214,7 +215,10 @@ extension TrainMapStore {
     }
 
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
-    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
+    guard let scheduleOffset = configStore.appConfig?.tripRemainder else {
+      logger.error("No trip remainder config found")
+      return
+    }
 
     if timeUntilDeparture <= scheduleOffset {
       cancelPendingTripReminder()
