@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Station Timeline Item
 
 /// Represents a station in the journey timeline with its state and timing
-struct StationTimelineItem: Identifiable {
+struct StationTimelineItem: Identifiable, Equatable {
   let id: String
   let station: Station
   let arrivalTime: Date?
@@ -19,7 +19,7 @@ struct StationTimelineItem: Identifiable {
   let isStop: Bool // Whether train stops at this station
   var progressToNext: Double? // Progress from this station to next (0.0 - 1.0)
   
-  enum StationState {
+  enum StationState: Equatable {
     case completed // Train has passed this station
     case current // Train is currently at or approaching this station
     case upcoming // Train hasn't reached this station yet
