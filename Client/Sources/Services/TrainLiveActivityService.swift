@@ -152,7 +152,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     return try Activity<TrainActivityAttributes>.request(
       attributes: attributes,
-      content: content
+      content: content,
+      pushType: .token
     )
   }
 
