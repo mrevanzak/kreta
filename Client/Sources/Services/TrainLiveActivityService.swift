@@ -193,6 +193,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
         alarmEnabled: alarmEnabled,
         alarmOffsetMinutes: alarmOffsetMinutes,
         arrivalTime: destination.estimatedTime,
+        departureTime: activity.attributes.from.estimatedTime,
         trainName: trainName,
         destinationName: destination.name,
         destinationCode: destination.code
@@ -256,13 +257,18 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
       if currentState != .prepareToDropOff,
         let arrivalTime = activity.attributes.destination.estimatedTime,
-        arrivalTime <= currentDate
+        let departureTime = activity.attributes.from.estimatedTime
       {
-        logger.debug(
-          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to prepareToDropOff"
-        )
-        await transitionToPrepareToDropOff(activityId: activity.id)
-        currentState = .prepareToDropOff
+        // Normalize arrival time to handle next-day arrivals
+        let normalizedArrival = Date.normalizeArrivalTime(
+          arrival: arrivalTime, relativeTo: departureTime)
+        if normalizedArrival <= currentDate {
+          logger.debug(
+            "Foreground refresh transitioning activity \(activity.id, privacy: .public) to prepareToDropOff"
+          )
+          await transitionToPrepareToDropOff(activityId: activity.id)
+          currentState = .prepareToDropOff
+        }
       }
 
       await rescheduleAlarmIfNeeded(for: activity)
@@ -346,6 +352,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
     alarmEnabled: Bool,
     alarmOffsetMinutes: Int,
     arrivalTime: Date?,
+    departureTime: Date? = nil,
     trainName: String,
     destinationName: String,
     destinationCode: String,
@@ -403,7 +410,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
         offsetMinutes: alarmOffsetMinutes,
         trainName: trainName,
         destinationName: destinationName,
-        destinationCode: destinationCode
+        destinationCode: destinationCode,
+        departureTime: departureTime
       )
       logger.info("Successfully scheduled alarm for activity \(activityId, privacy: .public)")
       AnalyticsEventService.shared.trackAlarmScheduled(
@@ -433,6 +441,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       alarmEnabled: alarmEnabled,
       alarmOffsetMinutes: alarmOffsetMinutes,
       arrivalTime: activity.attributes.destination.estimatedTime,
+      departureTime: activity.attributes.from.estimatedTime,
       trainName: activity.attributes.trainName,
       destinationName: activity.attributes.destination.name,
       destinationCode: activity.attributes.destination.code
@@ -635,6 +644,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
         alarmEnabled: alarmEnabled,
         alarmOffsetMinutes: alarmOffsetMinutes,
         arrivalTime: activity.attributes.destination.estimatedTime,
+        departureTime: activity.attributes.from.estimatedTime,
         trainName: activity.attributes.trainName,
         destinationName: activity.attributes.destination.name,
         destinationCode: activity.attributes.destination.code

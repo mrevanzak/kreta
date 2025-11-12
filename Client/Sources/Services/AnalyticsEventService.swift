@@ -51,7 +51,10 @@ final class AnalyticsEventService: @unchecked Sendable {
     hasAlarmEnabled: Bool
   ) {
     let now = Date()
-    let durationMinutes = Int(userSelectedArrival.timeIntervalSince(userSelectedDeparture) / 60)
+    // Normalize arrival time to handle next-day arrivals
+    let normalizedArrival = Date.normalizeArrivalTime(
+      arrival: userSelectedArrival, relativeTo: userSelectedDeparture)
+    let durationMinutes = Int(normalizedArrival.timeIntervalSince(userSelectedDeparture) / 60)
     let timeUntilDepartureMinutes = Int(max(0, userSelectedDeparture.timeIntervalSince(now)) / 60)
 
     telemetry.track(
@@ -91,7 +94,12 @@ final class AnalyticsEventService: @unchecked Sendable {
     actualArrival: Date,
     wasTrackedUntilArrival: Bool
   ) {
-    let duration = Int(max(0, actualArrival.timeIntervalSince(userSelectedDeparture)) / 60)
+    // Normalize arrival time to handle next-day arrivals (using actualArrival as reference)
+    // Note: For completion tracking, we use actualArrival which should already be correct,
+    // but we normalize it relative to departure to ensure accurate duration calculation
+    let normalizedArrival = Date.normalizeArrivalTime(
+      arrival: actualArrival, relativeTo: userSelectedDeparture)
+    let duration = Int(max(0, normalizedArrival.timeIntervalSince(userSelectedDeparture)) / 60)
 
     telemetry.track(
       event: "journey_completed",
@@ -290,11 +298,11 @@ final class AnalyticsEventService: @unchecked Sendable {
       "is_valid": isValid,
       "configured_at": iso8601String(Date()),
     ]
-    
+
     if let reason = validationFailureReason {
       properties["validation_failure_reason"] = reason
     }
-    
+
     telemetry.track(
       event: "alarm_configured",
       properties: properties

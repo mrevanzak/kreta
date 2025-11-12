@@ -291,18 +291,21 @@ struct HomeScreen: View {
 
     let now = Date()
 
+    // Normalize arrival time to handle next-day arrivals
+    let normalizedArrival = Date.normalizeArrivalTime(arrival: arrival, relativeTo: departure)
+
     // Check if train hasn't departed yet
     if now < departure {
       return "Kereta belum berangkat"
     }
 
     // Check if train has already arrived
-    if now >= arrival {
+    if now >= normalizedArrival {
       return "Sudah Tiba"
     }
 
     // Calculate time remaining until arrival (mirrors TrainCard logic)
-    let timeInterval = arrival.timeIntervalSince(now)
+    let timeInterval = normalizedArrival.timeIntervalSince(now)
     let totalMinutes = Int(timeInterval / 60)
 
     let hours = totalMinutes / 60

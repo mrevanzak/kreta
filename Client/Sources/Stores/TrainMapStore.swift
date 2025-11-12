@@ -218,9 +218,12 @@ extension TrainMapStore {
     arrivalTime: Date
   ) -> AlarmValidationResult {
     let now = Date()
-    let minutesUntilArrival = Int(arrivalTime.timeIntervalSince(now) / 60)
-    let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
-    let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
+    // Normalize arrival time to handle next-day arrivals
+    let normalizedArrival = Date.normalizeArrivalTime(
+      arrival: arrivalTime, relativeTo: departureTime)
+    let minutesUntilArrival = Int(normalizedArrival.timeIntervalSince(now) / 60)
+    let journeyDurationMinutes = Int(normalizedArrival.timeIntervalSince(departureTime) / 60)
+    let alarmTime = normalizedArrival.addingTimeInterval(-Double(offsetMinutes * 60))
 
     // Check 1: Journey hasn't departed yet
     if departureTime <= now {
@@ -347,8 +350,13 @@ extension TrainMapStore {
     }
 
     let now = Date()
+    // Normalize arrival time to handle next-day arrivals
+    let normalizedArrival = Date.normalizeArrivalTime(
+      arrival: journeyData.userSelectedArrivalTime,
+      relativeTo: journeyData.userSelectedDepartureTime
+    )
     let isInProgress =
-      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+      (journeyData.userSelectedDepartureTime...normalizedArrival).contains(now)
 
     // TODO: Replace hardcoded seat class with actual user data
     _ = try await liveActivityService.start(
@@ -468,7 +476,12 @@ extension TrainMapStore {
     // Evaluate completion vs cancellation before clearing
     if let train = selectedTrain, let data = selectedJourneyData {
       let now = Date()
-      if now < data.userSelectedArrivalTime {
+      // Normalize arrival time to handle next-day arrivals
+      let normalizedArrival = Date.normalizeArrivalTime(
+        arrival: data.userSelectedArrivalTime,
+        relativeTo: data.userSelectedDepartureTime
+      )
+      if now < normalizedArrival {
         AnalyticsEventService.shared.trackJourneyCancelled(
           trainId: data.trainId,
           reason: "ended_before_arrival",
