@@ -6,7 +6,7 @@ import Observation
 import UserNotifications
 
 struct AppConfig: Codable {
-  let tripRemainder: Double
+  let tripReminder: Double
   let arrivalAlert: Double
 }
 

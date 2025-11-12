@@ -215,7 +215,7 @@ extension TrainMapStore {
     }
 
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
-    guard let scheduleOffset = configStore.appConfig?.tripRemainder else {
+    guard let scheduleOffset = configStore.appConfig?.tripReminder else {
       logger.error("No trip remainder config found")
       return
     }
