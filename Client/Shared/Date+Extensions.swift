@@ -46,41 +46,4 @@ extension Date {
         of: baseDate
       ) ?? date
   }
-
-  /// Normalizes arrival time to be after departure time
-  /// If arrival hour is less than departure hour (e.g., 01:00 vs 20:00),
-  /// adds 24 hours to arrival time to represent next-day arrival
-  /// - Parameters:
-  ///   - arrival: The arrival time to normalize
-  ///   - departure: The departure time to compare against
-  /// - Returns: Normalized arrival time that is guaranteed to be after departure time
-  static func normalizeArrivalTime(arrival: Date, relativeTo departure: Date) -> Date {
-    let calendar = Calendar.current
-    
-    // Extract hour and minute components from both dates
-    let arrivalComponents = calendar.dateComponents([.hour, .minute], from: arrival)
-    let departureComponents = calendar.dateComponents([.hour, .minute], from: departure)
-    
-    guard let arrivalHour = arrivalComponents.hour,
-          let arrivalMinute = arrivalComponents.minute,
-          let departureHour = departureComponents.hour,
-          let departureMinute = departureComponents.minute
-    else {
-      // If we can't extract components, return arrival as-is
-      return arrival
-    }
-    
-    // Calculate time in minutes since midnight for comparison
-    let arrivalMinutes = arrivalHour * 60 + arrivalMinute
-    let departureMinutes = departureHour * 60 + departureMinute
-    
-    // If arrival time is earlier in the day than departure, it's next day
-    if arrivalMinutes < departureMinutes {
-      // Add 24 hours to arrival time
-      return calendar.date(byAdding: .hour, value: 24, to: arrival) ?? arrival
-    }
-    
-    // Arrival is already after departure, return as-is
-    return arrival
-  }
 }

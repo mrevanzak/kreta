@@ -89,25 +89,19 @@ final class TrainAlarmService: @unchecked Sendable {
   ///   - trainName: Name of the train for notification content
   ///   - destinationName: Name of destination station
   ///   - destinationCode: Station code (e.g., "PSE")
-  ///   - departureTime: Optional departure time to normalize arrival for next-day arrivals
   func scheduleArrivalAlarm(
     activityId: String,
     arrivalTime: Date,
     offsetMinutes: Int = Constants.defaultOffsetMinutes,
     trainName: String,
     destinationName: String,
-    destinationCode: String,
-    departureTime: Date? = nil
+    destinationCode: String
   ) async throws {
     guard await requestAuthorization() else {
       throw TrainAlarmError.schedulingFailed("AlarmKit authorization not granted")
     }
 
-    let alarmTime = calculateAlarmTime(
-      arrivalTime: arrivalTime,
-      offsetMinutes: offsetMinutes,
-      departureTime: departureTime
-    )
+    let alarmTime = calculateAlarmTime(arrivalTime: arrivalTime, offsetMinutes: offsetMinutes)
     guard isAlarmTimeValid(alarmTime) else {
       logger.warning("Alarm time \(alarmTime) is in the past, skipping")
       return
@@ -138,21 +132,9 @@ final class TrainAlarmService: @unchecked Sendable {
     try await scheduleAlarm(id: alarmId, configuration: configuration, activityId: activityId)
   }
 
-  private func calculateAlarmTime(
-    arrivalTime: Date,
-    offsetMinutes: Int,
-    departureTime: Date? = nil
-  ) -> Date {
-    // Normalize arrival time if departure time is provided (handles next-day arrivals)
-    let normalizedArrival: Date
-    if let departureTime = departureTime {
-      normalizedArrival = Date.normalizeArrivalTime(arrival: arrivalTime, relativeTo: departureTime)
-    } else {
-      normalizedArrival = arrivalTime
-    }
-    
+  private func calculateAlarmTime(arrivalTime: Date, offsetMinutes: Int) -> Date {
     let offsetInSeconds = Double(offsetMinutes * Constants.secondsPerMinute)
-    return normalizedArrival.addingTimeInterval(-offsetInSeconds)
+    return arrivalTime.addingTimeInterval(-offsetInSeconds)
   }
 
   private func isAlarmTimeValid(_ alarmTime: Date) -> Bool {
