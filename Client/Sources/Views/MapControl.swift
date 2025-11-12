@@ -27,6 +27,7 @@ enum MapStyleOption: String, CaseIterable {
 
 struct MapControl: View {
   @Environment(TrainMapStore.self) private var trainMapStore
+  @Environment(\.colorScheme) private var colorScheme
 
   @Binding var isFollowing: Bool
   @Binding var focusTrigger: Bool
@@ -51,6 +52,7 @@ struct MapControl: View {
     .padding(.trailing)
     .padding(.top, Screen.safeArea.top)
     .ignoresSafeArea(edges: .top)
+    .id(colorScheme) // Force view recreation on color scheme change
   }
 
   private var showFocusButton: Bool {

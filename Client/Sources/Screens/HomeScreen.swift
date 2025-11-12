@@ -176,23 +176,23 @@ struct HomeScreen: View {
           Button {
             router.navigate(to: .sheet(.shareJourney))
           } label: {
-            Image(systemName: "square.and.arrow.up")
-              .foregroundStyle(.textSecondary)
-              .frame(width: 26)
-              .overlay (
-                Circle()
-                  .strokeBorder ( self.gradient , lineWidth: 1)
-                  .opacity ( 1 * 1.2 )
-                  .frame(width: 34, height: 34)
-              )
-            
-              .background (
-                Circle()
-                  .strokeBorder(.gray.opacity( 0.2 ), lineWidth: 1)
-                  .frame(width: 34, height: 34)
-              )
+            ZStack {
+              Circle()
+                .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
+                .frame(width: 44, height: 44)
+              
+              Circle()
+                .strokeBorder(self.gradient, lineWidth: 1)
+                .opacity(1 * 1.2)
+                .frame(width: 44, height: 44)
+              
+              Image(systemName: "square.and.arrow.up")
+                .foregroundStyle(.textSecondary)
+            }
+            .frame(width: 44, height: 44) // Larger tap area
+            .contentShape(Circle()) // Make entire area tappable
           }
-          .padding(.trailing, 8)
+          .padding(.trailing, 4)
         }
         
         Menu {
@@ -200,21 +200,21 @@ struct HomeScreen: View {
             router.navigate(to: .sheet(.feedback))
           }
         } label: {
-          Image(systemName: "ellipsis")
-            .foregroundStyle(.textSecondary)
-            .frame(width: 26)
-            .overlay (
-              Circle()
-                .strokeBorder ( self.gradient , lineWidth: 1)
-                .opacity ( 1 * 1.2 )
-                .frame(width: 34, height: 34)
-            )
-          
-            .background (
-              Circle()
-                .strokeBorder(.gray.opacity( 0.2 ), lineWidth: 1)
-                .frame(width: 34, height: 34)
-            )
+          ZStack {
+            Circle()
+              .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
+              .frame(width: 44, height: 44)
+            
+            Circle()
+              .strokeBorder(self.gradient, lineWidth: 1)
+              .opacity(1 * 1.2)
+              .frame(width: 44, height: 44)
+            
+            Image(systemName: "ellipsis")
+              .foregroundStyle(.textSecondary)
+          }
+          .frame(width: 44, height: 44) // Larger tap area
+          .contentShape(Circle()) // Make entire area tappable
         }
       }
       
