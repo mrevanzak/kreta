@@ -618,7 +618,8 @@ extension TrainMapStore {
       userSelectedFromStation: fromStation,
       userSelectedToStation: toStation,
       userSelectedDepartureTime: firstSegment.departure,
-      userSelectedArrivalTime: segments.last!.arrival
+      userSelectedArrivalTime: segments.last!.arrival,
+      selectedDate: Date() // Deep link trips use today's date
     )
 
     // Build ProjectedTrain

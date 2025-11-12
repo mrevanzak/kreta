@@ -26,12 +26,24 @@ struct StationTimelineItem: Identifiable {
   }
   
   /// Calculate progress between two stations based on current time
+  /// Note: If departure/arrival are on a future date, progress will be 0.0
   static func calculateProgress(from departure: Date?, to arrival: Date?) -> Double? {
     guard let departure = departure, let arrival = arrival else {
       return nil
     }
     
     let now = Date()
+    let calendar = Calendar.current
+    
+    // Check if the journey is on a future date (not today)
+    // Compare just the date components, not the time
+    let departureDay = calendar.startOfDay(for: departure)
+    let today = calendar.startOfDay(for: now)
+    
+    // If journey is on a future date, no progress yet
+    if departureDay > today {
+      return 0.0
+    }
     
     // If before departure, progress is 0
     if now < departure {
@@ -58,40 +70,53 @@ extension StationTimelineItem {
   static func buildTimelineFromStops(
     trainCode: String,
     currentSegmentFromStationId: String?,
-    trainStopService: TrainStopService
+    trainStopService: TrainStopService,
+    selectedDate: Date = Date() // Date to normalize times to
   ) async -> [StationTimelineItem] {
     do {
       guard let schedule = try await trainStopService.getTrainSchedule(trainCode: trainCode) else {
         return []
       }
       
+      // Check if journey is on a future date
+      let calendar = Calendar.current
+      let journeyDay = calendar.startOfDay(for: selectedDate)
+      let today = calendar.startOfDay(for: Date())
+      let isJourneyInFuture = journeyDay > today
+      
       var items: [StationTimelineItem] = []
       var foundCurrent = false
       
       for (index, stop) in schedule.stops.enumerated() {
-        // Determine if this is the current station
-        let isCurrent = stop.stationId == currentSegmentFromStationId && !foundCurrent
+        // Convert time strings to Date (HH:MM:SS format from server)
+        let arrivalDate = stop.arrivalTime.flatMap { parseTimeString($0, on: selectedDate) }
+        let departureDate = stop.departureTime.flatMap { parseTimeString($0, on: selectedDate) }
+        
+        // Determine if this is the current station (only if journey is today)
+        let isCurrent = !isJourneyInFuture && stop.stationId == currentSegmentFromStationId && !foundCurrent
         if isCurrent { foundCurrent = true }
         
-        // Determine state
+        // Determine state based on journey date
         let state: StationState
-        if foundCurrent && !isCurrent {
+        if isJourneyInFuture {
+          // If journey is in the future, all stations are upcoming
           state = .upcoming
-        } else if isCurrent {
-          state = .current
         } else {
-          state = .completed
+          // For today's journey, use normal logic
+          if foundCurrent && !isCurrent {
+            state = .upcoming
+          } else if isCurrent {
+            state = .current
+          } else {
+            state = .completed
+          }
         }
-        
-        // Convert time strings to Date (HH:MM:SS format from server)
-        let arrivalDate = stop.arrivalTime.flatMap { parseTimeString($0) }
-        let departureDate = stop.departureTime.flatMap { parseTimeString($0) }
         
         // Calculate progress to next station
         var progressToNext: Double? = nil
         if index < schedule.stops.count - 1 {
           let nextStop = schedule.stops[index + 1]
-          let nextArrival = nextStop.arrivalTime.flatMap { parseTimeString($0) }
+          let nextArrival = nextStop.arrivalTime.flatMap { parseTimeString($0, on: selectedDate) }
           
           // Use departure time of current station and arrival time of next station
           let currentDeparture = departureDate ?? arrivalDate
@@ -127,8 +152,8 @@ extension StationTimelineItem {
     }
   }
   
-  /// Parse time string in "HH:MM:SS" format to Date (normalized to today)
-  private static func parseTimeString(_ timeString: String) -> Date? {
+  /// Parse time string in "HH:MM:SS" format to Date (normalized to selected date)
+  private static func parseTimeString(_ timeString: String, on date: Date) -> Date? {
     let components = timeString.split(separator: ":")
     guard components.count >= 2,
           let hour = Int(components[0]),
@@ -137,8 +162,7 @@ extension StationTimelineItem {
     }
     
     let calendar = Calendar.current
-    let now = Date()
-    let startOfDay = calendar.startOfDay(for: now)
+    let startOfDay = calendar.startOfDay(for: date)
     
     return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay)
   }

@@ -228,11 +228,15 @@ struct JourneyProgressView: View {
     // Get current segment's from station to determine progress
     let currentSegmentFromStationId = train.fromStation?.id ?? train.fromStation?.code
     
+    // Use selected date from journey data, or fall back to today
+    let selectedDate = journeyData?.selectedDate ?? Date()
+    
     // Use new service to get only actual stops
     let items = await StationTimelineItem.buildTimelineFromStops(
       trainCode: train.code,
       currentSegmentFromStationId: currentSegmentFromStationId,
-      trainStopService: trainStopService
+      trainStopService: trainStopService,
+      selectedDate: selectedDate
     )
     
     timelineItems = items
@@ -300,7 +304,8 @@ struct JourneyProgressView: View {
     userSelectedFromStation: stations[0],
     userSelectedToStation: stations[3],
     userSelectedDepartureTime: Date().addingTimeInterval(-3600),
-    userSelectedArrivalTime: Date().addingTimeInterval(3600)
+    userSelectedArrivalTime: Date().addingTimeInterval(3600),
+    selectedDate: Date()
   )
   
   let train = ProjectedTrain(

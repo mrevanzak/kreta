@@ -28,6 +28,7 @@ struct TrainJourneyData: Codable, Equatable {
   let userSelectedToStation: Station
   let userSelectedDepartureTime: Date
   let userSelectedArrivalTime: Date
+  let selectedDate: Date // The date user selected for the journey
 }
 
 // MARK: - Logiks
@@ -197,6 +198,11 @@ extension AddTrainView {
       var journeySegments: [JourneySegment] = []
       var allStationsInJourney: [Station] = []
 
+      // Normalize times to the selected date
+      let targetDate = selectedDate ?? Date()
+      let normalizedUserDeparture = normalizeTimeToDate(item.segmentDeparture, to: targetDate)
+      let normalizedUserArrival = normalizeTimeToDate(item.segmentArrival, to: targetDate)
+
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
 
@@ -205,13 +211,17 @@ extension AddTrainView {
           if index < segments.count - 1 {
             let nextSegment = segments[index + 1]
 
+            // Normalize segment times to selected date
+            let normalizedDeparture = normalizeTimeToDate(segment.departure, to: targetDate)
+            let normalizedArrival = normalizeTimeToDate(nextSegment.arrival, to: targetDate)
+
             // Use nextSegment.routeId because the route connects TO the next station
             journeySegments.append(
               JourneySegment(
                 fromStationId: segment.stationId,
                 toStationId: nextSegment.stationId,
-                departure: segment.departure,
-                arrival: nextSegment.arrival,
+                departure: normalizedDeparture,
+                arrival: normalizedArrival,
                 routeId: nextSegment.routeId
               )
             )
@@ -230,8 +240,9 @@ extension AddTrainView {
           allStations: allStationsInJourney,
           userSelectedFromStation: fromStation!,
           userSelectedToStation: toStation!,
-          userSelectedDepartureTime: item.segmentDeparture,
-          userSelectedArrivalTime: item.segmentArrival,
+          userSelectedDepartureTime: normalizedUserDeparture,
+          userSelectedArrivalTime: normalizedUserArrival,
+          selectedDate: targetDate
         )
       } catch {
         print("Failed to fetch journey segments: \(error)")
@@ -240,6 +251,7 @@ extension AddTrainView {
       // Track selected train
       AnalyticsEventService.shared.trackTrainSelected(item: item)
 
+      // Create ProjectedTrain with normalized times
       let projected = ProjectedTrain(
         id: item.id,
         code: item.code,
@@ -254,11 +266,11 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: item.segmentDeparture,
-        segmentArrival: item.segmentArrival,
+        segmentDeparture: normalizedUserDeparture,
+        segmentArrival: normalizedUserArrival,
         progress: nil,
-        journeyDeparture: item.segmentDeparture,
-        journeyArrival: item.segmentArrival
+        journeyDeparture: normalizedUserDeparture,
+        journeyArrival: normalizedUserArrival
       )
 
       return projected
@@ -452,6 +464,19 @@ extension AddTrainView {
       }
 
       return nil
+    }
+
+    /// Normalize a time to a specific date (extract hour:minute and apply to target date)
+    private func normalizeTimeToDate(_ time: Date, to targetDate: Date) -> Date {
+      let calendar = Calendar.current
+      let components = calendar.dateComponents([.hour, .minute], from: time)
+      let startOfDay = calendar.startOfDay(for: targetDate)
+      
+      guard let hour = components.hour, let minute = components.minute else {
+        return time
+      }
+      
+      return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay) ?? time
     }
   }
 }
