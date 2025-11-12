@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as appConfig from "../appConfig.js";
 import type * as feedback from "../feedback.js";
 import type * as gapeka from "../gapeka.js";
 import type * as journeys from "../journeys.js";
+import type * as liveActivities from "../liveActivities.js";
 import type * as notifications from "../notifications.js";
 import type * as push from "../push.js";
 import type * as registrations from "../registrations.js";
@@ -35,9 +37,11 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  appConfig: typeof appConfig;
   feedback: typeof feedback;
   gapeka: typeof gapeka;
   journeys: typeof journeys;
+  liveActivities: typeof liveActivities;
   notifications: typeof notifications;
   push: typeof push;
   registrations: typeof registrations;

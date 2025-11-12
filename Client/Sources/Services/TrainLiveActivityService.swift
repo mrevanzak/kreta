@@ -51,7 +51,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
     destination: TrainStation,
     // seatClass: SeatClass,
     // seatNumber: String,
-    initialJourneyState: JourneyState? = nil
+    initialJourneyState: JourneyState? = nil,
+    alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async throws -> Activity<TrainActivityAttributes> {
     let activity = try await createActivity(
       trainName: trainName,
@@ -62,7 +63,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
       initialJourneyState: initialJourneyState
     )
 
-    await setupActivityMonitoring(for: activity, destination: destination, trainName: trainName)
+    await setupActivityMonitoring(
+      for: activity,
+      destination: destination,
+      trainName: trainName,
+      alarmOffsetMinutes: alarmOffsetMinutes
+    )
 
     return activity
   }
@@ -98,11 +104,11 @@ final class TrainLiveActivityService: @unchecked Sendable {
   private func setupActivityMonitoring(
     for activity: Activity<TrainActivityAttributes>,
     destination: TrainStation,
-    trainName: String
+    trainName: String,
+    alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async {
     let activityId = activity.id
     let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
-    let alarmOffsetMinutes = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
     logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
     logger.debug("Activity ID: \(activityId, privacy: .public)")
@@ -140,6 +146,16 @@ final class TrainLiveActivityService: @unchecked Sendable {
     Task {
       await scheduleServerArrivalAlert(trainName: trainName, destination: destination)
     }
+
+    Task {
+      await scheduleServerStateUpdates(
+        activityId: activityId,
+        trainName: trainName,
+        origin: activity.attributes.from,
+        destination: destination,
+        arrivalLeadMinutes: Double(alarmOffsetMinutes)
+      )
+    }
   }
 
   @MainActor
@@ -162,6 +178,39 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   private func findActivity(with activityId: String) -> Activity<TrainActivityAttributes>? {
     Activity<TrainActivityAttributes>.activities.first { $0.id == activityId }
+  }
+
+  @MainActor
+  func refreshInForeground(currentDate: Date = Date()) async {
+    logger.info("Refreshing Live Activities after foreground entry")
+
+    for activity in Activity<TrainActivityAttributes>.activities {
+      var currentState = activity.content.state.journeyState
+
+      if currentState == .beforeBoarding,
+        let departureTime = activity.attributes.from.estimatedTime,
+        departureTime <= currentDate
+      {
+        logger.debug(
+          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to onBoard"
+        )
+        await transitionToOnBoard(activityId: activity.id)
+        currentState = .onBoard
+      }
+
+      if currentState != .prepareToDropOff,
+        let arrivalTime = activity.attributes.destination.estimatedTime,
+        arrivalTime <= currentDate
+      {
+        logger.debug(
+          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to prepareToDropOff"
+        )
+        await transitionToPrepareToDropOff(activityId: activity.id)
+        currentState = .prepareToDropOff
+      }
+
+      await rescheduleAlarmIfNeeded(for: activity)
+    }
   }
 
   @MainActor
@@ -363,7 +412,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       return
     }
 
-    let arrivalMs = Int(arrivalTime.timeIntervalSince1970 * 1000)
+    let arrivalMs = Double(arrivalTime.timeIntervalSince1970 * 1000)
 
     do {
       let _: String = try await convexClient.mutation(
@@ -388,13 +437,58 @@ final class TrainLiveActivityService: @unchecked Sendable {
     }
   }
 
+  private func scheduleServerStateUpdates(
+    activityId: String,
+    trainName: String,
+    origin: TrainStation,
+    destination: TrainStation,
+    arrivalLeadMinutes: Double
+  ) async {
+    let departureTimeMs = origin.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
+    let arrivalTimeMs = destination.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
+
+    guard departureTimeMs != nil || arrivalTimeMs != nil else {
+      logger.debug(
+        "No schedule metadata for activity \(activityId, privacy: .public); skipping server state scheduling"
+      )
+      return
+    }
+
+    struct ScheduleResponse: Decodable {
+      let departureScheduled: Bool
+      let arrivalScheduled: Bool
+    }
+
+    let arrivalLeadMs = max(0, arrivalLeadMinutes) * 60 * 1000
+
+    do {
+      let response: ScheduleResponse = try await convexClient.mutation(
+        "liveActivities:scheduleStateUpdates",
+        with: [
+          "activityId": activityId,
+          "trainName": trainName,
+          "departureTime": departureTimeMs,
+          "arrivalTime": arrivalTimeMs,
+          "arrivalLeadTimeMs": arrivalLeadMs,
+        ],
+        captureTelemetry: true
+      )
+      logger.info(
+        "Server scheduling for activity \(activityId, privacy: .public) -> departure: \(response.departureScheduled), arrival: \(response.arrivalScheduled)"
+      )
+    } catch {
+      logger.error(
+        "Failed to schedule server state updates for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+      )
+    }
+  }
+
   @MainActor
   func startGlobalMonitoring() async {
     guard !hasStartedGlobalMonitoring else { return }
     hasStartedGlobalMonitoring = true
 
     Task { await monitorExistingActivities() }
-    Task { await monitorActivityUpdates() }
     Task { await monitorPushToStartTokens() }
     Task { await monitorAlarmUpdates() }
   }
@@ -415,12 +509,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     guard !hasAlarm else { return }
 
     await scheduleAlarmIfEnabled(for: activity)
-  }
-
-  private func monitorActivityUpdates() async {
-    for await activity in Activity<TrainActivityAttributes>.activityUpdates {
-      await monitorPushTokens(for: activity)
-    }
   }
 
   // MARK: - Token Registration

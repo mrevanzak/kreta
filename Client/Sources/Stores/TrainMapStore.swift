@@ -11,6 +11,7 @@ final class TrainMapStore {
   private nonisolated(unsafe) let convexClient = Dependencies.shared.convexClient
   private let cacheService = TrainMapCacheService()
   private let liveActivityService = TrainLiveActivityService.shared
+  private let configStore = ConfigStore.shared
   @ObservationIgnored private let notificationCenter = UNUserNotificationCenter.current()
 
   var isLoading: Bool = false
@@ -180,13 +181,21 @@ extension TrainMapStore {
 
 // MARK: - Selected train management
 extension TrainMapStore {
-  func selectTrain(_ train: ProjectedTrain, journeyData: TrainJourneyData) async throws {
+  func selectTrain(
+    _ train: ProjectedTrain,
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
+  ) async throws {
     selectedTrain = train
     selectedJourneyData = journeyData
     startProjectionUpdates()
 
     // Start Live Activity
-    try await startLiveActivityForTrain(train: train, journeyData: journeyData)
+    try await startLiveActivityForTrain(
+      train: train,
+      journeyData: journeyData,
+      alarmOffsetMinutes: alarmOffsetMinutes
+    )
 
     // Track journey start
     if let from = train.fromStation, let to = train.toStation {
@@ -202,9 +211,54 @@ extension TrainMapStore {
     }
   }
 
-  private func startLiveActivityForTrain(train: ProjectedTrain, journeyData: TrainJourneyData)
-    async throws
-  {
+  /// Validate if the alarm offset is appropriate for the journey timing
+  func validateAlarmTiming(
+    offsetMinutes: Int,
+    departureTime: Date,
+    arrivalTime: Date
+  ) -> AlarmValidationResult {
+    let now = Date()
+    let minutesUntilDeparture = Int(departureTime.timeIntervalSince(now) / 60)
+    let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
+    let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
+
+    // Check 1: Journey hasn't departed yet
+    if departureTime <= now {
+      return .invalid(
+        .alarmTimeInPast(
+          minutesUntilDeparture: minutesUntilDeparture,
+          requestedOffset: offsetMinutes
+        ))
+    }
+
+    // Check 2: Alarm time must be in the future
+    if alarmTime <= now {
+      return .invalid(
+        .alarmTimeInPast(
+          minutesUntilDeparture: minutesUntilDeparture,
+          requestedOffset: offsetMinutes
+        ))
+    }
+
+    // Check 3: Journey duration must be sufficient (offset + 10 minute buffer)
+    let minimumRequiredDuration = offsetMinutes + 10
+    if journeyDurationMinutes < minimumRequiredDuration {
+      return .invalid(
+        .journeyTooShort(
+          journeyDuration: journeyDurationMinutes,
+          requestedOffset: offsetMinutes,
+          minimumRequired: minimumRequiredDuration
+        ))
+    }
+
+    return .valid()
+  }
+
+  private func startLiveActivityForTrain(
+    train: ProjectedTrain,
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
+  ) async throws {
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
       let departureTime = train.segmentDeparture
@@ -214,14 +268,21 @@ extension TrainMapStore {
     }
 
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
-    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
+    guard let scheduleOffset = configStore.appConfig?.tripReminder else {
+      logger.error("No trip remainder config found")
+      return
+    }
 
     if timeUntilDeparture <= scheduleOffset {
       cancelPendingTripReminder()
       // Start immediately on device
       logger.info(
         "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
-      try await executeLiveActivityStart(train: train, journeyData: journeyData)
+      try await executeLiveActivityStart(
+        train: train,
+        journeyData: journeyData,
+        alarmOffsetMinutes: alarmOffsetMinutes
+      )
     } else {
       logger.info(
         "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
@@ -230,7 +291,8 @@ extension TrainMapStore {
         train: train,
         fromStation: fromStation,
         toStation: toStation,
-        departureTime: departureTime
+        departureTime: departureTime,
+        scheduleOffset: scheduleOffset
       )
     }
   }
@@ -239,7 +301,8 @@ extension TrainMapStore {
   /// This is the core logic that should be executed regardless of timing
   private func executeLiveActivityStart(
     train: ProjectedTrain,
-    journeyData: TrainJourneyData
+    journeyData: TrainJourneyData,
+    alarmOffsetMinutes: Int? = nil
   ) async throws {
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
@@ -268,7 +331,8 @@ extension TrainMapStore {
       ),
       // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
       // seatNumber: "1A",  // TODO: Replace with actual seat number
-      initialJourneyState: isInProgress ? .onBoard : nil
+      initialJourneyState: isInProgress ? .onBoard : nil,
+      alarmOffsetMinutes: alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
     )
   }
 
@@ -276,9 +340,9 @@ extension TrainMapStore {
     train: ProjectedTrain,
     fromStation: Station,
     toStation: Station,
-    departureTime: Date
+    departureTime: Date,
+    scheduleOffset: TimeInterval
   ) async throws {
-    let scheduleOffset: TimeInterval = 10 * 60  // 10 minutes
     let reminderDate = departureTime.addingTimeInterval(-scheduleOffset)
 
     guard reminderDate > Date() else {
@@ -294,6 +358,7 @@ extension TrainMapStore {
       "Kereta \(train.name) akan berangkat dalam 10 menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
     content.sound = .default
     content.categoryIdentifier = "TRIP_START_FALLBACK"
+    content.interruptionLevel = .timeSensitive
 
     if let deepLink = makeTripReminderDeepLink(
       trainId: train.id,
@@ -457,28 +522,29 @@ extension TrainMapStore {
           }
         }
 
-        // Re-project the train with current time
-        if let projectedTrain = projectSelectedTrain(now: Date()) {
-          selectedTrain = projectedTrain
-          startProjectionUpdates()
+        // Use cached train directly - it was already projected when the journey was created
+        // and remains valid. Re-projecting risks station ID lookup failures.
+        guard let cachedTrain = selectedTrain else {
+          throw TrainMapError.dataMappingFailed("Cached train data is missing")
+        }
 
-          // Execute Live Activity start (by now it should be <= 10 minutes until departure)
-          try await executeLiveActivityStart(train: projectedTrain, journeyData: cachedJourneyData)
+        // Live updates will work via liveTrainPosition computed property
+        startProjectionUpdates()
 
-          // Track journey start
-          if let from = projectedTrain.fromStation, let to = projectedTrain.toStation {
-            AnalyticsEventService.shared.trackJourneyStarted(
-              trainId: cachedJourneyData.trainId,
-              trainName: projectedTrain.name,
-              from: from,
-              to: to,
-              userSelectedDeparture: cachedJourneyData.userSelectedDepartureTime,
-              userSelectedArrival: cachedJourneyData.userSelectedArrivalTime,
-              hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
-            )
-          }
-        } else {
-          throw TrainMapError.dataMappingFailed("Failed to project train from cached data")
+        // Execute Live Activity start (by now it should be <= 10 minutes until departure)
+        try await executeLiveActivityStart(train: cachedTrain, journeyData: cachedJourneyData)
+
+        // Track journey start using cached train data
+        if let from = cachedTrain.fromStation, let to = cachedTrain.toStation {
+          AnalyticsEventService.shared.trackJourneyStarted(
+            trainId: cachedJourneyData.trainId,
+            trainName: cachedTrain.name,
+            from: from,
+            to: to,
+            userSelectedDeparture: cachedJourneyData.userSelectedDepartureTime,
+            userSelectedArrival: cachedJourneyData.userSelectedArrivalTime,
+            hasAlarmEnabled: AlarmPreferences.shared.defaultAlarmEnabled
+          )
         }
 
         return
@@ -580,12 +646,28 @@ extension TrainMapStore {
       throw TrainMapError.dataMappingFailed("Invalid journey segments")
     }
 
-    // Create a comprehensive stationsById dictionary for projection
-    // This maps segment station IDs to Station objects
-    // Use the segmentIdToStation mapping we created, falling back to ID lookup
-    let projectionStationsById: [String: Station] = Dictionary(
-      uniqueKeysWithValues: segmentIdToStation.map { ($0.key, $0.value) }
-    ).merging(stationsById) { (first, _) in first }
+    // Create a comprehensive stationsById dictionary for projection using multi-strategy approach
+    // This ensures robustness when segment IDs use different formats (server IDs vs codes)
+    let projectionStationsById: [String: Station] = {
+      var combined: [String: Station] = [:]
+
+      // Include segment-specific mappings first (highest priority)
+      for (key, station) in segmentIdToStation {
+        combined[key] = station
+      }
+
+      // Add global station mappings by ID
+      for station in stations where station.id != nil {
+        combined[station.id!] = station
+      }
+
+      // Add global station mappings by code (fallback)
+      for station in stations {
+        combined[station.code] = station
+      }
+
+      return combined
+    }()
 
     // Build TrainJourneyData
     let journeyData = TrainJourneyData(
@@ -595,7 +677,8 @@ extension TrainMapStore {
       userSelectedFromStation: fromStation,
       userSelectedToStation: toStation,
       userSelectedDepartureTime: firstSegment.departure,
-      userSelectedArrivalTime: segments.last!.arrival
+      userSelectedArrivalTime: segments.last!.arrival,
+      selectedDate: Date() // Deep link trips use today's date
     )
 
     // Build ProjectedTrain
@@ -608,12 +691,22 @@ extension TrainMapStore {
     )
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
+
+    // Log station lookup diagnostics for debugging
+    logger.debug(
+      """
+      Server fallback: Projecting train with \(projectionStationsById.count) stations mapped. \
+      First segment: \(journeySegments.first?.fromStationId ?? "none") → \
+      \(journeySegments.first?.toStationId ?? "none")
+      """)
+
     guard
       let projectedTrain = TrainProjector.projectTrain(
         now: Date(),
         journey: trainJourney,
         stationsById: projectionStationsById,
-        routesById: routesById
+        routesById: routesById,
+        selectedDate: Date() // Deep link trips use today's date
       )
     else {
       throw TrainMapError.dataMappingFailed("Failed to project train")
@@ -660,23 +753,53 @@ extension TrainMapStore {
   private func projectSelectedTrain(now: Date = Date()) -> ProjectedTrain? {
     guard let selectedTrain, let selectedJourneyData else { return nil }
 
-    let stationsById = Dictionary(
-      uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+    // Build comprehensive station lookup with multi-strategy approach
+    // This ensures TrainProjector can find all stations referenced by JourneySegment IDs
+    var stationsById: [String: Station] = [:]
+
+    // Strategy 1: Map by station.id (primary key)
+    for station in stations where station.id != nil {
+      stationsById[station.id!] = station
+    }
+
+    // Strategy 2: Map by station.code (fallback for code-based lookups)
+    for station in stations {
+      stationsById[station.code] = station
+    }
+
+    // Strategy 3: Include journey-specific stations from TrainJourneyData.allStations
+    for station in selectedJourneyData.allStations {
+      if let id = station.id {
+        stationsById[id] = station
+      }
+      stationsById[station.code] = station
+    }
+
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
 
+    // Use trainId from journeyData, not selectedTrain.id (which may be journey ID)
     let trainJourney = TrainJourney(
-      id: selectedTrain.id,
-      trainId: selectedTrain.id,
+      id: selectedJourneyData.trainId,
+      trainId: selectedJourneyData.trainId,
       code: selectedTrain.code,
       name: selectedTrain.name,
       segments: selectedJourneyData.segments
     )
 
+    // Log station lookup diagnostics for debugging
+    logger.debug(
+      """
+      Projecting train with \(stationsById.count) stations mapped. \
+      First segment: \(selectedJourneyData.segments.first?.fromStationId ?? "none") → \
+      \(selectedJourneyData.segments.first?.toStationId ?? "none")
+      """)
+
     return TrainProjector.projectTrain(
       now: now,
       journey: trainJourney,
       stationsById: stationsById,
-      routesById: routesById
+      routesById: routesById,
+      selectedDate: selectedJourneyData.selectedDate
     )
   }
 }

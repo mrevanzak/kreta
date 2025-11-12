@@ -5,6 +5,8 @@ import SwiftUI
 struct KretaApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+  @Environment(\.scenePhase) private var scenePhase
+
   @State var router: Router = .init(level: 0)
   @State private var convexClient = Dependencies.shared.convexClient
 
@@ -16,6 +18,12 @@ struct KretaApp: App {
         HomeScreen()
           .environment(\.convexClient, convexClient)
           .withToast()
+      }
+    }
+    .onChange(of: scenePhase) { _, newPhase in
+      guard newPhase == .active else { return }
+      Task {
+        await TrainLiveActivityService.shared.refreshInForeground()
       }
     }
   }

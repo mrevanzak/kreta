@@ -18,6 +18,7 @@ struct JourneyTimelineView: View {
           isFirst: index == 0,
           isLast: index == items.count - 1
         )
+        .id(item.id) // Add id for ScrollViewReader
       }
     }
   }

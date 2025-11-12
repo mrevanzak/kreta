@@ -24,12 +24,13 @@ struct TrainCard: View {
           // Centered title
           HStack(spacing: 4) {
             Text(train.name)
-              .portal(id: "trainName", .source)
               .fontWeight(.bold)
               .foregroundStyle(.primary)
+              .portal(id: "trainName", .source)
             Text("(\(train.code))")
               .fontWeight(.bold)
               .foregroundStyle(.sublime)
+              .portal(id: "trainCode", .source)
 
           }
           .frame(maxWidth: .infinity)

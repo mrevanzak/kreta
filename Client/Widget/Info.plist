@@ -4,13 +4,13 @@
 <dict>
 	<key>NSExtension</key>
 	<dict>
-		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.widgetkit-extension</string>
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>WKSupportsLiveActivities</key>
 			<true/>
 		</dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
 	</dict>
 </dict>
 </plist>

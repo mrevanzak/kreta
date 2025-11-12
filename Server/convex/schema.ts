@@ -2,6 +2,12 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  appConfig: defineTable({
+    configKey: v.string(),
+    value: v.number(),
+    updatedAt: v.number(),
+  }).index("by_configKey", ["configKey"]),
+
   devices: defineTable({
     token: v.string(),
     userId: v.union(v.string(), v.null()),
@@ -18,6 +24,17 @@ export default defineSchema({
   })
     .index("by_activityId", ["activityId"])
     .index("by_deviceToken", ["deviceToken"]),
+
+  liveActivitySchedules: defineTable({
+    activityId: v.string(),
+    trainName: v.string(),
+    departureTime: v.union(v.number(), v.null()),
+    arrivalTime: v.union(v.number(), v.null()),
+    arrivalLeadTimeMs: v.number(),
+    departureSchedulerId: v.union(v.id("_scheduled_functions"), v.null()),
+    arrivalSchedulerId: v.union(v.id("_scheduled_functions"), v.null()),
+    updatedAt: v.number(),
+  }).index("by_activityId", ["activityId"]),
 
   liveActivityStartTokens: defineTable({
     deviceToken: v.string(),
