@@ -382,24 +382,54 @@ extension AddTrainView {
       }
 
       if searchText.isEmpty {
-        return stations
+        return stations.sorted { $0.name < $1.name }
       }
 
-      return stations.filter { station in
+      let filtered = stations.filter { station in
         station.name.localizedCaseInsensitiveContains(searchText)
           || station.code.localizedCaseInsensitiveContains(searchText)
           || (station.city?.localizedCaseInsensitiveContains(searchText) ?? false)
       }
+      
+      // Sort with exact name matches first, then alphabetically
+      return filtered.sorted { lhs, rhs in
+        let lhsNameMatch = lhs.name.localizedCaseInsensitiveCompare(searchText) == .orderedSame
+        let rhsNameMatch = rhs.name.localizedCaseInsensitiveCompare(searchText) == .orderedSame
+        
+        // Exact name matches come first
+        if lhsNameMatch && !rhsNameMatch {
+          return true
+        } else if !lhsNameMatch && rhsNameMatch {
+          return false
+        }
+        
+        // Both are exact matches or both are not - sort alphabetically
+        return lhs.name < rhs.name
+      }
     }
 
     var searchableTrains: [JourneyService.AvailableTrainItem] {
+      let trains: [JourneyService.AvailableTrainItem]
+      
       if trainSearchText.isEmpty {
-        return filteredTrains
+        trains = filteredTrains
+      } else {
+        trains = filteredTrains.filter { item in
+          item.name.localizedCaseInsensitiveContains(trainSearchText)
+            || item.code.localizedCaseInsensitiveContains(trainSearchText)
+        }
       }
-
-      return filteredTrains.filter { item in
-        item.name.localizedCaseInsensitiveContains(trainSearchText)
-          || item.code.localizedCaseInsensitiveContains(trainSearchText)
+      
+      // Sort by train name alphabetically, then by departure time
+      return trains.sorted { lhs, rhs in
+        // First compare by train name
+        let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+        if nameComparison != .orderedSame {
+          return nameComparison == .orderedAscending
+        }
+        
+        // If same train name, sort by departure time (earliest first)
+        return lhs.segmentDeparture < rhs.segmentDeparture
       }
     }
 

@@ -118,11 +118,11 @@ extension StationTimelineItem {
         } else if !hasTrainDeparted {
           // If journey is today but train hasn't departed yet, all stations are upcoming
           state = .upcoming
-        } else if hasArrivedAtDestination {
-          // Train has arrived at user's destination - mark all stations as completed
+        } else if hasArrivedAtDestination && currentSegmentFromStationId == nil {
+          // Train has arrived at user's destination AND no active segment - mark all as completed
           state = .completed
         } else {
-          // Train has departed but not arrived yet - use normal logic
+          // Train has departed but not arrived yet (or still has active position) - use normal logic
           if foundCurrent && !isCurrent {
             state = .upcoming
           } else if isCurrent {
