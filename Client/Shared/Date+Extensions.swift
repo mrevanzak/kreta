@@ -46,4 +46,17 @@ extension Date {
         of: baseDate
       ) ?? date
   }
+
+  /// Normalize arrival time for next-day journeys
+  /// If arrival is before departure, assumes it's the next day and adds 24 hours
+  /// - Parameters:
+  ///   - departure: The departure time
+  ///   - arrival: The arrival time to normalize
+  /// - Returns: The normalized arrival time (arrival + 24 hours if arrival < departure)
+  static func normalizeArrivalTime(departure: Date, arrival: Date) -> Date {
+    if arrival < departure {
+      return arrival.addingTimeInterval(24 * 60 * 60)  // Add 24 hours
+    }
+    return arrival
+  }
 }

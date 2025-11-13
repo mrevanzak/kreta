@@ -29,16 +29,18 @@ public struct TrainStation: Codable, Hashable, Sendable {
     name = try container.decode(String.self, forKey: .name)
     code = try container.decode(String.self, forKey: .code)
 
-    // Decode milliseconds since epoch and normalize to local Date with hour:minute
+    // Decode milliseconds since epoch
+    // For ActivityKit: preserve full date information (don't normalize to today)
+    // For server data: will be normalized when creating TrainStation from server response
     if let timestampMs = try container.decodeIfPresent(Double.self, forKey: .estimatedTime) {
       // Check if it's milliseconds (> threshold) or seconds
       // Milliseconds since 1970 would be > 1e12, seconds would be < 1e10
       if timestampMs > 1e12 {
-        // It's milliseconds, normalize to local Date with hour:minute
-        estimatedTime = Date(fromMillisecondsSinceEpoch: timestampMs)
+        // It's milliseconds, preserve full date (ActivityKit encoding)
+        estimatedTime = Date(timeIntervalSince1970: timestampMs / 1000)
       } else {
-        // It's seconds, convert to milliseconds first, then normalize
-        estimatedTime = Date(fromMillisecondsSinceEpoch: timestampMs * 1000)
+        // It's seconds, preserve full date
+        estimatedTime = Date(timeIntervalSince1970: timestampMs)
       }
     } else {
       estimatedTime = nil

@@ -111,15 +111,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     initialJourneyState: JourneyState? = nil,
     alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async throws -> Activity<TrainActivityAttributes> {
-    logger.info("=== TrainLiveActivityService.start() called ===")
-    logger.info("Train: \(trainName, privacy: .public)")
-    logger.info("From: \(from.name, privacy: .public) (\(from.code, privacy: .public))")
-    logger.info(
-      "Destination: \(destination.name, privacy: .public) (\(destination.code, privacy: .public))")
-    logger.info("Initial state: \(initialJourneyState?.rawValue ?? "nil", privacy: .public)")
-    logger.info("Alarm offset: \(alarmOffsetMinutes) minutes")
-
-    logger.info("Creating Activity...")
     let activity: Activity<TrainActivityAttributes>
     do {
       activity = try await createActivity(
@@ -130,29 +121,17 @@ final class TrainLiveActivityService: @unchecked Sendable {
         // seatNumber: seatNumber,
         initialJourneyState: initialJourneyState
       )
-      logger.info("✅ Activity created successfully")
-      logger.info("  Activity ID: \(activity.id, privacy: .public)")
-      logger.info(
-        "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
     } catch {
-      logger.error("❌ Failed to create Activity: \(error.localizedDescription, privacy: .public)")
-      logger.error("  Error type: \(String(describing: type(of: error)), privacy: .public)")
-      if let nsError = error as NSError? {
-        logger.error("  Domain: \(nsError.domain, privacy: .public)")
-        logger.error("  Code: \(nsError.code)")
-        logger.error("  UserInfo: \(String(describing: nsError.userInfo), privacy: .public)")
-      }
+      logger.error("Failed to create Activity: \(error.localizedDescription, privacy: .public)")
       throw error
     }
 
-    logger.info("Setting up activity monitoring...")
     await setupActivityMonitoring(
       for: activity,
       destination: destination,
       trainName: trainName,
       alarmOffsetMinutes: alarmOffsetMinutes
     )
-    logger.info("✅ Activity monitoring setup completed")
 
     return activity
   }
@@ -166,9 +145,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     // seatNumber: String,
     initialJourneyState: JourneyState? = nil
   ) async throws -> Activity<TrainActivityAttributes> {
-    logger.info("=== createActivity() called ===")
-    logger.info("Building attributes...")
-
     let attributes = TrainActivityAttributes(
       trainName: trainName,
       from: from,
@@ -177,41 +153,18 @@ final class TrainLiveActivityService: @unchecked Sendable {
       // seatNumber: seatNumber
     )
 
-    logger.info("Attributes created:")
-    logger.info("  Train name: \(attributes.trainName, privacy: .public)")
-    logger.info("  From: \(attributes.from.name, privacy: .public)")
-    logger.info("  Destination: \(attributes.destination.name, privacy: .public)")
-
     let initialState = initialJourneyState ?? .beforeBoarding
-    logger.info("Initial journey state: \(initialState.rawValue, privacy: .public)")
-
     let contentState = TrainActivityAttributes.ContentState(journeyState: initialState)
     let content = ActivityContent(state: contentState, staleDate: nil)
 
-    logger.info("Requesting Activity from ActivityKit...")
-    logger.info("  Push type: token")
-
     do {
-      let activity = try Activity<TrainActivityAttributes>.request(
+      return try Activity<TrainActivityAttributes>.request(
         attributes: attributes,
         content: content,
         pushType: .token
       )
-      logger.info("✅ Activity.request() succeeded")
-      logger.info("  Activity ID: \(activity.id, privacy: .public)")
-      logger.info(
-        "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
-      logger.info("  Push token available: \(activity.pushToken != nil)")
-      return activity
     } catch {
-      logger.error("❌ Activity.request() failed")
-      logger.error("  Error: \(error.localizedDescription, privacy: .public)")
-      logger.error("  Error type: \(String(describing: type(of: error)), privacy: .public)")
-      if let nsError = error as NSError? {
-        logger.error("  Domain: \(nsError.domain, privacy: .public)")
-        logger.error("  Code: \(nsError.code)")
-        logger.error("  UserInfo: \(String(describing: nsError.userInfo), privacy: .public)")
-      }
+      logger.error("Activity.request() failed: \(error.localizedDescription, privacy: .public)")
       throw error
     }
   }
@@ -226,11 +179,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let activityId = activity.id
     let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
 
-    logger.info("Starting Live Activity setup for train: \(trainName, privacy: .public)")
-    logger.debug("Activity ID: \(activityId, privacy: .public)")
-    logger.debug("Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes")
-
-    logger.info("Monitoring push tokens for activity \(activityId, privacy: .public)")
     startMonitoringPushTokens(for: activity)
 
     // Safety: if departure is already in the past and state is still beforeBoarding,
@@ -242,9 +190,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       await transitionToOnBoard(activityId: activityId)
     }
 
-    logger.info("Starting automatic transitions for activity \(activityId, privacy: .public)")
     await startAutomaticTransitions(for: activity)
-    logger.info("Automatic transitions started for activity \(activityId, privacy: .public)")
 
     runBackgroundJob(label: "scheduleAlarm") { service in
       await service.scheduleAlarmIfEnabled(
@@ -297,8 +243,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   @MainActor
   func refreshInForeground(currentDate: Date = Date()) async {
-    logger.info("Refreshing Live Activities after foreground entry")
-
     // Refresh existing activities
     for activity in Activity<TrainActivityAttributes>.activities {
       var currentState = activity.content.state.journeyState
@@ -307,9 +251,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
         let departureTime = activity.attributes.from.estimatedTime,
         departureTime <= currentDate
       {
-        logger.debug(
-          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to onBoard"
-        )
         await transitionToOnBoard(activityId: activity.id)
         currentState = .onBoard
       }
@@ -318,9 +259,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
         let arrivalTime = activity.attributes.destination.estimatedTime,
         arrivalTime <= currentDate
       {
-        logger.debug(
-          "Foreground refresh transitioning activity \(activity.id, privacy: .public) to prepareToDropOff"
-        )
         await transitionToPrepareToDropOff(activityId: activity.id)
         currentState = .prepareToDropOff
       }
@@ -341,12 +279,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
       let fromStation = train.fromStation,
       let toStation = train.toStation
     else {
-      logger.debug("No cached journey data available for restarting live activity")
       return
     }
-
-    logger.info(
-      "Checking if live activity needs to be restarted for train \(train.name, privacy: .public)")
 
     // Check if an activity already exists for this journey
     let existingActivities = getActiveLiveActivities()
@@ -357,13 +291,16 @@ final class TrainLiveActivityService: @unchecked Sendable {
     }
 
     guard !hasActivity else {
-      logger.debug("Live activity already exists for this journey")
       return
     }
 
-    logger.info("No live activity found, attempting to restart")
-
     do {
+      // Normalize arrival time for next-day journeys before creating TrainStation
+      let normalizedDestinationArrival = Date.normalizeArrivalTime(
+        departure: journeyData.userSelectedDepartureTime,
+        arrival: journeyData.userSelectedArrivalTime
+      )
+
       let fromTrainStation = TrainStation(
         name: fromStation.name,
         code: fromStation.code,
@@ -372,12 +309,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
       let destinationTrainStation = TrainStation(
         name: toStation.name,
         code: toStation.code,
-        estimatedTime: train.segmentArrival
+        estimatedTime: normalizedDestinationArrival
       )
 
       let now = Date()
       let isInProgress =
-        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+        (journeyData.userSelectedDepartureTime...normalizedDestinationArrival).contains(now)
 
       let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
@@ -388,8 +325,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
         initialJourneyState: isInProgress ? .onBoard : nil,
         alarmOffsetMinutes: alarmOffset
       )
-
-      logger.info("Successfully restarted live activity for train \(train.name, privacy: .public)")
     } catch {
       logger.error(
         "Failed to restart live activity: \(error.localizedDescription, privacy: .public)")
@@ -413,27 +348,16 @@ final class TrainLiveActivityService: @unchecked Sendable {
     }
 
     guard existingActivity == nil else {
-      logger.debug(
-        "Live activity already exists for train \(trainName, privacy: .public) from \(from.code, privacy: .public) to \(destination.code, privacy: .public)"
-      )
       return
     }
 
-    logger.info(
-      "No live activity found for train \(trainName, privacy: .public), attempting to start one"
-    )
-
     // Start the activity
-    let activity = try await start(
+    _ = try await start(
       trainName: trainName,
       from: from,
       destination: destination,
       initialJourneyState: initialJourneyState,
       alarmOffsetMinutes: alarmOffsetMinutes
-    )
-
-    logger.info(
-      "Successfully restarted live activity \(activity.id, privacy: .public) for train \(trainName, privacy: .public)"
     )
   }
 
@@ -493,13 +417,10 @@ final class TrainLiveActivityService: @unchecked Sendable {
     do {
       try await Task.sleep(nanoseconds: delayNanoseconds)
     } catch is CancellationError {
-      logger.debug(
-        "Departure transition timer cancelled for activity \(activityId, privacy: .public)")
       return
     } catch {
       logger.error(
-        "Departure transition timer failed for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
-      )
+        "Departure transition timer failed: \(error.localizedDescription, privacy: .public)")
       return
     }
 
@@ -520,26 +441,16 @@ final class TrainLiveActivityService: @unchecked Sendable {
     force: Bool = false
   ) async {
     guard !Task.isCancelled else {
-      logger.debug(
-        "Skipping alarm scheduling for \(activityId, privacy: .public) due to cancellation")
       return
     }
-    logger.debug("scheduleAlarmIfEnabled called for activity \(activityId, privacy: .public)")
-    logger.debug(
-      "Alarm enabled: \(alarmEnabled), offset: \(alarmOffsetMinutes) minutes"
-    )
 
     guard alarmEnabled else {
       await stateRegistry.clearAlarmSnapshot(for: activityId)
-      logger.info(
-        "Alarm disabled for activity \(activityId, privacy: .public), skipping alarm scheduling")
       return
     }
 
     guard let arrivalTime = arrivalTime else {
       await stateRegistry.clearAlarmSnapshot(for: activityId)
-      logger.warning(
-        "No arrival time for activity \(activityId, privacy: .public), skipping alarm scheduling")
       return
     }
 
@@ -552,17 +463,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
         force: force
       )
     else {
-      logger.debug(
-        "Skipping alarm scheduling for activity \(activityId, privacy: .public); parameters unchanged"
-      )
       return
     }
-
-    logger.info("Scheduling alarm for activity \(activityId, privacy: .public)")
-    logger.debug(
-      "Train: \(trainName, privacy: .public), Destination: \(destinationName, privacy: .public) (\(destinationCode, privacy: .public))"
-    )
-    logger.debug("Arrival time: \(arrivalTime, privacy: .public)")
 
     do {
       try await TrainAlarmService.shared.scheduleArrivalAlarm(
@@ -573,7 +475,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
         destinationName: destinationName,
         destinationCode: destinationCode
       )
-      logger.info("Successfully scheduled alarm for activity \(activityId, privacy: .public)")
       AnalyticsEventService.shared.trackAlarmScheduled(
         activityId: activityId,
         arrivalTime: arrivalTime,
@@ -582,13 +483,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
       )
     } catch {
       await stateRegistry.clearAlarmSnapshot(for: activityId)
-      logger.error(
-        "Failed to schedule alarm for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
-      )
-      if let alarmError = error as? TrainAlarmError {
-        logger.debug(
-          "AlarmKit error: \(alarmError.errorDescription ?? "Unknown", privacy: .public)")
-      }
+      logger.error("Failed to schedule alarm: \(error.localizedDescription, privacy: .public)")
     }
   }
 
@@ -617,12 +512,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
   ) -> Task<Void, Never> {
     Task(priority: priority) { [weak self] in
       guard let self else { return }
-      self.logger.debug("Starting job \(label, privacy: .public)")
-      defer { self.logger.debug("Finished job \(label, privacy: .public)") }
-      guard !Task.isCancelled else {
-        self.logger.debug("Skipping job \(label, privacy: .public) due to cancellation")
-        return
-      }
+      guard !Task.isCancelled else { return }
       await operation(self)
     }
   }
@@ -671,12 +561,10 @@ final class TrainLiveActivityService: @unchecked Sendable {
   ) async {
     guard !Task.isCancelled else { return }
     guard let deviceToken = PushRegistrationService.shared.currentToken() else {
-      logger.debug("No device token available; skipping server arrival alert scheduling")
       return
     }
 
     guard let arrivalTime = destination.estimatedTime else {
-      logger.debug("No destination ETA; skipping server arrival alert scheduling")
       return
     }
 
@@ -698,7 +586,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
         ],
         captureTelemetry: true
       )
-      logger.info("Scheduled server arrival alert for \(destination.name, privacy: .public)")
     } catch {
       logger.error(
         "Failed to schedule server arrival alert: \(error.localizedDescription, privacy: .public)")
@@ -717,9 +604,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let arrivalTimeMs = destination.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
 
     guard departureTimeMs != nil || arrivalTimeMs != nil else {
-      logger.debug(
-        "No schedule metadata for activity \(activityId, privacy: .public); skipping server state scheduling"
-      )
       return
     }
 
@@ -731,7 +615,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let arrivalLeadMs = max(0, arrivalLeadMinutes) * 60 * 1000
 
     do {
-      let response: ScheduleResponse = try await convexClient.mutation(
+      let _: ScheduleResponse = try await convexClient.mutation(
         "liveActivities:scheduleStateUpdates",
         with: [
           "activityId": activityId,
@@ -742,13 +626,9 @@ final class TrainLiveActivityService: @unchecked Sendable {
         ],
         captureTelemetry: true
       )
-      logger.info(
-        "Server scheduling for activity \(activityId, privacy: .public) -> departure: \(response.departureScheduled), arrival: \(response.arrivalScheduled)"
-      )
     } catch {
       logger.error(
-        "Failed to schedule server state updates for activity \(activityId, privacy: .public): \(error.localizedDescription, privacy: .public)"
-      )
+        "Failed to schedule server state updates: \(error.localizedDescription, privacy: .public)")
     }
   }
 
@@ -780,9 +660,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
   @MainActor
   func refreshAlarmConfiguration(alarmOffsetMinutes: Int) async {
     let activities = Activity<TrainActivityAttributes>.activities
-    logger.info(
-      "Refreshing alarm configuration for \(activities.count, privacy: .public) active activities"
-    )
 
     for activity in activities {
       await TrainAlarmService.shared.cancelArrivalAlarm(activityId: activity.id)
@@ -791,7 +668,6 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     let alarmEnabled = AlarmPreferences.shared.defaultAlarmEnabled
     guard alarmEnabled else {
-      logger.info("Default alarm disabled; skipping reschedule for active activities")
       return
     }
 
@@ -833,20 +709,13 @@ final class TrainLiveActivityService: @unchecked Sendable {
     // CRITICAL: Register the current token if it exists before monitoring for changes.
     // pushTokenUpdates only emits when the token CHANGES, not the initial value.
     if let currentToken = activity.pushToken {
-      logger.info(
-        "Registering existing push token for activity \(activityId, privacy: .public)")
       let token = currentToken.hexEncodedString()
       await registerLiveActivityToken(activityId: activityId, token: token)
-    } else {
-      logger.warning(
-        "Activity \(activityId, privacy: .public) has no push token yet, waiting for updates"
-      )
     }
 
     // Continue monitoring for token changes
     for await tokenData in activity.pushTokenUpdates {
       if Task.isCancelled { break }
-      logger.info("Received push token update for activity \(activityId, privacy: .public)")
       let token = tokenData.hexEncodedString()
       await registerLiveActivityToken(activityId: activityId, token: token)
     }
@@ -887,17 +756,13 @@ final class TrainLiveActivityService: @unchecked Sendable {
     // CRITICAL: Register the current push-to-start token if it exists.
     // pushToStartTokenUpdates only emits when the token CHANGES, not the initial value.
     if let currentToken = Activity<TrainActivityAttributes>.pushToStartToken {
-      logger.info("Registering existing push-to-start token")
       let token = currentToken.hexEncodedString()
       await registerLiveActivityStartToken(token: token)
-    } else {
-      logger.warning("No push-to-start token available yet, waiting for updates")
     }
 
     // Continue monitoring for token changes
     for await tokenData in Activity<TrainActivityAttributes>.pushToStartTokenUpdates {
       if Task.isCancelled { break }
-      logger.info("Received push-to-start token update")
       let token = tokenData.hexEncodedString()
       await registerLiveActivityStartToken(token: token)
     }
@@ -927,35 +792,26 @@ final class TrainLiveActivityService: @unchecked Sendable {
   ) async {
     for attempt in 1...Constants.maxRetryAttempts {
       if Task.isCancelled {
-        logger.debug("\(label, privacy: .public) cancelled before attempt \(attempt)")
         return
       }
 
       do {
-        logger.debug("\(label, privacy: .public) attempt \(attempt) started")
         try await operation()
-        logger.debug("\(label, privacy: .public) succeeded on attempt \(attempt)")
         return
       } catch is CancellationError {
-        logger.debug("\(label, privacy: .public) cancelled during attempt \(attempt)")
         return
       } catch {
-        logger.error(
-          "\(label, privacy: .public) attempt \(attempt) failed: \(error.localizedDescription, privacy: .public)"
-        )
         guard attempt < Constants.maxRetryAttempts else {
-          logger.error("\(label, privacy: .public) exhausted retry attempts")
+          logger.error(
+            "\(label, privacy: .public) exhausted retry attempts: \(error.localizedDescription, privacy: .public)"
+          )
           return
         }
 
         let delayNanoseconds = calculateRetryDelay(for: attempt)
-        logger.debug(
-          "\(label, privacy: .public) retrying in \(delayNanoseconds) nanoseconds"
-        )
         do {
           try await Task.sleep(nanoseconds: delayNanoseconds)
         } catch is CancellationError {
-          logger.debug("\(label, privacy: .public) retry sleep cancelled")
           return
         } catch {
           logger.error(
@@ -991,16 +847,11 @@ final class TrainLiveActivityService: @unchecked Sendable {
   @MainActor
   private func handleAlarmTriggered(for activityId: String) async {
     guard findActivity(with: activityId) != nil else {
-      logger.warning(
-        "Activity \(activityId, privacy: .public) no longer exists, skipping transition")
       return
     }
 
     AnalyticsEventService.shared.trackAlarmTriggered(activityId: activityId)
     await transitionToPrepareToDropOff(activityId: activityId)
-    logger.info(
-      "Automatically transitioned activity \(activityId, privacy: .public) to .prepareToDropOff due to alarm"
-    )
   }
 }
 

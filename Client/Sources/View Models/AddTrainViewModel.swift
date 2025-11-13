@@ -47,7 +47,12 @@ extension TrainJourneyData {
         // Sanity: these should meet at the same station
         let intermediateStation = prevSeg.toStationId
         if intermediateStation == nextSeg.fromStationId {
-          let dwell = nextSeg.departure.timeIntervalSince(prevSeg.arrival)
+          // Normalize arrival time for next-day journeys
+          let normalizedArrival = Date.normalizeArrivalTime(
+            departure: prevSeg.departure,
+            arrival: prevSeg.arrival
+          )
+          let dwell = nextSeg.departure.timeIntervalSince(normalizedArrival)
           if dwell >= seconds { stops.append(intermediateStation) }
         } else {
           // If segments don't meet (data glitch), be conservative: don't add as stop.
@@ -201,7 +206,10 @@ extension AddTrainView {
       // Normalize times to the selected date
       let targetDate = selectedDate ?? Date()
       let normalizedUserDeparture = normalizeTimeToDate(item.segmentDeparture, to: targetDate)
-      let normalizedUserArrival = normalizeTimeToDate(item.segmentArrival, to: targetDate)
+      let normalizedUserArrival = Date.normalizeArrivalTime(
+        departure: normalizedUserDeparture,
+        arrival: normalizeTimeToDate(item.segmentArrival, to: targetDate)
+      )
 
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
@@ -213,7 +221,10 @@ extension AddTrainView {
 
             // Normalize segment times to selected date
             let normalizedDeparture = normalizeTimeToDate(segment.departure, to: targetDate)
-            let normalizedArrival = normalizeTimeToDate(nextSegment.arrival, to: targetDate)
+            let normalizedArrival = Date.normalizeArrivalTime(
+              departure: normalizedDeparture,
+              arrival: normalizeTimeToDate(nextSegment.arrival, to: targetDate)
+            )
 
             // Use nextSegment.routeId because the route connects TO the next station
             journeySegments.append(
@@ -390,19 +401,19 @@ extension AddTrainView {
           || station.code.localizedCaseInsensitiveContains(searchText)
           || (station.city?.localizedCaseInsensitiveContains(searchText) ?? false)
       }
-      
+
       // Sort with exact name matches first, then alphabetically
       return filtered.sorted { lhs, rhs in
         let lhsNameMatch = lhs.name.localizedCaseInsensitiveCompare(searchText) == .orderedSame
         let rhsNameMatch = rhs.name.localizedCaseInsensitiveCompare(searchText) == .orderedSame
-        
+
         // Exact name matches come first
         if lhsNameMatch && !rhsNameMatch {
           return true
         } else if !lhsNameMatch && rhsNameMatch {
           return false
         }
-        
+
         // Both are exact matches or both are not - sort alphabetically
         return lhs.name < rhs.name
       }
@@ -410,7 +421,7 @@ extension AddTrainView {
 
     var searchableTrains: [JourneyService.AvailableTrainItem] {
       let trains: [JourneyService.AvailableTrainItem]
-      
+
       if trainSearchText.isEmpty {
         trains = filteredTrains
       } else {
@@ -419,7 +430,7 @@ extension AddTrainView {
             || item.code.localizedCaseInsensitiveContains(trainSearchText)
         }
       }
-      
+
       // Sort by train name alphabetically, then by departure time
       return trains.sorted { lhs, rhs in
         // First compare by train name
@@ -427,7 +438,7 @@ extension AddTrainView {
         if nameComparison != .orderedSame {
           return nameComparison == .orderedAscending
         }
-        
+
         // If same train name, sort by departure time (earliest first)
         return lhs.segmentDeparture < rhs.segmentDeparture
       }

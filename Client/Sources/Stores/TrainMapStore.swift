@@ -52,9 +52,7 @@ final class TrainMapStore {
   init() {
 
     // Load cached data immediately on init for instant display
-    if (try? loadCachedDataIfAvailable()) != nil {
-      logger.debug("Loaded cached data on initialization")
-    }
+    _ = try? loadCachedDataIfAvailable()
 
     lastUpdatedAtCancellable = convexClient.subscribe(
       to: "gapeka:getLastUpdatedAt", yielding: String.self, captureTelemetry: true
@@ -64,20 +62,17 @@ final class TrainMapStore {
       receiveCompletion: { completion in
         switch completion {
         case .finished:
-          self.logger.debug("LastUpdatedAt subscription completed")
+          break
         case .failure(let error):
           self.logger.error("LastUpdatedAt subscription error: \(error)")
         }
       },
       receiveValue: { lastUpdatedAt in
-        self.logger.debug("Received lastUpdatedAt: \(lastUpdatedAt)")
         self.lastUpdatedAt = lastUpdatedAt
       })
   }
 
   func loadData(at timestamp: String) async throws {
-    logger.debug("Starting loadData(at: \(timestamp))")
-
     isLoading = true
     defer { isLoading = false }
 
@@ -85,7 +80,6 @@ final class TrainMapStore {
 
     do {
       let cachedTimestamp = cacheService.getCachedTimestamp()
-      logger.debug("Fetched cached timestamp: \(String(describing: cachedTimestamp))")
 
       let hasCompleteCache =
         cacheService.hasCachedStations()
@@ -94,7 +88,6 @@ final class TrainMapStore {
       let needsUpdate = cachedTimestamp != timestamp || !hasCompleteCache
 
       if needsUpdate {
-        logger.debug("Cache stale or missing. Fetching fresh data in parallel...")
 
         async let routesResult: [RoutePolyline] = Task { @MainActor in
           try await convexClient.query(to: "routes:list", yielding: [RoutePolyline].self)
@@ -105,7 +98,6 @@ final class TrainMapStore {
 
         do {
           let routePolylines = try await routesResult
-          logger.debug("Fetched \(routePolylines.count) routes")
           self.routes = routePolylines.map { Route(id: $0.id, name: $0.name, path: $0.path) }
           try cacheService.saveRoutes(routePolylines)
         } catch {
@@ -115,7 +107,6 @@ final class TrainMapStore {
 
         do {
           let stations = try await stationsResult
-          logger.debug("Fetched \(stations.count) stations")
           self.stations = stations
           try cacheService.saveStations(stations)
         } catch {
@@ -124,7 +115,6 @@ final class TrainMapStore {
         }
 
       } else {
-        logger.debug("Loading train map data from cache")
         try loadCachedData()
       }
 
@@ -233,9 +223,11 @@ extension TrainMapStore {
     arrivalTime: Date
   ) -> AlarmValidationResult {
     let now = Date()
-    let minutesUntilArrival = Int(arrivalTime.timeIntervalSince(now) / 60)
-    let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
-    let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
+    let normalizedArrival = Date.normalizeArrivalTime(
+      departure: departureTime, arrival: arrivalTime)
+    let minutesUntilArrival = Int(normalizedArrival.timeIntervalSince(now) / 60)
+    let journeyDurationMinutes = Int(normalizedArrival.timeIntervalSince(departureTime) / 60)
+    let alarmTime = normalizedArrival.addingTimeInterval(-Double(offsetMinutes * 60))
 
     // Check 1: Journey hasn't departed yet
     if departureTime <= now {
@@ -389,13 +381,18 @@ extension TrainMapStore {
     }
 
     let now = Date()
+    let normalizedArrival = Date.normalizeArrivalTime(
+      departure: journeyData.userSelectedDepartureTime,
+      arrival: journeyData.userSelectedArrivalTime
+    )
     let isInProgress =
-      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+      (journeyData.userSelectedDepartureTime...normalizedArrival).contains(now)
 
     logger.info("Journey state check:")
     logger.info("  Now: \(now, privacy: .public)")
     logger.info("  Departure: \(journeyData.userSelectedDepartureTime, privacy: .public)")
-    logger.info("  Arrival: \(journeyData.userSelectedArrivalTime, privacy: .public)")
+    logger.info("  Original Arrival: \(journeyData.userSelectedArrivalTime, privacy: .public)")
+    logger.info("  Normalized Arrival: \(normalizedArrival, privacy: .public)")
     logger.info("  Is in progress: \(isInProgress)")
 
     let finalAlarmOffset = alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
@@ -409,7 +406,14 @@ extension TrainMapStore {
     let destinationTrainStation = TrainStation(
       name: toStation.name,
       code: toStation.code,
-      estimatedTime: train.segmentArrival
+      estimatedTime: normalizedArrival
+    )
+
+    logger.info("Created TrainStation for destination:")
+    logger.info("  Name: \(destinationTrainStation.name, privacy: .public)")
+    logger.info("  Code: \(destinationTrainStation.code, privacy: .public)")
+    logger.info(
+      "  Estimated Time: \(destinationTrainStation.estimatedTime?.description ?? "nil", privacy: .public)"
     )
 
     logger.info("Calling liveActivityService.start()...")
@@ -436,6 +440,24 @@ extension TrainMapStore {
       logger.info("  Activity ID: \(activity.id, privacy: .public)")
       logger.info(
         "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
+
+      // Verify the activity is actually in the system
+      let allActivities = liveActivityService.getActiveLiveActivities()
+      logger.info("📊 Total active Live Activities after creation: \(allActivities.count)")
+      if let foundActivity = allActivities.first(where: { $0.id == activity.id }) {
+        logger.info("✅ Created activity found in active activities list")
+        logger.info(
+          "  Activity attributes - From: \(foundActivity.attributes.from.name, privacy: .public) (\(foundActivity.attributes.from.code, privacy: .public))"
+        )
+        logger.info(
+          "  Activity attributes - Destination: \(foundActivity.attributes.destination.name, privacy: .public) (\(foundActivity.attributes.destination.code, privacy: .public))"
+        )
+        logger.info(
+          "  Activity attributes - Destination time: \(foundActivity.attributes.destination.estimatedTime?.description ?? "nil", privacy: .public)"
+        )
+      } else {
+        logger.error("❌ Created activity NOT found in active activities list!")
+      }
     } catch {
       logger.error(
         "❌ Failed to create Live Activity: \(error.localizedDescription, privacy: .public)")
@@ -497,10 +519,6 @@ extension TrainMapStore {
 
     try await addNotificationRequest(request)
     scheduledTripReminderRequestId = requestId
-
-    logger.info(
-      "Scheduled local trip reminder notification for train \(train.name) at \(reminderDate.timeIntervalSince1970)"
-    )
   }
 
   private func addNotificationRequest(_ request: UNNotificationRequest) async throws {
@@ -521,7 +539,6 @@ extension TrainMapStore {
     notificationCenter.removePendingNotificationRequests(withIdentifiers: [requestId])
     notificationCenter.removeDeliveredNotifications(withIdentifiers: [requestId])
     scheduledTripReminderRequestId = nil
-    logger.info("Cancelled pending local trip reminder notification with identifier \(requestId)")
   }
 
   private func makeTripReminderIdentifier(for trainId: String, departureTime: Date) -> String {
@@ -626,13 +643,16 @@ extension TrainMapStore {
     }
 
     guard !hasActivity else {
-      logger.debug("Live activity already exists for this journey")
       return
     }
 
-    logger.info("No live activity found, attempting to restart")
-
     do {
+      // Normalize arrival time for next-day journeys before creating TrainStation
+      let normalizedDestinationArrival = Date.normalizeArrivalTime(
+        departure: journeyData.userSelectedDepartureTime,
+        arrival: journeyData.userSelectedArrivalTime
+      )
+
       let fromTrainStation = TrainStation(
         name: fromStation.name,
         code: fromStation.code,
@@ -641,12 +661,12 @@ extension TrainMapStore {
       let destinationTrainStation = TrainStation(
         name: toStation.name,
         code: toStation.code,
-        estimatedTime: train.segmentArrival
+        estimatedTime: normalizedDestinationArrival
       )
 
       let now = Date()
       let isInProgress =
-        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+        (journeyData.userSelectedDepartureTime...normalizedDestinationArrival).contains(now)
 
       let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
@@ -657,21 +677,15 @@ extension TrainMapStore {
         initialJourneyState: isInProgress ? .onBoard : nil,
         alarmOffsetMinutes: alarmOffset
       )
-
-      logger.info("Successfully restarted live activity for train \(train.name, privacy: .public)")
     } catch {
       logger.error(
-        "Failed to restart live activity: \(error.localizedDescription, privacy: .public)"
-      )
+        "Failed to restart live activity: \(error.localizedDescription, privacy: .public)")
     }
   }
 
   /// Start trip from deep link (notification handler)
   /// Tries cache first, then falls back to server fetch if needed
   func startFromDeepLink(trainId: String, fromCode: String, toCode: String) async throws {
-    logger.info(
-      "Starting trip from deep link for trainId: \(trainId), fromCode: \(fromCode), toCode: \(toCode)"
-    )
 
     // Try cache first (most common case - user just created the journey)
     do {
@@ -729,16 +743,12 @@ extension TrainMapStore {
         }
 
         return
-      } else {
-        logger.info("Cached train doesn't match trainId, fetching from server")
       }
     } catch {
-      logger.info(
-        "Cache miss or error loading cache: \(error.localizedDescription), fetching from server")
+      // Cache miss or error - will fetch from server below
     }
 
     // Cache miss or doesn't match - fetch from server
-    logger.info("Fetching train data from server for trainId: \(trainId)")
 
     // Ensure stations and routes are loaded
     if stations.isEmpty || routes.isEmpty {
@@ -873,7 +883,7 @@ extension TrainMapStore {
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
 
-    // Log station lookup diagnostics for debugging
+    // Station lookup diagnostics
     logger.debug(
       """
       Server fallback: Projecting train with \(projectionStationsById.count) stations mapped. \
@@ -966,14 +976,6 @@ extension TrainMapStore {
       name: selectedTrain.name,
       segments: selectedJourneyData.segments
     )
-
-    // Log station lookup diagnostics for debugging
-    logger.debug(
-      """
-      Projecting train with \(stationsById.count) stations mapped. \
-      First segment: \(selectedJourneyData.segments.first?.fromStationId ?? "none") → \
-      \(selectedJourneyData.segments.first?.toStationId ?? "none")
-      """)
 
     return TrainProjector.projectTrain(
       now: now,
