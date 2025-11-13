@@ -71,7 +71,8 @@ extension StationTimelineItem {
     trainCode: String,
     currentSegmentFromStationId: String?,
     trainStopService: TrainStopService,
-    selectedDate: Date = Date() // Date to normalize times to
+    selectedDate: Date = Date(), // Date to normalize times to
+    userDestinationStationId: String? = nil // User's selected destination station
   ) async -> [StationTimelineItem] {
     do {
       guard let schedule = try await trainStopService.getTrainSchedule(trainCode: trainCode) else {
@@ -84,6 +85,19 @@ extension StationTimelineItem {
       let today = calendar.startOfDay(for: Date())
       let isJourneyInFuture = journeyDay > today
       
+      // Check if train has departed from the first station
+      let now = Date()
+      let firstStopDeparture = schedule.stops.first?.departureTime.flatMap { parseTimeString($0, on: selectedDate) }
+      let hasTrainDeparted = firstStopDeparture.map { now >= $0 } ?? false
+      
+      // Check if train has arrived at user's destination (if specified)
+      var hasArrivedAtDestination = false
+      if let destinationId = userDestinationStationId,
+         let destinationStop = schedule.stops.first(where: { $0.stationId == destinationId }),
+         let arrivalTime = destinationStop.arrivalTime.flatMap({ parseTimeString($0, on: selectedDate) }) {
+        hasArrivedAtDestination = now >= arrivalTime
+      }
+      
       var items: [StationTimelineItem] = []
       var foundCurrent = false
       
@@ -92,17 +106,23 @@ extension StationTimelineItem {
         let arrivalDate = stop.arrivalTime.flatMap { parseTimeString($0, on: selectedDate) }
         let departureDate = stop.departureTime.flatMap { parseTimeString($0, on: selectedDate) }
         
-        // Determine if this is the current station (only if journey is today)
-        let isCurrent = !isJourneyInFuture && stop.stationId == currentSegmentFromStationId && !foundCurrent
+        // Determine if this is the current station (only if journey is today AND train has departed)
+        let isCurrent = !isJourneyInFuture && hasTrainDeparted && stop.stationId == currentSegmentFromStationId && !foundCurrent
         if isCurrent { foundCurrent = true }
         
-        // Determine state based on journey date
+        // Determine state based on journey date and departure status
         let state: StationState
         if isJourneyInFuture {
           // If journey is in the future, all stations are upcoming
           state = .upcoming
+        } else if !hasTrainDeparted {
+          // If journey is today but train hasn't departed yet, all stations are upcoming
+          state = .upcoming
+        } else if hasArrivedAtDestination {
+          // Train has arrived at user's destination - mark all stations as completed
+          state = .completed
         } else {
-          // For today's journey, use normal logic
+          // Train has departed but not arrived yet - use normal logic
           if foundCurrent && !isCurrent {
             state = .upcoming
           } else if isCurrent {

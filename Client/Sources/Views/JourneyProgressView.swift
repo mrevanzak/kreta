@@ -252,12 +252,16 @@ struct JourneyProgressView: View {
     // Use selected date from journey data, or fall back to today
     let selectedDate = journeyData?.selectedDate ?? Date()
     
+    // Get user's destination station ID
+    let userDestinationId = journeyData?.userSelectedToStation.id ?? journeyData?.userSelectedToStation.code
+    
     // Use new service to get only actual stops
     let items = await StationTimelineItem.buildTimelineFromStops(
       trainCode: train.code,
       currentSegmentFromStationId: currentSegmentFromStationId,
       trainStopService: trainStopService,
-      selectedDate: selectedDate
+      selectedDate: selectedDate,
+      userDestinationStationId: userDestinationId
     )
     
     timelineItems = items

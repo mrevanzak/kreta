@@ -205,11 +205,11 @@ struct HomeScreen: View {
             router.navigate(to: .sheet(.feedback))
           }
 
-          #if DEBUG
-            Button("Alarm Debug", systemImage: "list.bullet") {
-              router.navigate(to: .sheet(.alarmDebug))
-            }
-          #endif
+//          #if DEBUG
+//            Button("Alarm Debug", systemImage: "list.bullet") {
+//              router.navigate(to: .sheet(.alarmDebug))
+//            }
+//          #endif
         } label: {
           ZStack {
             Circle()
