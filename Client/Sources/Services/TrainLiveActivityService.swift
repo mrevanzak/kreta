@@ -441,15 +441,22 @@ final class TrainLiveActivityService: @unchecked Sendable {
     force: Bool = false
   ) async {
     guard !Task.isCancelled else {
+      logger.debug(
+        "Task cancelled, skipping alarm scheduling for activityId: \(activityId, privacy: .public)")
       return
     }
 
     guard alarmEnabled else {
+      logger.debug(
+        "Alarm disabled, clearing snapshot for activityId: \(activityId, privacy: .public)")
       await stateRegistry.clearAlarmSnapshot(for: activityId)
       return
     }
 
     guard let arrivalTime = arrivalTime else {
+      logger.warning(
+        "No arrival time provided, clearing alarm snapshot for activityId: \(activityId, privacy: .public)"
+      )
       await stateRegistry.clearAlarmSnapshot(for: activityId)
       return
     }
@@ -463,8 +470,15 @@ final class TrainLiveActivityService: @unchecked Sendable {
         force: force
       )
     else {
+      logger.debug(
+        "Alarm already scheduled with same parameters for activityId: \(activityId, privacy: .public)"
+      )
       return
     }
+
+    logger.info(
+      "Scheduling alarm for activityId: \(activityId, privacy: .public), arrivalTime: \(arrivalTime, privacy: .public), offsetMinutes: \(alarmOffsetMinutes)"
+    )
 
     do {
       try await TrainAlarmService.shared.scheduleArrivalAlarm(
@@ -475,6 +489,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
         destinationName: destinationName,
         destinationCode: destinationCode
       )
+      logger.info("Successfully scheduled alarm for activityId: \(activityId, privacy: .public)")
       AnalyticsEventService.shared.trackAlarmScheduled(
         activityId: activityId,
         arrivalTime: arrivalTime,
@@ -483,7 +498,9 @@ final class TrainLiveActivityService: @unchecked Sendable {
       )
     } catch {
       await stateRegistry.clearAlarmSnapshot(for: activityId)
-      logger.error("Failed to schedule alarm: \(error.localizedDescription, privacy: .public)")
+      logger.error(
+        "Failed to schedule alarm for activityId: \(activityId, privacy: .public), error: \(error.localizedDescription, privacy: .public)"
+      )
     }
   }
 
@@ -559,14 +576,26 @@ final class TrainLiveActivityService: @unchecked Sendable {
     trainName: String,
     destination: TrainStation
   ) async {
-    guard !Task.isCancelled else { return }
+    guard !Task.isCancelled else {
+      logger.debug("Task cancelled, skipping server arrival alert scheduling")
+      return
+    }
+
     guard let deviceToken = PushRegistrationService.shared.currentToken() else {
+      logger.warning("No device token available for server arrival alert scheduling")
       return
     }
 
     guard let arrivalTime = destination.estimatedTime else {
+      logger.warning(
+        "No arrival time available for server arrival alert scheduling, trainName: \(trainName, privacy: .public)"
+      )
       return
     }
+
+    logger.debug(
+      "Scheduling server arrival alert for trainName: \(trainName, privacy: .public), destination: \(destination.code, privacy: .public)"
+    )
 
     let arrivalMs = Double(arrivalTime.timeIntervalSince1970 * 1000)
 
@@ -586,6 +615,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
         ],
         captureTelemetry: true
       )
+      logger.debug("Successfully scheduled server arrival alert")
     } catch {
       logger.error(
         "Failed to schedule server arrival alert: \(error.localizedDescription, privacy: .public)")
@@ -599,13 +629,24 @@ final class TrainLiveActivityService: @unchecked Sendable {
     destination: TrainStation,
     arrivalLeadMinutes: Double
   ) async {
-    guard !Task.isCancelled else { return }
+    guard !Task.isCancelled else {
+      logger.debug("Task cancelled, skipping server state updates scheduling")
+      return
+    }
+
     let departureTimeMs = origin.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
     let arrivalTimeMs = destination.estimatedTime.map { Double($0.timeIntervalSince1970 * 1000) }
 
     guard departureTimeMs != nil || arrivalTimeMs != nil else {
+      logger.warning(
+        "No departure or arrival time available for server state updates, activityId: \(activityId, privacy: .public)"
+      )
       return
     }
+
+    logger.debug(
+      "Scheduling server state updates for activityId: \(activityId, privacy: .public), trainName: \(trainName, privacy: .public)"
+    )
 
     struct ScheduleResponse: Decodable {
       let departureScheduled: Bool
@@ -626,9 +667,11 @@ final class TrainLiveActivityService: @unchecked Sendable {
         ],
         captureTelemetry: true
       )
+      logger.debug("Successfully scheduled server state updates")
     } catch {
       logger.error(
-        "Failed to schedule server state updates: \(error.localizedDescription, privacy: .public)")
+        "Failed to schedule server state updates for activityId: \(activityId, privacy: .public), error: \(error.localizedDescription, privacy: .public)"
+      )
     }
   }
 
@@ -704,19 +747,31 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   @MainActor
   private func monitorPushTokens(activityId: String) async {
-    guard let activity = findActivity(with: activityId) else { return }
+    guard let activity = findActivity(with: activityId) else {
+      logger.debug("Activity not found for token monitoring: \(activityId, privacy: .public)")
+      return
+    }
+
+    logger.debug("Starting push token monitoring for activityId: \(activityId, privacy: .public)")
 
     // CRITICAL: Register the current token if it exists before monitoring for changes.
     // pushTokenUpdates only emits when the token CHANGES, not the initial value.
     if let currentToken = activity.pushToken {
       let token = currentToken.hexEncodedString()
+      logger.debug("Registering initial push token for activityId: \(activityId, privacy: .public)")
       await registerLiveActivityToken(activityId: activityId, token: token)
     }
 
     // Continue monitoring for token changes
     for await tokenData in activity.pushTokenUpdates {
-      if Task.isCancelled { break }
+      guard !Task.isCancelled else {
+        logger.debug(
+          "Task cancelled, stopping push token monitoring for activityId: \(activityId, privacy: .public)"
+        )
+        break
+      }
       let token = tokenData.hexEncodedString()
+      logger.debug("Push token updated for activityId: \(activityId, privacy: .public)")
       await registerLiveActivityToken(activityId: activityId, token: token)
     }
   }
@@ -753,17 +808,24 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func monitorPushToStartTokens() async {
+    logger.debug("Starting push-to-start token monitoring")
+
     // CRITICAL: Register the current push-to-start token if it exists.
     // pushToStartTokenUpdates only emits when the token CHANGES, not the initial value.
     if let currentToken = Activity<TrainActivityAttributes>.pushToStartToken {
       let token = currentToken.hexEncodedString()
+      logger.debug("Registering initial push-to-start token")
       await registerLiveActivityStartToken(token: token)
     }
 
     // Continue monitoring for token changes
     for await tokenData in Activity<TrainActivityAttributes>.pushToStartTokenUpdates {
-      if Task.isCancelled { break }
+      guard !Task.isCancelled else {
+        logger.debug("Task cancelled, stopping push-to-start token monitoring")
+        break
+      }
       let token = tokenData.hexEncodedString()
+      logger.debug("Push-to-start token updated")
       await registerLiveActivityStartToken(token: token)
     }
   }
@@ -831,14 +893,22 @@ final class TrainLiveActivityService: @unchecked Sendable {
   }
 
   private func monitorAlarmUpdates() async {
+    logger.debug("Starting alarm updates monitoring")
+
     for await alarms in AlarmManager.shared.alarmUpdates {
-      if Task.isCancelled { break }
+      guard !Task.isCancelled else {
+        logger.debug("Task cancelled, stopping alarm updates monitoring")
+        break
+      }
+
       for alarm in alarms {
         guard alarm.state == .alerting else { continue }
         guard let activityId = TrainAlarmService.shared.activityId(for: alarm.id) else {
+          logger.debug("No activity ID found for alarm: \(alarm.id, privacy: .public)")
           continue
         }
 
+        logger.info("Alarm triggered for activityId: \(activityId, privacy: .public)")
         await handleAlarmTriggered(for: activityId)
       }
     }

@@ -59,4 +59,22 @@ extension Date {
     }
     return arrival
   }
+
+  /// Normalize a time to a specific date (extract hour:minute and apply to target date)
+  /// This is useful for normalizing server times to user-selected dates
+  /// - Parameters:
+  ///   - time: The source time to extract hour:minute from
+  ///   - targetDate: The target date to apply the time to
+  /// - Returns: A new Date with the hour:minute from time applied to targetDate
+  static func normalizeTimeToDate(_ time: Date, to targetDate: Date) -> Date {
+    let calendar = Calendar.current
+    let components = calendar.dateComponents([.hour, .minute], from: time)
+    let startOfDay = calendar.startOfDay(for: targetDate)
+
+    guard let hour = components.hour, let minute = components.minute else {
+      return time
+    }
+
+    return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay) ?? time
+  }
 }

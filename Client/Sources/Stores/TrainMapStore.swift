@@ -152,6 +152,7 @@ extension TrainMapStore {
 extension TrainMapStore {
   func startProjectionUpdates(interval: TimeInterval = 1.0) {
     stopProjectionUpdates()
+    logger.debug("Starting projection updates with interval: \(interval)s")
     let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
       guard let self else { return }
       Task { @MainActor in
@@ -164,6 +165,9 @@ extension TrainMapStore {
   }
 
   func stopProjectionUpdates() {
+    if projectionTimer != nil {
+      logger.debug("Stopping projection updates")
+    }
     projectionTimer?.invalidate()
     projectionTimer = nil
   }
@@ -770,115 +774,75 @@ extension TrainMapStore {
       throw TrainMapError.dataMappingFailed("No journey segments found for trainId: \(trainId)")
     }
 
-    // Build journey segments and collect stations
-    // Use code-based lookup as primary method for station identification
-    let stationsByCode = Dictionary(uniqueKeysWithValues: stations.map { ($0.code, $0) })
-    let stationsById = Dictionary(uniqueKeysWithValues: stations.map { ($0.id ?? $0.code, $0) })
+    logger.info(
+      "Building journey from server data: trainId=\(trainId, privacy: .public), fromCode=\(fromCode, privacy: .public), toCode=\(toCode, privacy: .public)"
+    )
 
     // Find stations using code-based lookup (from deep link parameters)
-    guard let fromStation = stationsByCode[fromCode],
-      let toStation = stationsByCode[toCode]
+    guard
+      let stationPair = StationLookupHelper.findStationsByCodes(
+        fromCode: fromCode,
+        toCode: toCode,
+        in: self.stations
+      )
     else {
+      logger.error(
+        "Could not find stations for codes: fromCode=\(fromCode, privacy: .public), toCode=\(toCode, privacy: .public)"
+      )
       throw TrainMapError.dataMappingFailed(
         "Could not find stations for journey using codes: fromCode=\(fromCode), toCode=\(toCode)")
     }
 
-    // Create a mapping from segment station IDs to Station objects
-    // This handles cases where server station IDs don't match cached station IDs
-    var segmentIdToStation: [String: Station] = [:]
+    let fromStation = stationPair.from
+    let toStation = stationPair.to
 
-    // Map known stations from deep link
-    if let firstSegment = segments.first {
-      segmentIdToStation[firstSegment.stationId] = fromStation
-    }
-    if let lastSegment = segments.last {
-      segmentIdToStation[lastSegment.stationId] = toStation
-    }
-
-    // For other segments, try to find stations by ID or code
-    for segment in segments {
-      if segmentIdToStation[segment.stationId] == nil {
-        // Try ID lookup first
-        if let station = stationsById[segment.stationId] {
-          segmentIdToStation[segment.stationId] = station
-        } else {
-          // Try to find by matching code in station data
-          // Note: We don't have codes for intermediate stations, so we'll use ID matching
-          // If ID doesn't match, we'll need to rely on the segment having the correct ID
-          // For now, skip stations we can't match - they'll be handled in projection
-        }
-      }
-    }
-
-    var journeySegments: [JourneySegment] = []
-    var allStationsInJourney: [Station] = []
-
-    for (index, segment) in segments.enumerated() {
-      if index < segments.count - 1 {
-        let nextSegment = segments[index + 1]
-        journeySegments.append(
-          JourneySegment(
-            fromStationId: segment.stationId,
-            toStationId: nextSegment.stationId,
-            departure: segment.departure,
-            arrival: nextSegment.arrival,
-            routeId: nextSegment.routeId
-          )
-        )
-      }
-
-      // Add station if we found it
-      if let station = segmentIdToStation[segment.stationId] {
-        allStationsInJourney.append(station)
-      }
+    // Validate journey data
+    if let validationError = JourneyDataBuilder.validateJourneyData(
+      rows: segments,
+      fromStation: fromStation,
+      toStation: toStation
+    ) {
+      logger.warning("Journey validation warning: \(validationError, privacy: .public)")
     }
 
     guard let firstSegment = segments.first else {
+      logger.error("No segments found for trainId: \(trainId, privacy: .public)")
       throw TrainMapError.dataMappingFailed("Invalid journey segments")
     }
 
-    // Create a comprehensive stationsById dictionary for projection using multi-strategy approach
-    // This ensures robustness when segment IDs use different formats (server IDs vs codes)
-    let projectionStationsById: [String: Station] = {
-      var combined: [String: Station] = [:]
-
-      // Include segment-specific mappings first (highest priority)
-      for (key, station) in segmentIdToStation {
-        combined[key] = station
-      }
-
-      // Add global station mappings by ID
-      for station in stations where station.id != nil {
-        combined[station.id!] = station
-      }
-
-      // Add global station mappings by code (fallback)
-      for station in stations {
-        combined[station.code] = station
-      }
-
-      return combined
-    }()
+    // Build journey segments and collect stations using JourneyDataBuilder
+    let selectedDate = Date()  // Deep link trips use today's date
+    let stationsById = StationLookupHelper.buildStationsById(self.stations)
+    let (journeySegments, allStationsInJourney) = JourneyDataBuilder.buildSegmentsAndStations(
+      from: segments,
+      selectedDate: selectedDate,
+      stationsById: stationsById
+    )
 
     // Build TrainJourneyData
-    let journeyData = TrainJourneyData(
+    let journeyData = JourneyDataBuilder.buildTrainJourneyData(
       trainId: trainId,
       segments: journeySegments,
       allStations: allStationsInJourney,
-      userSelectedFromStation: fromStation,
-      userSelectedToStation: toStation,
-      userSelectedDepartureTime: firstSegment.departure,
-      userSelectedArrivalTime: segments.last!.arrival,
-      selectedDate: Date()  // Deep link trips use today's date
+      fromStation: fromStation,
+      toStation: toStation,
+      userSelectedDepartureTime: Date.normalizeTimeToDate(firstSegment.departure, to: selectedDate),
+      userSelectedArrivalTime: Date.normalizeTimeToDate(segments.last!.arrival, to: selectedDate),
+      selectedDate: selectedDate
     )
 
-    // Build ProjectedTrain
-    let trainJourney = TrainJourney(
-      id: firstSegment.trainCode,
+    // Build TrainJourney for projection
+    let trainJourney = JourneyDataBuilder.buildTrainJourney(
       trainId: trainId,
-      code: firstSegment.trainCode,
-      name: firstSegment.trainName,
+      trainCode: firstSegment.trainCode,
+      trainName: firstSegment.trainName,
       segments: journeySegments
+    )
+
+    // Build comprehensive station lookup for projection
+    let projectionStationsById = StationLookupHelper.buildComprehensiveLookup(
+      stations: self.stations,
+      journeyStations: allStationsInJourney
     )
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
@@ -942,48 +906,45 @@ extension TrainMapStore {
   }
 
   private func projectSelectedTrain(now: Date = Date()) -> ProjectedTrain? {
-    guard let selectedTrain, let selectedJourneyData else { return nil }
+    guard let selectedTrain, let selectedJourneyData else {
+      logger.debug("Cannot project train: selectedTrain or selectedJourneyData is nil")
+      return nil
+    }
+
+    logger.debug(
+      "Projecting train '\(selectedTrain.name, privacy: .public)' at \(now, privacy: .public)")
 
     // Build comprehensive station lookup with multi-strategy approach
-    // This ensures TrainProjector can find all stations referenced by JourneySegment IDs
-    var stationsById: [String: Station] = [:]
-
-    // Strategy 1: Map by station.id (primary key)
-    for station in stations where station.id != nil {
-      stationsById[station.id!] = station
-    }
-
-    // Strategy 2: Map by station.code (fallback for code-based lookups)
-    for station in stations {
-      stationsById[station.code] = station
-    }
-
-    // Strategy 3: Include journey-specific stations from TrainJourneyData.allStations
-    for station in selectedJourneyData.allStations {
-      if let id = station.id {
-        stationsById[id] = station
-      }
-      stationsById[station.code] = station
-    }
+    let stationsById = StationLookupHelper.buildComprehensiveLookup(
+      stations: stations,
+      journeyStations: selectedJourneyData.allStations
+    )
 
     let routesById = Dictionary(uniqueKeysWithValues: routes.map { ($0.id, $0) })
 
     // Use trainId from journeyData, not selectedTrain.id (which may be journey ID)
-    let trainJourney = TrainJourney(
-      id: selectedJourneyData.trainId,
+    let trainJourney = JourneyDataBuilder.buildTrainJourney(
       trainId: selectedJourneyData.trainId,
-      code: selectedTrain.code,
-      name: selectedTrain.name,
+      trainCode: selectedTrain.code,
+      trainName: selectedTrain.name,
       segments: selectedJourneyData.segments
     )
 
-    return TrainProjector.projectTrain(
-      now: now,
-      journey: trainJourney,
-      stationsById: stationsById,
-      routesById: routesById,
-      selectedDate: selectedJourneyData.selectedDate
-    )
+    guard
+      let projected = TrainProjector.projectTrain(
+        now: now,
+        journey: trainJourney,
+        stationsById: stationsById,
+        routesById: routesById,
+        selectedDate: selectedJourneyData.selectedDate
+      )
+    else {
+      logger.error("Failed to project train '\(selectedTrain.name, privacy: .public)'")
+      return nil
+    }
+
+    logger.debug("Successfully projected train '\(projected.name, privacy: .public)'")
+    return projected
   }
 }
 

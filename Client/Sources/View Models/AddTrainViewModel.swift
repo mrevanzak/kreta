@@ -130,7 +130,9 @@ extension AddTrainView {
           departureStationId: departureId
         )
       } catch {
-        print("Failed to fetch connected stations: \(error)")
+        print(
+          "Failed to fetch connected stations for departureId: \(departureId), error: \(error.localizedDescription)"
+        )
         connectedStations = []
       }
     }
@@ -174,7 +176,9 @@ extension AddTrainView {
 
         filteredTrains = items
       } catch {
-        print("Failed to fetch available trains: \(error)")
+        print(
+          "Failed to fetch available trains for route: departureId=\(departureId), arrivalId=\(arrivalId), error: \(error.localizedDescription)"
+        )
         filteredTrains = []
       }
     }
@@ -194,69 +198,76 @@ extension AddTrainView {
 
     /// Build and select a ProjectedTrain from a selected list item
     func didSelect(_ item: JourneyService.AvailableTrainItem) async -> ProjectedTrain {
-      let stationsById = Dictionary(
-        uniqueKeysWithValues: allStations.map { ($0.id ?? $0.code, $0) })
-      let fromStation = stationsById[item.fromStationId]
-      let toStation = stationsById[item.toStationId]
-
-      // Fetch journey segments for the complete route
-      var journeySegments: [JourneySegment] = []
-      var allStationsInJourney: [Station] = []
+      let stationsById = StationLookupHelper.buildStationsById(allStations)
+      guard
+        let fromStation = stationsById[item.fromStationId]
+          ?? StationLookupHelper.findStation(
+            by: item.fromStationId,
+            in: allStations
+          ),
+        let toStation = stationsById[item.toStationId]
+          ?? StationLookupHelper.findStation(
+            by: item.toStationId,
+            in: allStations
+          )
+      else {
+        print(
+          "Failed to find stations for train item: fromStationId=\(item.fromStationId), toStationId=\(item.toStationId)"
+        )
+        // Return a minimal ProjectedTrain as fallback
+        return ProjectedTrain(
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          position: Position(latitude: 0, longitude: 0),
+          moving: false,
+          bearing: nil,
+          routeIdentifier: item.routeId,
+          speedKph: nil,
+          fromStation: nil,
+          toStation: nil,
+          segmentDeparture: item.segmentDeparture,
+          segmentArrival: item.segmentArrival,
+          progress: nil,
+          journeyDeparture: item.segmentDeparture,
+          journeyArrival: item.segmentArrival
+        )
+      }
 
       // Normalize times to the selected date
       let targetDate = selectedDate ?? Date()
-      let normalizedUserDeparture = normalizeTimeToDate(item.segmentDeparture, to: targetDate)
+      let normalizedUserDeparture = Date.normalizeTimeToDate(item.segmentDeparture, to: targetDate)
       let normalizedUserArrival = Date.normalizeArrivalTime(
         departure: normalizedUserDeparture,
-        arrival: normalizeTimeToDate(item.segmentArrival, to: targetDate)
+        arrival: Date.normalizeTimeToDate(item.segmentArrival, to: targetDate)
       )
 
       do {
         let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
 
-        // Convert to JourneySegment model
-        for (index, segment) in segments.enumerated() {
-          if index < segments.count - 1 {
-            let nextSegment = segments[index + 1]
-
-            // Normalize segment times to selected date
-            let normalizedDeparture = normalizeTimeToDate(segment.departure, to: targetDate)
-            let normalizedArrival = Date.normalizeArrivalTime(
-              departure: normalizedDeparture,
-              arrival: normalizeTimeToDate(nextSegment.arrival, to: targetDate)
-            )
-
-            // Use nextSegment.routeId because the route connects TO the next station
-            journeySegments.append(
-              JourneySegment(
-                fromStationId: segment.stationId,
-                toStationId: nextSegment.stationId,
-                departure: normalizedDeparture,
-                arrival: normalizedArrival,
-                routeId: nextSegment.routeId
-              )
-            )
-          }
-
-          // Collect all stations
-          if let station = stationsById[segment.stationId] {
-            allStationsInJourney.append(station)
-          }
-        }
+        // Build journey segments and collect stations using JourneyDataBuilder
+        let (journeySegments, allStationsInJourney) = JourneyDataBuilder.buildSegmentsAndStations(
+          from: segments,
+          selectedDate: targetDate,
+          stationsById: stationsById
+        )
 
         // Store journey data separately
-        trainJourneyData[item.trainId] = TrainJourneyData(
+        trainJourneyData[item.trainId] = JourneyDataBuilder.buildTrainJourneyData(
           trainId: item.trainId,
           segments: journeySegments,
           allStations: allStationsInJourney,
-          userSelectedFromStation: fromStation!,
-          userSelectedToStation: toStation!,
+          fromStation: fromStation,
+          toStation: toStation,
           userSelectedDepartureTime: normalizedUserDeparture,
           userSelectedArrivalTime: normalizedUserArrival,
           selectedDate: targetDate
         )
       } catch {
-        print("Failed to fetch journey segments: \(error)")
+        print(
+          "Failed to fetch journey segments for trainId: \(item.trainId), error: \(error.localizedDescription)"
+        )
+        // Continue with available data - we still have the basic train info
       }
 
       // Track selected train
@@ -268,8 +279,8 @@ extension AddTrainView {
         code: item.code,
         name: item.name,
         position: Position(
-          latitude: fromStation?.position.latitude ?? 0,
-          longitude: fromStation?.position.longitude ?? 0
+          latitude: fromStation.position.latitude,
+          longitude: fromStation.position.longitude
         ),
         moving: false,
         bearing: nil,
@@ -507,17 +518,5 @@ extension AddTrainView {
       return nil
     }
 
-    /// Normalize a time to a specific date (extract hour:minute and apply to target date)
-    private func normalizeTimeToDate(_ time: Date, to targetDate: Date) -> Date {
-      let calendar = Calendar.current
-      let components = calendar.dateComponents([.hour, .minute], from: time)
-      let startOfDay = calendar.startOfDay(for: targetDate)
-
-      guard let hour = components.hour, let minute = components.minute else {
-        return time
-      }
-
-      return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: startOfDay) ?? time
-    }
   }
 }
