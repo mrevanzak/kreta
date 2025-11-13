@@ -221,7 +221,7 @@ struct ActivitySmallView: View {
     case .beforeBoarding:
       BeforeBoardingSmallView(context: context)
     case .onBoard:
-      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
+      if let departureEstimatedTime = context.attributes.from.estimatedTime, let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
         VStack(spacing: 0) {
           Spacer()
           Text(timerInterval: Date()...destinationEstimatedArrival, showsHours: true)
@@ -230,7 +230,7 @@ struct ActivitySmallView: View {
             .foregroundColor(.highlight)
 
           ProgressView(
-            timerInterval: Date()...destinationEstimatedArrival,
+            timerInterval: departureEstimatedTime...destinationEstimatedArrival,
             countsDown: false,
             label: { EmptyView() },
             currentValueLabel: {
@@ -279,11 +279,11 @@ struct ActivityProgressView: View {
   let context: ActivityViewContext<TrainActivityAttributes>
 
   var body: some View {
-    if let destinationEstimatedArrival = context.attributes.destination
+    if let departureEstimatedTime = context.attributes.from.estimatedTime, let destinationEstimatedArrival = context.attributes.destination
       .estimatedTime
     {
       ProgressView(
-        timerInterval: Date()...destinationEstimatedArrival,
+        timerInterval: departureEstimatedTime...destinationEstimatedArrival,
         countsDown: false,
         label: { EmptyView() },
         currentValueLabel: {
@@ -307,7 +307,7 @@ struct TrainExpandedBottomView: View {
 
   var body: some View {
     VStack {
-      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime {
+      if let destinationEstimatedArrival = context.attributes.destination.estimatedTime, let departureEstimatedTime = context.attributes.from.estimatedTime {
         Spacer()
 
         VStack(spacing: 0) {
@@ -350,7 +350,7 @@ struct TrainExpandedBottomView: View {
           }
 
           ProgressView(
-            timerInterval: Date()...destinationEstimatedArrival,
+            timerInterval: departureEstimatedTime...destinationEstimatedArrival,
             countsDown: false,
             label: { EmptyView() },
             currentValueLabel: { EmptyView() }
