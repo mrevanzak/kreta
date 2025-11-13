@@ -32,7 +32,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
       intentIdentifiers: [],
       options: [.customDismissAction]
     )
-    notificationCenter.setNotificationCategories([tripStart])
+    let stationPromo = UNNotificationCategory(
+      identifier: "STATION_PROMO",
+      actions: [],
+      intentIdentifiers: [],
+      options: []
+    )
+    notificationCenter.setNotificationCategories([tripStart, stationPromo])
 
     // Configure telemetry SDKs early
     SentryErrorReporter.configure(

@@ -12,6 +12,7 @@ final class TrainMapStore {
   private let cacheService = TrainMapCacheService()
   private let liveActivityService = TrainLiveActivityService.shared
   private let configStore = ConfigStore.shared
+  @ObservationIgnored private let stationProximityNotifier = StationProximityNotificationService.shared
   @ObservationIgnored private let notificationCenter = UNUserNotificationCenter.current()
 
   var isLoading: Bool = false
@@ -22,7 +23,14 @@ final class TrainMapStore {
     }
   }
 
-  var stations: [Station] = []
+  var stations: [Station] = [] {
+    didSet {
+      guard oldValue != stations else { return }
+      Task { @MainActor in
+        await stationProximityNotifier.refreshTrackedStations(stations)
+      }
+    }
+  }
   var routes: [Route] = []
   var lastUpdatedAt: String?
 
