@@ -87,15 +87,39 @@ extension StationTimelineItem {
       
       // Check if train has departed from the first station
       let now = Date()
-      let firstStopDeparture = schedule.stops.first?.departureTime.flatMap { parseTimeString($0, on: selectedDate) }
+      var firstStopDeparture = schedule.stops.first?.departureTime.flatMap { parseTimeString($0, on: selectedDate) }
+      
+      // Handle midnight-spanning journeys: if last arrival time-of-day is earlier than first departure time-of-day,
+      // the journey spans midnight. If we're currently between midnight and arrival, departure was yesterday.
+      if let departure = firstStopDeparture,
+         let lastStop = schedule.stops.last,
+         let lastArrival = lastStop.arrivalTime.flatMap({ parseTimeString($0, on: selectedDate) }),
+         lastArrival < departure { // Arrival time-of-day < Departure time-of-day = midnight span
+        
+        // Check if we're between midnight and the arrival time
+        // If now < arrival (time-of-day), we're in the "next day" portion of the journey
+        if now < lastArrival {
+          // Adjust departure to yesterday
+          firstStopDeparture = calendar.date(byAdding: .day, value: -1, to: departure)
+        }
+      }
+      
       let hasTrainDeparted = firstStopDeparture.map { now >= $0 } ?? false
       
       // Check if train has arrived at user's destination (if specified)
       var hasArrivedAtDestination = false
       if let destinationId = userDestinationStationId,
-         let destinationStop = schedule.stops.first(where: { $0.stationId == destinationId }),
-         let arrivalTime = destinationStop.arrivalTime.flatMap({ parseTimeString($0, on: selectedDate) }) {
-        hasArrivedAtDestination = now >= arrivalTime
+         let destinationStop = schedule.stops.first(where: { $0.stationId == destinationId }) {
+        var arrivalTime = destinationStop.arrivalTime.flatMap({ parseTimeString($0, on: selectedDate) })
+        
+        // Handle midnight-spanning: if destination arrival is earlier than first departure (time-of-day),
+        // and we adjusted departure to yesterday, also check if we need to keep arrival as today
+        if let arrival = arrivalTime, let departure = firstStopDeparture, arrival < departure {
+          // This means arrival is in the "next day" portion - keep it as-is (today)
+          // No adjustment needed since it's already normalized to selectedDate
+        }
+        
+        hasArrivedAtDestination = arrivalTime.map { now >= $0 } ?? false
       }
       
       var items: [StationTimelineItem] = []
