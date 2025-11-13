@@ -91,6 +91,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
   private let convexClient: ConvexClient
   private let logger = Logger(subsystem: "kreta", category: "TrainLiveActivityService")
   private let stateRegistry = LiveActivityRegistry()
+  private let cacheService = TrainMapCacheService()
 
   private init(
     convexClient: ConvexClient = Dependencies.shared.convexClient
@@ -110,21 +111,48 @@ final class TrainLiveActivityService: @unchecked Sendable {
     initialJourneyState: JourneyState? = nil,
     alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
   ) async throws -> Activity<TrainActivityAttributes> {
-    let activity = try await createActivity(
-      trainName: trainName,
-      from: from,
-      destination: destination,
-      // seatClass: seatClass,
-      // seatNumber: seatNumber,
-      initialJourneyState: initialJourneyState
-    )
+    logger.info("=== TrainLiveActivityService.start() called ===")
+    logger.info("Train: \(trainName, privacy: .public)")
+    logger.info("From: \(from.name, privacy: .public) (\(from.code, privacy: .public))")
+    logger.info(
+      "Destination: \(destination.name, privacy: .public) (\(destination.code, privacy: .public))")
+    logger.info("Initial state: \(initialJourneyState?.rawValue ?? "nil", privacy: .public)")
+    logger.info("Alarm offset: \(alarmOffsetMinutes) minutes")
 
+    logger.info("Creating Activity...")
+    let activity: Activity<TrainActivityAttributes>
+    do {
+      activity = try await createActivity(
+        trainName: trainName,
+        from: from,
+        destination: destination,
+        // seatClass: seatClass,
+        // seatNumber: seatNumber,
+        initialJourneyState: initialJourneyState
+      )
+      logger.info("✅ Activity created successfully")
+      logger.info("  Activity ID: \(activity.id, privacy: .public)")
+      logger.info(
+        "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
+    } catch {
+      logger.error("❌ Failed to create Activity: \(error.localizedDescription, privacy: .public)")
+      logger.error("  Error type: \(String(describing: type(of: error)), privacy: .public)")
+      if let nsError = error as NSError? {
+        logger.error("  Domain: \(nsError.domain, privacy: .public)")
+        logger.error("  Code: \(nsError.code)")
+        logger.error("  UserInfo: \(String(describing: nsError.userInfo), privacy: .public)")
+      }
+      throw error
+    }
+
+    logger.info("Setting up activity monitoring...")
     await setupActivityMonitoring(
       for: activity,
       destination: destination,
       trainName: trainName,
       alarmOffsetMinutes: alarmOffsetMinutes
     )
+    logger.info("✅ Activity monitoring setup completed")
 
     return activity
   }
@@ -138,6 +166,9 @@ final class TrainLiveActivityService: @unchecked Sendable {
     // seatNumber: String,
     initialJourneyState: JourneyState? = nil
   ) async throws -> Activity<TrainActivityAttributes> {
+    logger.info("=== createActivity() called ===")
+    logger.info("Building attributes...")
+
     let attributes = TrainActivityAttributes(
       trainName: trainName,
       from: from,
@@ -146,15 +177,43 @@ final class TrainLiveActivityService: @unchecked Sendable {
       // seatNumber: seatNumber
     )
 
+    logger.info("Attributes created:")
+    logger.info("  Train name: \(attributes.trainName, privacy: .public)")
+    logger.info("  From: \(attributes.from.name, privacy: .public)")
+    logger.info("  Destination: \(attributes.destination.name, privacy: .public)")
+
     let initialState = initialJourneyState ?? .beforeBoarding
+    logger.info("Initial journey state: \(initialState.rawValue, privacy: .public)")
+
     let contentState = TrainActivityAttributes.ContentState(journeyState: initialState)
     let content = ActivityContent(state: contentState, staleDate: nil)
 
-    return try Activity<TrainActivityAttributes>.request(
-      attributes: attributes,
-      content: content,
-      pushType: .token
-    )
+    logger.info("Requesting Activity from ActivityKit...")
+    logger.info("  Push type: token")
+
+    do {
+      let activity = try Activity<TrainActivityAttributes>.request(
+        attributes: attributes,
+        content: content,
+        pushType: .token
+      )
+      logger.info("✅ Activity.request() succeeded")
+      logger.info("  Activity ID: \(activity.id, privacy: .public)")
+      logger.info(
+        "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
+      logger.info("  Push token available: \(activity.pushToken != nil)")
+      return activity
+    } catch {
+      logger.error("❌ Activity.request() failed")
+      logger.error("  Error: \(error.localizedDescription, privacy: .public)")
+      logger.error("  Error type: \(String(describing: type(of: error)), privacy: .public)")
+      if let nsError = error as NSError? {
+        logger.error("  Domain: \(nsError.domain, privacy: .public)")
+        logger.error("  Code: \(nsError.code)")
+        logger.error("  UserInfo: \(String(describing: nsError.userInfo), privacy: .public)")
+      }
+      throw error
+    }
   }
 
   @MainActor
@@ -240,6 +299,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
   func refreshInForeground(currentDate: Date = Date()) async {
     logger.info("Refreshing Live Activities after foreground entry")
 
+    // Refresh existing activities
     for activity in Activity<TrainActivityAttributes>.activities {
       var currentState = activity.content.state.journeyState
 
@@ -267,6 +327,114 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
       await rescheduleAlarmIfNeeded(for: activity)
     }
+
+    // Check for cached journey data and restart failed activities if needed
+    await restartFailedActivityIfNeeded()
+  }
+
+  /// Restart failed live activity if cached journey data exists but no matching activity is found
+  @MainActor
+  private func restartFailedActivityIfNeeded() async {
+    // Load cached journey data
+    guard let train = try? cacheService.loadSelectedTrain(),
+      let journeyData = try? cacheService.loadJourneyData(),
+      let fromStation = train.fromStation,
+      let toStation = train.toStation
+    else {
+      logger.debug("No cached journey data available for restarting live activity")
+      return
+    }
+
+    logger.info(
+      "Checking if live activity needs to be restarted for train \(train.name, privacy: .public)")
+
+    // Check if an activity already exists for this journey
+    let existingActivities = getActiveLiveActivities()
+    let hasActivity = existingActivities.contains { activity in
+      activity.attributes.trainName == train.name
+        && activity.attributes.from.code == fromStation.code
+        && activity.attributes.destination.code == toStation.code
+    }
+
+    guard !hasActivity else {
+      logger.debug("Live activity already exists for this journey")
+      return
+    }
+
+    logger.info("No live activity found, attempting to restart")
+
+    do {
+      let fromTrainStation = TrainStation(
+        name: fromStation.name,
+        code: fromStation.code,
+        estimatedTime: train.segmentDeparture
+      )
+      let destinationTrainStation = TrainStation(
+        name: toStation.name,
+        code: toStation.code,
+        estimatedTime: train.segmentArrival
+      )
+
+      let now = Date()
+      let isInProgress =
+        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+
+      let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
+
+      try await restartFailedActivity(
+        trainName: train.name,
+        from: fromTrainStation,
+        destination: destinationTrainStation,
+        initialJourneyState: isInProgress ? .onBoard : nil,
+        alarmOffsetMinutes: alarmOffset
+      )
+
+      logger.info("Successfully restarted live activity for train \(train.name, privacy: .public)")
+    } catch {
+      logger.error(
+        "Failed to restart live activity: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  /// Restart a live activity for a journey that should have one but doesn't
+  @MainActor
+  func restartFailedActivity(
+    trainName: String,
+    from: TrainStation,
+    destination: TrainStation,
+    initialJourneyState: JourneyState? = nil,
+    alarmOffsetMinutes: Int = AlarmPreferences.shared.defaultAlarmOffsetMinutes
+  ) async throws {
+    // Check if an activity already exists for this journey
+    let existingActivity = Activity<TrainActivityAttributes>.activities.first { activity in
+      activity.attributes.trainName == trainName
+        && activity.attributes.from.code == from.code
+        && activity.attributes.destination.code == destination.code
+    }
+
+    guard existingActivity == nil else {
+      logger.debug(
+        "Live activity already exists for train \(trainName, privacy: .public) from \(from.code, privacy: .public) to \(destination.code, privacy: .public)"
+      )
+      return
+    }
+
+    logger.info(
+      "No live activity found for train \(trainName, privacy: .public), attempting to start one"
+    )
+
+    // Start the activity
+    let activity = try await start(
+      trainName: trainName,
+      from: from,
+      destination: destination,
+      initialJourneyState: initialJourneyState,
+      alarmOffsetMinutes: alarmOffsetMinutes
+    )
+
+    logger.info(
+      "Successfully restarted live activity \(activity.id, privacy: .public) for train \(trainName, privacy: .public)"
+    )
   }
 
   @MainActor
@@ -301,7 +469,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let timerTask = Task<Void, Never> { @MainActor [weak self] in
       guard let self else { return }
       await self.scheduleDepartureTransition(for: activityId)
-      await self.stateRegistry.removeTimer(for: activityId)
+      _ = await self.stateRegistry.removeTimer(for: activityId)
     }
 
     let previousTimer = await stateRegistry.storeTimer(timerTask, for: activityId)

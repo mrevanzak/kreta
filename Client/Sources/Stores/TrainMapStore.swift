@@ -186,16 +186,31 @@ extension TrainMapStore {
     journeyData: TrainJourneyData,
     alarmOffsetMinutes: Int? = nil
   ) async throws {
+    logger.info("=== selectTrain called ===")
+    logger.info("Train: \(train.name, privacy: .public), ID: \(train.id, privacy: .public)")
+    logger.info("From station: \(train.fromStation?.name ?? "nil", privacy: .public)")
+    logger.info("To station: \(train.toStation?.name ?? "nil", privacy: .public)")
+    logger.info("Departure: \(train.segmentDeparture?.description ?? "nil", privacy: .public)")
+    logger.info("Journey data trainId: \(journeyData.trainId, privacy: .public)")
+
     selectedTrain = train
     selectedJourneyData = journeyData
     startProjectionUpdates()
 
     // Start Live Activity
-    try await startLiveActivityForTrain(
-      train: train,
-      journeyData: journeyData,
-      alarmOffsetMinutes: alarmOffsetMinutes
-    )
+    logger.info("Attempting to start Live Activity...")
+    do {
+      try await startLiveActivityForTrain(
+        train: train,
+        journeyData: journeyData,
+        alarmOffsetMinutes: alarmOffsetMinutes
+      )
+      logger.info("Live Activity start completed successfully")
+    } catch {
+      logger.error("Failed to start Live Activity: \(error.localizedDescription, privacy: .public)")
+      logger.error("Error type: \(String(describing: type(of: error)), privacy: .public)")
+      throw error
+    }
 
     // Track journey start
     if let from = train.fromStation, let to = train.toStation {
@@ -293,25 +308,46 @@ extension TrainMapStore {
     journeyData: TrainJourneyData,
     alarmOffsetMinutes: Int? = nil
   ) async throws {
+    logger.info("=== startLiveActivityForTrain called ===")
+    logger.info("Train: \(train.name, privacy: .public)")
+
+    // Validate required data
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
       let departureTime = train.segmentDeparture
     else {
-      logger.error("Missing required data for Live Activity")
-      return
+      logger.error("❌ Missing required data for Live Activity")
+      logger.error("  fromStation: \(train.fromStation?.name ?? "nil", privacy: .public)")
+      logger.error("  toStation: \(train.toStation?.name ?? "nil", privacy: .public)")
+      logger.error(
+        "  departureTime: \(train.segmentDeparture?.description ?? "nil", privacy: .public)")
+      throw TrainMapError.dataMappingFailed(
+        "Missing required data for Live Activity: fromStation=\(train.fromStation != nil), toStation=\(train.toStation != nil), departureTime=\(train.segmentDeparture != nil)"
+      )
     }
 
+    logger.info("✅ Required data validated")
+    logger.info(
+      "  From: \(fromStation.name, privacy: .public) (\(fromStation.code, privacy: .public))")
+    logger.info("  To: \(toStation.name, privacy: .public) (\(toStation.code, privacy: .public))")
+    logger.info("  Departure: \(departureTime, privacy: .public)")
+
     let timeUntilDeparture = departureTime.timeIntervalSinceNow
+    logger.info("Time until departure: \(timeUntilDeparture / 60) minutes")
+
     guard let scheduleOffset = configStore.appConfig?.tripReminder else {
-      logger.error("No trip remainder config found")
-      return
+      logger.error("❌ No trip reminder config found")
+      logger.error("  appConfig exists: \(self.configStore.appConfig != nil)")
+      throw TrainMapError.dataMappingFailed("No trip reminder configuration found")
     }
+
+    logger.info("Schedule offset: \(scheduleOffset / 60) minutes")
 
     if timeUntilDeparture <= scheduleOffset {
       cancelPendingTripReminder()
       // Start immediately on device
       logger.info(
-        "Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
+        "✅ Starting Live Activity immediately (departure in \(timeUntilDeparture / 60) minutes)")
       try await executeLiveActivityStart(
         train: train,
         journeyData: journeyData,
@@ -319,7 +355,7 @@ extension TrainMapStore {
       )
     } else {
       logger.info(
-        "Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
+        "⏰ Queuing trip reminder notification (departure in \(timeUntilDeparture / 60) minutes)")
 
       try await scheduleTripReminderNotification(
         train: train,
@@ -338,36 +374,79 @@ extension TrainMapStore {
     journeyData: TrainJourneyData,
     alarmOffsetMinutes: Int? = nil
   ) async throws {
+    logger.info("=== executeLiveActivityStart called ===")
+
     guard let fromStation = train.fromStation,
       let toStation = train.toStation,
       let departureTime = train.segmentDeparture
     else {
-      logger.error("Missing required data for Live Activity")
-      return
+      logger.error("❌ Missing required data in executeLiveActivityStart")
+      logger.error("  fromStation: \(train.fromStation?.name ?? "nil", privacy: .public)")
+      logger.error("  toStation: \(train.toStation?.name ?? "nil", privacy: .public)")
+      logger.error(
+        "  departureTime: \(train.segmentDeparture?.description ?? "nil", privacy: .public)")
+      throw TrainMapError.dataMappingFailed("Missing required data in executeLiveActivityStart")
     }
 
     let now = Date()
     let isInProgress =
       (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
-    // TODO: Replace hardcoded seat class with actual user data
-    _ = try await liveActivityService.start(
-      trainName: train.name,
-      from: TrainStation(
-        name: fromStation.name,
-        code: fromStation.code,
-        estimatedTime: departureTime
-      ),
-      destination: TrainStation(
-        name: toStation.name,
-        code: toStation.code,
-        estimatedTime: train.segmentArrival
-      ),
-      // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
-      // seatNumber: "1A",  // TODO: Replace with actual seat number
-      initialJourneyState: isInProgress ? .onBoard : nil,
-      alarmOffsetMinutes: alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
+    logger.info("Journey state check:")
+    logger.info("  Now: \(now, privacy: .public)")
+    logger.info("  Departure: \(journeyData.userSelectedDepartureTime, privacy: .public)")
+    logger.info("  Arrival: \(journeyData.userSelectedArrivalTime, privacy: .public)")
+    logger.info("  Is in progress: \(isInProgress)")
+
+    let finalAlarmOffset = alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
+    logger.info("Alarm offset: \(finalAlarmOffset) minutes")
+
+    let fromTrainStation = TrainStation(
+      name: fromStation.name,
+      code: fromStation.code,
+      estimatedTime: departureTime
     )
+    let destinationTrainStation = TrainStation(
+      name: toStation.name,
+      code: toStation.code,
+      estimatedTime: train.segmentArrival
+    )
+
+    logger.info("Calling liveActivityService.start()...")
+    logger.info("  Train name: \(train.name, privacy: .public)")
+    logger.info(
+      "  From: \(fromTrainStation.name, privacy: .public) (\(fromTrainStation.code, privacy: .public))"
+    )
+    logger.info(
+      "  Destination: \(destinationTrainStation.name, privacy: .public) (\(destinationTrainStation.code, privacy: .public))"
+    )
+    logger.info("  Initial state: \(isInProgress ? "onBoard" : "beforeBoarding", privacy: .public)")
+
+    do {
+      let activity = try await liveActivityService.start(
+        trainName: train.name,
+        from: fromTrainStation,
+        destination: destinationTrainStation,
+        // seatClass: .economy(number: 1),  // TODO: Replace with actual seat class
+        // seatNumber: "1A",  // TODO: Replace with actual seat number
+        initialJourneyState: isInProgress ? .onBoard : nil,
+        alarmOffsetMinutes: finalAlarmOffset
+      )
+      logger.info("✅ Live Activity created successfully")
+      logger.info("  Activity ID: \(activity.id, privacy: .public)")
+      logger.info(
+        "  Activity state: \(activity.content.state.journeyState.rawValue, privacy: .public)")
+    } catch {
+      logger.error(
+        "❌ Failed to create Live Activity: \(error.localizedDescription, privacy: .public)")
+      logger.error("  Error type: \(String(describing: type(of: error)), privacy: .public)")
+      if let nsError = error as NSError? {
+        logger.error("  Domain: \(nsError.domain, privacy: .public)")
+        logger.error("  Code: \(nsError.code)")
+        logger.error("  UserInfo: \(nsError.userInfo, privacy: .public)")
+      }
+      throw error
+    }
   }
 
   private func scheduleTripReminderNotification(
@@ -522,6 +601,69 @@ extension TrainMapStore {
   func loadSelectedTrainFromCache() async throws {
     selectedTrain = try cacheService.loadSelectedTrain()
     selectedJourneyData = try cacheService.loadJourneyData()
+  }
+
+  /// Restart failed live activities for the current selected journey
+  func restartFailedLiveActivityIfNeeded() async {
+    guard let train = selectedTrain,
+      let journeyData = selectedJourneyData,
+      let fromStation = train.fromStation,
+      let toStation = train.toStation
+    else {
+      logger.debug("No selected journey data available for restarting live activity")
+      return
+    }
+
+    logger.info(
+      "Checking if live activity needs to be restarted for train \(train.name, privacy: .public)")
+
+    // Check if an activity already exists
+    let existingActivities = liveActivityService.getActiveLiveActivities()
+    let hasActivity = existingActivities.contains { activity in
+      activity.attributes.trainName == train.name
+        && activity.attributes.from.code == fromStation.code
+        && activity.attributes.destination.code == toStation.code
+    }
+
+    guard !hasActivity else {
+      logger.debug("Live activity already exists for this journey")
+      return
+    }
+
+    logger.info("No live activity found, attempting to restart")
+
+    do {
+      let fromTrainStation = TrainStation(
+        name: fromStation.name,
+        code: fromStation.code,
+        estimatedTime: train.segmentDeparture
+      )
+      let destinationTrainStation = TrainStation(
+        name: toStation.name,
+        code: toStation.code,
+        estimatedTime: train.segmentArrival
+      )
+
+      let now = Date()
+      let isInProgress =
+        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
+
+      let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
+
+      try await liveActivityService.restartFailedActivity(
+        trainName: train.name,
+        from: fromTrainStation,
+        destination: destinationTrainStation,
+        initialJourneyState: isInProgress ? .onBoard : nil,
+        alarmOffsetMinutes: alarmOffset
+      )
+
+      logger.info("Successfully restarted live activity for train \(train.name, privacy: .public)")
+    } catch {
+      logger.error(
+        "Failed to restart live activity: \(error.localizedDescription, privacy: .public)"
+      )
+    }
   }
 
   /// Start trip from deep link (notification handler)

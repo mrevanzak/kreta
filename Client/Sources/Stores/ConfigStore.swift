@@ -32,9 +32,9 @@ final class ConfigStore {
       receiveCompletion: { completion in
         switch completion {
         case .finished:
-          self.logger.debug("LastUpdatedAt subscription completed")
+          self.logger.debug("AppConfig subscription completed")
         case .failure(let error):
-          self.logger.error("LastUpdatedAt subscription error: \(error)")
+          self.logger.error("AppConfig subscription error: \(error)")
         }
       },
       receiveValue: { appConfig in
