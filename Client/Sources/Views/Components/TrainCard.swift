@@ -5,8 +5,8 @@
 //  Created by Gilang Banyu Biru Erassunu on 25/10/25.
 //
 
-import SwiftUI
 import Portal
+import SwiftUI
 
 struct TrainCard: View {
   let train: ProjectedTrain
@@ -68,7 +68,7 @@ struct TrainCard: View {
             .font(.title2)
             .bold()
 
-          Text(departureStationCity)
+          Text(departureStationName)
             .font(.caption)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -99,7 +99,7 @@ struct TrainCard: View {
             .font(.title2)
             .bold()
 
-          Text(arrivalStationCity)
+          Text(arrivalStationName)
             .font(.caption)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -130,8 +130,8 @@ struct TrainCard: View {
     journeyData?.userSelectedFromStation.code ?? train.fromStation?.code ?? "--"
   }
 
-  private var departureStationCity: String {
-    journeyData?.userSelectedFromStation.city ?? train.fromStation?.city ?? "Unknown"
+  private var departureStationName: String {
+    journeyData?.userSelectedFromStation.name ?? train.fromStation?.name ?? "Unknown"
   }
 
   private var departureTime: Date? {
@@ -143,8 +143,8 @@ struct TrainCard: View {
     journeyData?.userSelectedToStation.code ?? train.toStation?.code ?? "--"
   }
 
-  private var arrivalStationCity: String {
-    journeyData?.userSelectedToStation.city ?? train.toStation?.city ?? "Unknown"
+  private var arrivalStationName: String {
+    journeyData?.userSelectedToStation.name ?? train.toStation?.name ?? "Unknown"
   }
 
   private var arrivalTime: Date? {
