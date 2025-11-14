@@ -12,7 +12,6 @@ struct HomeScreen: View {
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
   @State private var selectedDetent: PresentationDetent = .height(200)
-  @State private var showInstaView: Bool = false  // Added state for InstaView
 
   private var isPortalActive: Binding<Bool> {
     Binding(
@@ -90,11 +89,6 @@ struct HomeScreen: View {
               }
             }
             .routerPresentation(router: router)
-          }
-          // InstaView Sheet
-          .sheet(isPresented: $showInstaView) {
-            InstaView()
-              .environment(trainMapStore)
           }
       }
       .environment(trainMapStore)
@@ -207,34 +201,34 @@ struct HomeScreen: View {
 
           #if DEBUG
             Divider()
-            
+
             Menu("🧪 Proximity Debug", systemImage: "location.circle") {
               Button("Show Pending Notifications", systemImage: "list.bullet") {
                 Task {
                   await StationProximityService.shared.debugPendingNotifications()
                 }
               }
-              
+
               Button("Force Refresh Triggers", systemImage: "arrow.clockwise") {
                 Task {
                   await StationProximityService.shared.forceRefresh()
                 }
               }
-              
+
               Divider()
-              
+
               Button("Test: Malang Station", systemImage: "bell.badge.fill") {
                 Task {
                   await StationProximityService.shared.testProximityNotification(stationCode: "ML")
                 }
               }
-              
+
               Button("Test: Pasar Senen", systemImage: "bell.badge.fill") {
                 Task {
                   await StationProximityService.shared.testProximityNotification(stationCode: "PSE")
                 }
               }
-              
+
               Button("Test: Gambir", systemImage: "bell.badge.fill") {
                 Task {
                   await StationProximityService.shared.testProximityNotification(stationCode: "GMR")
