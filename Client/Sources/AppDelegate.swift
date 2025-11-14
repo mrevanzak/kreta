@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     notificationCenter.delegate = self
-    
+
     // Register notification categories
     let tripStart = UNNotificationCategory(
       identifier: "TRIP_START_FALLBACK",
@@ -34,11 +34,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
       options: [.customDismissAction]
     )
     notificationCenter.setNotificationCategories([tripStart])
-    
+
     // Register station proximity notification category
     Task { @MainActor in
       StationProximityService.shared.registerNotificationCategory()
-      StationProximityService.shared.requestLocationAuthorization()
+      // Location authorization will be requested from onboarding screen
     }
 
     // Configure telemetry SDKs early
@@ -58,13 +58,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     Task {
       // Begin monitoring ActivityKit tokens as early as possible
       await liveActivityService.startGlobalMonitoring()
-      await requestNotificationAuthorization()
-
-      // Request AlarmKit authorization
-      let authorized = await TrainAlarmService.shared.requestAuthorization()
-      if !authorized {
-        print("Unable to request AlarmKit authorization")
-      }
+      // Permission requests will be handled from onboarding screen
     }
 
     #if DEBUG

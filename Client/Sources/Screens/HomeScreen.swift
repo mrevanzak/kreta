@@ -89,6 +89,12 @@ struct HomeScreen: View {
               }
             }
             .routerPresentation(router: router)
+            .task {
+              // Show permissions onboarding on first launch
+              if !OnboardingState.hasCompletedOnboarding() {
+                router.navigate(to: .sheet(.permissionsOnboarding))
+              }
+            }
           }
       }
       .environment(trainMapStore)
