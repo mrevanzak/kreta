@@ -24,7 +24,7 @@ final class StationProximityService: NSObject, Sendable {
   private let maxRegions = 10
   
   // Notification radius around each station (in meters)
-  private let stationRadius: CLLocationDistance = 500 // 500 meters
+  private let stationRadius: CLLocationDistance = 1500 // 500 meters
   
   // Notification category identifier
   static let categoryIdentifier = "STATION_PROXIMITY"
@@ -164,7 +164,7 @@ final class StationProximityService: NSObject, Sendable {
     }
     
     logger.info("Updated proximity triggers for \(sortedStations.count) closest stations")
-    logger.info("Monitoring \(locationManager.monitoredRegions.count) regions in background")
+    logger.info("Monitoring \(self.locationManager.monitoredRegions.count) regions in background")
   }
   
   private func scheduleProximityNotification(for station: Station, distance: CLLocationDistance) async {
@@ -261,7 +261,7 @@ final class StationProximityService: NSObject, Sendable {
     
     logger.info("=== PROXIMITY NOTIFICATIONS DEBUG ===")
     logger.info("Total proximity notifications: \(proximity.count)")
-    logger.info("Total monitored regions: \(locationManager.monitoredRegions.count)")
+    logger.info("Total monitored regions: \(self.locationManager.monitoredRegions.count)")
     
     // Show monitored regions (for background geofencing)
     logger.info("--- MONITORED REGIONS (Background) ---")
@@ -295,7 +295,6 @@ final class StationProximityService: NSObject, Sendable {
     let authStatus = locationManager.authorizationStatus
     logger.info("🔐 Location authorization: \(authStatus.rawValue) (\(authStatus == .authorizedAlways ? "Always - Background OK" : authStatus == .authorizedWhenInUse ? "When In Use - Background LIMITED" : "NOT AUTHORIZED"))")
     logger.info("=====================================")
-  }
   }
   
   /// Debug: Manually trigger a test notification for a specific station
@@ -423,17 +422,20 @@ extension StationProximityService: CLLocationManagerDelegate {
   }
   
   nonisolated func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {
+    let regionId = region.identifier
     Task { @MainActor in
-      logger.debug("✅ Started monitoring region: \(region.identifier)")
+      logger.debug("✅ Started monitoring region: \(regionId)")
     }
   }
   
   nonisolated func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
+    let regionId = region?.identifier
+    let errorDesc = error.localizedDescription
     Task { @MainActor in
-      if let region = region {
-        logger.error("❌ Monitoring failed for region \(region.identifier): \(error.localizedDescription)")
+      if let regionId = regionId {
+        logger.error("❌ Monitoring failed for region \(regionId): \(errorDesc)")
       } else {
-        logger.error("❌ Monitoring failed: \(error.localizedDescription)")
+        logger.error("❌ Monitoring failed: \(errorDesc)")
       }
     }
   }
