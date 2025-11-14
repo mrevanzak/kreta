@@ -187,8 +187,8 @@ final class StationProximityService: NSObject, Sendable {
     )
     
     let content = UNMutableNotificationContent()
-    content.title = "Mendekati Stasiun"
-    content.body = "Anda sedang mendekati stasiun \(station.name) (\(station.code))"
+    content.title = "Mau naik kereta?"
+    content.body = "Yuk, track perjalananmu untuk pengalaman yang lebih nyaman. ✨"
     content.sound = .default
     content.categoryIdentifier = Self.categoryIdentifier
     
