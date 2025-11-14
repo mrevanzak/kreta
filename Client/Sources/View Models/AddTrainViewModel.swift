@@ -47,12 +47,8 @@ extension TrainJourneyData {
         // Sanity: these should meet at the same station
         let intermediateStation = prevSeg.toStationId
         if intermediateStation == nextSeg.fromStationId {
-          // Normalize arrival time for next-day journeys
-          let normalizedArrival = Date.normalizeArrivalTime(
-            departure: prevSeg.departure,
-            arrival: prevSeg.arrival
-          )
-          let dwell = nextSeg.departure.timeIntervalSince(normalizedArrival)
+          // Server already normalized times, use directly
+          let dwell = nextSeg.departure.timeIntervalSince(prevSeg.arrival)
           if dwell >= seconds { stops.append(intermediateStation) }
         } else {
           // If segments don't meet (data glitch), be conservative: don't add as stop.
@@ -163,9 +159,11 @@ extension AddTrainView {
 
         for _ in trainRoutes {
           // Fetch full journey data for trains that actually stop at both stations
+          let targetDate = selectedDate ?? Date()
           let fullItems = try await journeyService.fetchProjectedForRoute(
             departureStationId: departureId,
-            arrivalStationId: arrivalId
+            arrivalStationId: arrivalId,
+            selectedDate: targetDate
           )
 
           // Filter to only include the trains from trainStopService
@@ -234,21 +232,20 @@ extension AddTrainView {
         )
       }
 
-      // Normalize times to the selected date
+      // Server already normalized times to selected date
       let targetDate = selectedDate ?? Date()
-      let normalizedUserDeparture = Date.normalizeTimeToDate(item.segmentDeparture, to: targetDate)
-      let normalizedUserArrival = Date.normalizeArrivalTime(
-        departure: normalizedUserDeparture,
-        arrival: Date.normalizeTimeToDate(item.segmentArrival, to: targetDate)
-      )
+      let userDeparture = item.segmentDeparture
+      let userArrival = item.segmentArrival
 
       do {
-        let segments = try await journeyService.fetchSegmentsForTrain(trainId: item.trainId)
+        let segments = try await journeyService.fetchSegmentsForTrain(
+          trainId: item.trainId,
+          selectedDate: targetDate
+        )
 
         // Build journey segments and collect stations using JourneyDataBuilder
         let (journeySegments, allStationsInJourney) = JourneyDataBuilder.buildSegmentsAndStations(
           from: segments,
-          selectedDate: targetDate,
           stationsById: stationsById
         )
 
@@ -259,8 +256,8 @@ extension AddTrainView {
           allStations: allStationsInJourney,
           fromStation: fromStation,
           toStation: toStation,
-          userSelectedDepartureTime: normalizedUserDeparture,
-          userSelectedArrivalTime: normalizedUserArrival,
+          userSelectedDepartureTime: userDeparture,
+          userSelectedArrivalTime: userArrival,
           selectedDate: targetDate
         )
       } catch {
@@ -273,7 +270,7 @@ extension AddTrainView {
       // Track selected train
       AnalyticsEventService.shared.trackTrainSelected(item: item)
 
-      // Create ProjectedTrain with normalized times
+      // Create ProjectedTrain with server-normalized times
       let projected = ProjectedTrain(
         id: item.id,
         code: item.code,
@@ -288,11 +285,11 @@ extension AddTrainView {
         speedKph: nil,
         fromStation: fromStation,
         toStation: toStation,
-        segmentDeparture: normalizedUserDeparture,
-        segmentArrival: normalizedUserArrival,
+        segmentDeparture: userDeparture,
+        segmentArrival: userArrival,
         progress: nil,
-        journeyDeparture: normalizedUserDeparture,
-        journeyArrival: normalizedUserArrival
+        journeyDeparture: userDeparture,
+        journeyArrival: userArrival
       )
 
       return projected

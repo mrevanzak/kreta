@@ -200,12 +200,12 @@ struct JourneySegment: Codable, Sendable, Equatable {
     fromStationId = try container.decode(String.self, forKey: .fromStationId)
     toStationId = try container.decode(String.self, forKey: .toStationId)
 
-    // Decode milliseconds and normalize to local Date with hour:minute
+    // Decode milliseconds directly as Date (server already normalized)
     let departureMs = try container.decode(Double.self, forKey: .departureTimeMs)
-    departure = Date(fromMillisecondsSinceEpoch: departureMs)
+    departure = Date(timeIntervalSince1970: departureMs / 1000.0)
 
     let arrivalMs = try container.decode(Double.self, forKey: .arrivalTimeMs)
-    arrival = Date(fromMillisecondsSinceEpoch: arrivalMs)
+    arrival = Date(timeIntervalSince1970: arrivalMs / 1000.0)
 
     routeId = try container.decodeIfPresent(String.self, forKey: .routeId)
   }

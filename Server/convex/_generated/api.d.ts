@@ -20,6 +20,7 @@ import type * as routes from "../routes.js";
 import type * as station from "../station.js";
 import type * as train from "../train.js";
 import type * as trainStops from "../trainStops.js";
+import type * as utils_dateHelpers from "../utils/dateHelpers.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   station: typeof station;
   train: typeof train;
   trainStops: typeof trainStops;
+  "utils/dateHelpers": typeof utils_dateHelpers;
   validators: typeof validators;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

@@ -56,12 +56,12 @@ final class JourneyService {
       fromStationId = try container.decode(String.self, forKey: .fromStationId)
       toStationId = try container.decode(String.self, forKey: .toStationId)
 
-      // Decode milliseconds and normalize to local Date with hour:minute
+      // Decode milliseconds directly as Date (server already normalized)
       let departureMs = try container.decode(Int64.self, forKey: .segmentDeparture)
-      segmentDeparture = Date(fromMillisecondsSinceEpoch: departureMs)
+      segmentDeparture = Date(timeIntervalSince1970: TimeInterval(departureMs) / 1000.0)
 
       let arrivalMs = try container.decode(Int64.self, forKey: .segmentArrival)
-      segmentArrival = Date(fromMillisecondsSinceEpoch: arrivalMs)
+      segmentArrival = Date(timeIntervalSince1970: TimeInterval(arrivalMs) / 1000.0)
 
       routeId = try container.decodeIfPresent(String.self, forKey: .routeId)
       fromStationName = try container.decodeIfPresent(String.self, forKey: .fromStationName)
@@ -94,13 +94,16 @@ final class JourneyService {
 
   func fetchProjectedForRoute(
     departureStationId: String,
-    arrivalStationId: String
+    arrivalStationId: String,
+    selectedDate: Date
   ) async throws -> [AvailableTrainItem] {
+    let selectedDateMs = Double(selectedDate.timeIntervalSince1970 * 1000)
     return try await convexClient.query(
       to: "journeys:projectedForRoute",
       with: [
         "departureStationId": departureStationId,
         "arrivalStationId": arrivalStationId,
+        "selectedDate": selectedDateMs,
       ],
       yielding: [AvailableTrainItem].self
     )
@@ -127,12 +130,12 @@ final class JourneyService {
       let container = try decoder.container(keyedBy: CodingKeys.self)
       stationId = try container.decode(String.self, forKey: .stationId)
 
-      // Decode milliseconds and normalize to local Date with hour:minute
+      // Decode milliseconds directly as Date (server already normalized)
       let arrivalMs = try container.decode(Double.self, forKey: .arrivalTime)
-      arrival = Date(fromMillisecondsSinceEpoch: arrivalMs)
+      arrival = Date(timeIntervalSince1970: arrivalMs / 1000.0)
 
       let departureMs = try container.decode(Double.self, forKey: .departureTime)
-      departure = Date(fromMillisecondsSinceEpoch: departureMs)
+      departure = Date(timeIntervalSince1970: departureMs / 1000.0)
 
       trainCode = try container.decode(String.self, forKey: .trainCode)
       trainName = try container.decode(String.self, forKey: .trainName)
@@ -150,10 +153,15 @@ final class JourneyService {
     }
   }
 
-  func fetchSegmentsForTrain(trainId: String) async throws -> [TrainJourneyRow] {
+  func fetchSegmentsForTrain(trainId: String, selectedDate: Date) async throws -> [TrainJourneyRow]
+  {
+    let selectedDateMs = Double(selectedDate.timeIntervalSince1970 * 1000)
     return try await convexClient.query(
       to: "journeys:segmentsForTrain",
-      with: ["trainId": trainId],
+      with: [
+        "trainId": trainId,
+        "selectedDate": selectedDateMs,
+      ],
       yielding: [TrainJourneyRow].self
     )
   }

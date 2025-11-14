@@ -6,14 +6,13 @@ enum JourneyDataBuilder {
   private static let logger = Logger(subsystem: "kreta", category: "JourneyDataBuilder")
 
   /// Build journey segments from server response rows
-  /// Converts TrainJourneyRow array to JourneySegment array with date normalization
+  /// Converts TrainJourneyRow array to JourneySegment array
+  /// Server already normalized times to selected date
   /// - Parameters:
-  ///   - rows: Server response rows ordered by departure time
-  ///   - selectedDate: The date to normalize times to
+  ///   - rows: Server response rows ordered by departure time (already normalized)
   /// - Returns: Array of JourneySegment objects
   static func buildJourneySegments(
-    from rows: [JourneyService.TrainJourneyRow],
-    selectedDate: Date
+    from rows: [JourneyService.TrainJourneyRow]
   ) -> [JourneySegment] {
     guard rows.count >= 2 else {
       logger.warning("Insufficient rows to build journey segments: \(rows.count)")
@@ -26,19 +25,13 @@ enum JourneyDataBuilder {
       let currentRow = rows[index]
       let nextRow = rows[index + 1]
 
-      // Normalize segment times to selected date
-      let normalizedDeparture = Date.normalizeTimeToDate(currentRow.departure, to: selectedDate)
-      let normalizedArrival = Date.normalizeArrivalTime(
-        departure: normalizedDeparture,
-        arrival: Date.normalizeTimeToDate(nextRow.arrival, to: selectedDate)
-      )
-
+      // Server already normalized times, use directly
       // Use nextRow.routeId because the route connects TO the next station
       let segment = JourneySegment(
         fromStationId: currentRow.stationId,
         toStationId: nextRow.stationId,
-        departure: normalizedDeparture,
-        arrival: normalizedArrival,
+        departure: currentRow.departure,
+        arrival: nextRow.arrival,
         routeId: nextRow.routeId
       )
 
@@ -50,14 +43,15 @@ enum JourneyDataBuilder {
   }
 
   /// Build TrainJourneyData from segments and station information
+  /// Server already normalized times to selected date
   /// - Parameters:
   ///   - trainId: The train identifier
-  ///   - segments: Journey segments
+  ///   - segments: Journey segments (already normalized)
   ///   - allStations: All stations in the journey
   ///   - fromStation: User-selected departure station
   ///   - toStation: User-selected arrival station
-  ///   - userSelectedDepartureTime: User-selected departure time
-  ///   - userSelectedArrivalTime: User-selected arrival time
+  ///   - userSelectedDepartureTime: User-selected departure time (already normalized)
+  ///   - userSelectedArrivalTime: User-selected arrival time (already normalized)
   ///   - selectedDate: The date the journey is scheduled for
   /// - Returns: TrainJourneyData object
   static func buildTrainJourneyData(
@@ -70,11 +64,6 @@ enum JourneyDataBuilder {
     userSelectedArrivalTime: Date,
     selectedDate: Date
   ) -> TrainJourneyData {
-    let normalizedArrival = Date.normalizeArrivalTime(
-      departure: userSelectedDepartureTime,
-      arrival: userSelectedArrivalTime
-    )
-
     logger.debug(
       "Building TrainJourneyData for trainId='\(trainId, privacy: .public)', segments=\(segments.count), stations=\(allStations.count)"
     )
@@ -86,23 +75,22 @@ enum JourneyDataBuilder {
       userSelectedFromStation: fromStation,
       userSelectedToStation: toStation,
       userSelectedDepartureTime: userSelectedDepartureTime,
-      userSelectedArrivalTime: normalizedArrival,
+      userSelectedArrivalTime: userSelectedArrivalTime,
       selectedDate: selectedDate
     )
   }
 
   /// Build journey segments and collect all stations from server rows
+  /// Server already normalized times to selected date
   /// - Parameters:
-  ///   - rows: Server response rows
-  ///   - selectedDate: The date to normalize times to
+  ///   - rows: Server response rows (already normalized)
   ///   - stationsById: Dictionary for station lookup
   /// - Returns: Tuple of (segments, allStations)
   static func buildSegmentsAndStations(
     from rows: [JourneyService.TrainJourneyRow],
-    selectedDate: Date,
     stationsById: [String: Station]
   ) -> (segments: [JourneySegment], allStations: [Station]) {
-    let segments = buildJourneySegments(from: rows, selectedDate: selectedDate)
+    let segments = buildJourneySegments(from: rows)
 
     var allStations: [Station] = []
     var seenStationIds = Set<String>()

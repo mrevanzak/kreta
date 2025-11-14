@@ -226,12 +226,11 @@ extension TrainMapStore {
     departureTime: Date,
     arrivalTime: Date
   ) -> AlarmValidationResult {
+    // Server already normalized times, use directly
     let now = Date()
-    let normalizedArrival = Date.normalizeArrivalTime(
-      departure: departureTime, arrival: arrivalTime)
-    let minutesUntilArrival = Int(normalizedArrival.timeIntervalSince(now) / 60)
-    let journeyDurationMinutes = Int(normalizedArrival.timeIntervalSince(departureTime) / 60)
-    let alarmTime = normalizedArrival.addingTimeInterval(-Double(offsetMinutes * 60))
+    let minutesUntilArrival = Int(arrivalTime.timeIntervalSince(now) / 60)
+    let journeyDurationMinutes = Int(arrivalTime.timeIntervalSince(departureTime) / 60)
+    let alarmTime = arrivalTime.addingTimeInterval(-Double(offsetMinutes * 60))
 
     // Check 1: Journey hasn't departed yet
     if departureTime <= now {
@@ -384,19 +383,15 @@ extension TrainMapStore {
       throw TrainMapError.dataMappingFailed("Missing required data in executeLiveActivityStart")
     }
 
+    // Server already normalized times, use directly
     let now = Date()
-    let normalizedArrival = Date.normalizeArrivalTime(
-      departure: journeyData.userSelectedDepartureTime,
-      arrival: journeyData.userSelectedArrivalTime
-    )
     let isInProgress =
-      (journeyData.userSelectedDepartureTime...normalizedArrival).contains(now)
+      (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
     logger.info("Journey state check:")
     logger.info("  Now: \(now, privacy: .public)")
     logger.info("  Departure: \(journeyData.userSelectedDepartureTime, privacy: .public)")
-    logger.info("  Original Arrival: \(journeyData.userSelectedArrivalTime, privacy: .public)")
-    logger.info("  Normalized Arrival: \(normalizedArrival, privacy: .public)")
+    logger.info("  Arrival: \(journeyData.userSelectedArrivalTime, privacy: .public)")
     logger.info("  Is in progress: \(isInProgress)")
 
     let finalAlarmOffset = alarmOffsetMinutes ?? AlarmPreferences.shared.defaultAlarmOffsetMinutes
@@ -410,7 +405,7 @@ extension TrainMapStore {
     let destinationTrainStation = TrainStation(
       name: toStation.name,
       code: toStation.code,
-      estimatedTime: normalizedArrival
+      estimatedTime: journeyData.userSelectedArrivalTime
     )
 
     logger.info("Created TrainStation for destination:")
@@ -651,11 +646,7 @@ extension TrainMapStore {
     }
 
     do {
-      // Normalize arrival time for next-day journeys before creating TrainStation
-      let normalizedDestinationArrival = Date.normalizeArrivalTime(
-        departure: journeyData.userSelectedDepartureTime,
-        arrival: journeyData.userSelectedArrivalTime
-      )
+      // Server already normalized arrival time, use directly
 
       let fromTrainStation = TrainStation(
         name: fromStation.name,
@@ -665,12 +656,12 @@ extension TrainMapStore {
       let destinationTrainStation = TrainStation(
         name: toStation.name,
         code: toStation.code,
-        estimatedTime: normalizedDestinationArrival
+        estimatedTime: journeyData.userSelectedArrivalTime
       )
 
       let now = Date()
       let isInProgress =
-        (journeyData.userSelectedDepartureTime...normalizedDestinationArrival).contains(now)
+        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
       let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
@@ -768,7 +759,11 @@ extension TrainMapStore {
 
     // Fetch journey segments
     let journeyService = JourneyService()
-    let segments = try await journeyService.fetchSegmentsForTrain(trainId: trainId)
+    let selectedDate = Date()  // Deep link trips use today's date
+    let segments = try await journeyService.fetchSegmentsForTrain(
+      trainId: trainId,
+      selectedDate: selectedDate
+    )
 
     guard !segments.isEmpty else {
       throw TrainMapError.dataMappingFailed("No journey segments found for trainId: \(trainId)")
@@ -811,23 +806,26 @@ extension TrainMapStore {
     }
 
     // Build journey segments and collect stations using JourneyDataBuilder
-    let selectedDate = Date()  // Deep link trips use today's date
+    // Server already normalized times to selectedDate
     let stationsById = StationLookupHelper.buildStationsById(self.stations)
     let (journeySegments, allStationsInJourney) = JourneyDataBuilder.buildSegmentsAndStations(
       from: segments,
-      selectedDate: selectedDate,
       stationsById: stationsById
     )
 
     // Build TrainJourneyData
+    // Server already normalized times, use directly
+    guard let lastSegment = segments.last else {
+      throw TrainMapError.dataMappingFailed("No segments found")
+    }
     let journeyData = JourneyDataBuilder.buildTrainJourneyData(
       trainId: trainId,
       segments: journeySegments,
       allStations: allStationsInJourney,
       fromStation: fromStation,
       toStation: toStation,
-      userSelectedDepartureTime: Date.normalizeTimeToDate(firstSegment.departure, to: selectedDate),
-      userSelectedArrivalTime: Date.normalizeTimeToDate(segments.last!.arrival, to: selectedDate),
+      userSelectedDepartureTime: firstSegment.departure,
+      userSelectedArrivalTime: lastSegment.arrival,
       selectedDate: selectedDate
     )
 

@@ -27,12 +27,13 @@ struct StationTimelineItem: Identifiable, Equatable {
 
   /// Calculate progress between two stations based on current time
   /// Note: If departure/arrival are on a future date, progress will be 0.0
+  /// Note: Times should already be normalized by the server
   static func calculateProgress(from departure: Date?, to arrival: Date?) -> Double? {
     guard let departure = departure, let arrival = arrival else {
       return nil
     }
 
-    let normalizedArrival = Date.normalizeArrivalTime(departure: departure, arrival: arrival)
+    // Server already normalized times, use directly
     let now = Date()
     let calendar = Calendar.current
 
@@ -52,12 +53,12 @@ struct StationTimelineItem: Identifiable, Equatable {
     }
 
     // If after arrival, progress is 1
-    if now >= normalizedArrival {
+    if now >= arrival {
       return 1.0
     }
 
     // Calculate progress between 0 and 1
-    let totalDuration = normalizedArrival.timeIntervalSince(departure)
+    let totalDuration = arrival.timeIntervalSince(departure)
     let elapsed = now.timeIntervalSince(departure)
 
     return min(max(elapsed / totalDuration, 0.0), 1.0)

@@ -299,12 +299,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
     }
 
     do {
-      // Normalize arrival time for next-day journeys before creating TrainStation
-      let normalizedDestinationArrival = Date.normalizeArrivalTime(
-        departure: journeyData.userSelectedDepartureTime,
-        arrival: journeyData.userSelectedArrivalTime
-      )
-
+      // Server already normalized arrival time, use directly
       let fromTrainStation = TrainStation(
         name: fromStation.name,
         code: fromStation.code,
@@ -313,12 +308,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
       let destinationTrainStation = TrainStation(
         name: toStation.name,
         code: toStation.code,
-        estimatedTime: normalizedDestinationArrival
+        estimatedTime: journeyData.userSelectedArrivalTime
       )
 
       let now = Date()
       let isInProgress =
-        (journeyData.userSelectedDepartureTime...normalizedDestinationArrival).contains(now)
+        (journeyData.userSelectedDepartureTime...journeyData.userSelectedArrivalTime).contains(now)
 
       let alarmOffset = AlarmPreferences.shared.defaultAlarmOffsetMinutes
 
