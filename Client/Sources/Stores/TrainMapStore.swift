@@ -502,7 +502,12 @@ extension TrainMapStore {
       : String(format: "%.1f", minutes)
     content.body =
       "Kereta \(train.name) akan berangkat dalam \(minutesText) menit dari \(fromStation.name). Buka aplikasi untuk mulai melacak perjalanan."
-    content.sound = .default
+    if let soundURL = Bundle.main.url(forResource: "alert", withExtension: "wav") {
+      let sound = UNNotificationSound(named: UNNotificationSoundName(soundURL.absoluteString))
+      content.sound = sound
+    } else {
+      content.sound = UNNotificationSound.default
+    }
     content.categoryIdentifier = "TRIP_START_FALLBACK"
     content.interruptionLevel = .timeSensitive
 

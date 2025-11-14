@@ -34,6 +34,7 @@ export const triggerPush = action({
       subtitle: args.subtitle,
       body: args.body,
     };
+    note.sound = "alert.wav";
     note.aps["interruption-level"] = "time-sensitive";
     return await provider.sendNotification(note, args.deviceToken);
   },
@@ -120,6 +121,7 @@ export const startLiveActivity = action({
     note.aps["attributes-type"] = "TrainActivityAttributes";
     note.aps.attributes = attributes;
     note.alert = args.alert;
+    note.sound = "alert.wav";
     return await provider.sendNotification(note, args.startToken);
   },
 });
@@ -148,6 +150,7 @@ export const sendTripReminderPush = internalAction({
       title: args.title,
       body: args.body,
     };
+    note.sound = "alert.wav";
     note.payload = {
       deeplink: args.deeplink,
       trainId: args.trainId,
@@ -184,6 +187,7 @@ export const sendArrivalPush = internalAction({
       title: args.title,
       body: args.body,
     };
+    note.sound = "alert.wav";
     note.payload = {
       deeplink: args.deeplink,
       trainId: args.trainId,
