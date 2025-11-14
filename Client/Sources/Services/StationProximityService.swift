@@ -24,7 +24,7 @@ final class StationProximityService: NSObject, Sendable {
   private let maxRegions = 10
   
   // Notification radius around each station (in meters)
-  private let stationRadius: CLLocationDistance = 1500 // 500 meters
+  private let stationRadius: CLLocationDistance = 1000 // 500 meters
   
   // Notification category identifier
   static let categoryIdentifier = "STATION_PROXIMITY"
@@ -395,8 +395,8 @@ extension StationProximityService: CLLocationManagerDelegate {
       
       // Send notification
       let content = UNMutableNotificationContent()
-      content.title = "Mendekati Stasiun"
-      content.body = "Anda sedang mendekati stasiun \(station.name) (\(station.code))"
+      content.title = "Mau naik kereta?"
+      content.body = "Yuk, track perjalananmu untuk pengalaman yang lebih nyaman. ✨"
       content.sound = .default
       content.categoryIdentifier = Self.categoryIdentifier
       content.userInfo = [

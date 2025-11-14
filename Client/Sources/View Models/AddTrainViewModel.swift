@@ -83,7 +83,7 @@ extension AddTrainView {
 
     var currentStep: SelectionStep = .departure
     var searchText: String = ""
-    var trainSearchText: String = ""  // Separate search for train filtering
+    var selectedTrainNameFilter: String = "Semua Kereta"  // Picker selection for train filtering
     var showCalendar: Bool = false
     var isLoadingConnections: Bool = false
     var isLoadingTrains: Bool = false
@@ -349,6 +349,7 @@ extension AddTrainView {
       selectedDate = nil
       connectedStations = []
       filteredTrains = []
+      selectedTrainNameFilter = "Semua Kereta"
       showCalendar = false
       currentStep = .departure
       searchText = ""
@@ -358,6 +359,7 @@ extension AddTrainView {
       selectedArrivalStation = nil
       selectedDate = nil
       filteredTrains = []
+      selectedTrainNameFilter = "Semua Kereta"
       showCalendar = false
       currentStep = .arrival
       searchText = ""
@@ -370,6 +372,7 @@ extension AddTrainView {
     func goBackToDate() {
       selectedDate = nil
       filteredTrains = []
+      selectedTrainNameFilter = "Semua Kereta"
       showCalendar = false
       currentStep = .date
       searchText = ""
@@ -381,6 +384,7 @@ extension AddTrainView {
       selectedArrivalStation = nil
       selectedDate = nil
       searchText = ""
+      selectedTrainNameFilter = "Semua Kereta"
       connectedStations = []
       filteredTrains = []
       showCalendar = false
@@ -427,15 +431,19 @@ extension AddTrainView {
       }
     }
 
+    var uniqueTrainNames: [String] {
+      let names = Set(filteredTrains.map { $0.name }).sorted()
+      return ["Semua Kereta"] + names
+    }
+    
     var searchableTrains: [JourneyService.AvailableTrainItem] {
       let trains: [JourneyService.AvailableTrainItem]
 
-      if trainSearchText.isEmpty {
+      if selectedTrainNameFilter == "Semua Kereta" {
         trains = filteredTrains
       } else {
         trains = filteredTrains.filter { item in
-          item.name.localizedCaseInsensitiveContains(trainSearchText)
-            || item.code.localizedCaseInsensitiveContains(trainSearchText)
+          item.name == selectedTrainNameFilter
         }
       }
 

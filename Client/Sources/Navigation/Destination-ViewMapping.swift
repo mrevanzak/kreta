@@ -21,7 +21,8 @@ func view(for destination: SheetDestination) -> some View {
         .presentationDragIndicator(.hidden)
     case .addTrain:
       AddTrainView()
-        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(true)
+        .presentationDragIndicator(.hidden)
     case .shareJourney:
       ShareScreen()
         .presentationDetents([.large])

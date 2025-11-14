@@ -257,50 +257,53 @@ struct AddTrainView: View {
             .background(.backgroundPrimary)
         } else if viewModel.searchableTrains.isEmpty {
           ContentUnavailableView(
-            viewModel.trainSearchText.isEmpty ? "Tidak ada kereta tersedia" : "Tidak ditemukan",
+            viewModel.selectedTrainNameFilter == "Semua Kereta" ? "Tidak ada kereta tersedia" : "Tidak ditemukan",
             systemImage: "train.side.front.car",
             description: Text(
-              viewModel.trainSearchText.isEmpty
+              viewModel.selectedTrainNameFilter == "Semua Kereta"
                 ? "Tidak ada layanan kereta untuk rute ini pada tanggal yang dipilih"
-                : "Tidak ada kereta yang cocok dengan pencarian '\(viewModel.trainSearchText)'"
+                : "Tidak ada kereta '\(viewModel.selectedTrainNameFilter)' untuk rute ini"
             )
           )
         }
       }
 
-      // Floating search bar at top with gradient blur
+      // Floating picker at top with gradient blur
       VStack(spacing: 0) {
-        HStack(spacing: 8) {
-          Image(systemName: "magnifyingglass")
-            .font(.subheadline)
-            .foregroundStyle(.tertiary)
+        HStack {
+          ZStack {
+            // 1. Your custom label – purely visual
+            HStack(spacing: 8) {
+              Text(viewModel.selectedTrainNameFilter)
+                .foregroundStyle(.primary)
 
-          TextField("Search", text: $viewModel.trainSearchText)
-            .textFieldStyle(.plain)
-
-          if !viewModel.trainSearchText.isEmpty {
-            Button {
-              viewModel.trainSearchText = ""
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .font(.caption)
-                .symbolRenderingMode(.hierarchical)
+              Image(systemName: "chevron.down")
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
+            .frame(minWidth: 140, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+              .componentFill.opacity(isSearchBarOverContent ? 0.2 : 0.1),
+              in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .glassEffect()
+            .animation(.easeInOut(duration: 0.25), value: isSearchBarOverContent)
+
+            // 2. Invisible Picker on top – only for interaction
+            Picker("", selection: $viewModel.selectedTrainNameFilter) {
+              ForEach(viewModel.uniqueTrainNames, id: \.self) { trainName in
+                Text(trainName).tag(trainName)
+              }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .opacity(0.02)                    // clickable, but not really visible
+            .contentShape(Rectangle())        // full area tappable
           }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .if(!isSearchBarOverContent) { view in
-          view.background(
-            .componentFill.opacity(0.1), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        }
-        .if(!isSearchBarOverContent) { view in
-          view.glassEffect()
-        }
-        .if(isSearchBarOverContent) { view in
-          view.glassEffect()
+
+          Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 20)
@@ -481,3 +484,4 @@ struct ScrollOffsetPreferenceKey: PreferenceKey {
   return AddTrainView()
     .environment(store)
 }
+
