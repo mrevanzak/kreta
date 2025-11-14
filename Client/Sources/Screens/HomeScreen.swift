@@ -205,11 +205,43 @@ struct HomeScreen: View {
             router.navigate(to: .sheet(.feedback))
           }
 
-//          #if DEBUG
-//            Button("Alarm Debug", systemImage: "list.bullet") {
-//              router.navigate(to: .sheet(.alarmDebug))
-//            }
-//          #endif
+          #if DEBUG
+            Divider()
+            
+            Menu("🧪 Proximity Debug", systemImage: "location.circle") {
+              Button("Show Pending Notifications", systemImage: "list.bullet") {
+                Task {
+                  await StationProximityService.shared.debugPendingNotifications()
+                }
+              }
+              
+              Button("Force Refresh Triggers", systemImage: "arrow.clockwise") {
+                Task {
+                  await StationProximityService.shared.forceRefresh()
+                }
+              }
+              
+              Divider()
+              
+              Button("Test: Malang Station", systemImage: "bell.badge.fill") {
+                Task {
+                  await StationProximityService.shared.testProximityNotification(stationCode: "ML")
+                }
+              }
+              
+              Button("Test: Pasar Senen", systemImage: "bell.badge.fill") {
+                Task {
+                  await StationProximityService.shared.testProximityNotification(stationCode: "PSE")
+                }
+              }
+              
+              Button("Test: Gambir", systemImage: "bell.badge.fill") {
+                Task {
+                  await StationProximityService.shared.testProximityNotification(stationCode: "GMR")
+                }
+              }
+            }
+          #endif
         } label: {
           ZStack {
             Circle()
