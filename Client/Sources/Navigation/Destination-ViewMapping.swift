@@ -23,8 +23,8 @@ func view(for destination: SheetDestination) -> some View {
       AddTrainView()
         .presentationDragIndicator(.visible)
     case .shareJourney:
-      InstaView()
-        .presentationDetents([.large])  // Changed from [.medium, .large] to just [.large]
+      ShareScreen()
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     case .alarmConfiguration:
       AlarmConfigurationSheetContainer()

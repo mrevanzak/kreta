@@ -3,7 +3,7 @@ import MapKit
 
 fileprivate let kInstagramAppId = "793250190549271"
 
-struct InstaView: View {
+struct ShareScreen: View {
     @Environment(TrainMapStore.self) private var mapStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.displayScale) private var displayScale
