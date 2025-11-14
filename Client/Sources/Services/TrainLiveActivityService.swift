@@ -247,6 +247,7 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
   @MainActor
   func refreshInForeground(currentDate: Date = Date()) async {
+    var foundActivity = false
     // Refresh existing activities
     for activity in Activity<TrainActivityAttributes>.activities {
       var currentState = activity.content.state.journeyState
@@ -267,7 +268,12 @@ final class TrainLiveActivityService: @unchecked Sendable {
         currentState = .prepareToDropOff
       }
 
+      foundActivity = true
       await rescheduleAlarmIfNeeded(for: activity)
+    }
+
+    guard !foundActivity else {
+      return
     }
 
     // Check for cached journey data and restart failed activities if needed
