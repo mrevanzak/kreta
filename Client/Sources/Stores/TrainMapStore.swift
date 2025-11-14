@@ -11,6 +11,7 @@ final class TrainMapStore {
   private nonisolated(unsafe) let convexClient = Dependencies.shared.convexClient
   private let cacheService = TrainMapCacheService()
   private let liveActivityService = TrainLiveActivityService.shared
+  private let proximityService = StationProximityService.shared
   private let configStore = ConfigStore.shared
   @ObservationIgnored private let notificationCenter = UNUserNotificationCenter.current()
 
@@ -109,6 +110,9 @@ final class TrainMapStore {
           let stations = try await stationsResult
           self.stations = stations
           try cacheService.saveStations(stations)
+          
+          // Update proximity triggers with new station data
+          await proximityService.updateProximityTriggers(for: stations)
         } catch {
           logger.error("Stations fetch error: \(error)")
           throw TrainMapError.stationsFetchFailed(error.localizedDescription)
@@ -116,6 +120,9 @@ final class TrainMapStore {
 
       } else {
         try loadCachedData()
+        
+        // Update proximity triggers with cached station data
+        await proximityService.updateProximityTriggers(for: stations)
       }
 
       startProjectionUpdates()

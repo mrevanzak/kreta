@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     notificationCenter.delegate = self
+    
     // Register notification categories
     let tripStart = UNNotificationCategory(
       identifier: "TRIP_START_FALLBACK",
@@ -33,6 +34,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
       options: [.customDismissAction]
     )
     notificationCenter.setNotificationCategories([tripStart])
+    
+    // Register station proximity notification category
+    Task { @MainActor in
+      StationProximityService.shared.registerNotificationCategory()
+      StationProximityService.shared.requestLocationAuthorization()
+    }
 
     // Configure telemetry SDKs early
     SentryErrorReporter.configure(

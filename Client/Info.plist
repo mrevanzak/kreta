@@ -21,12 +21,17 @@
 	</array>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>Kreta uses AlarmKit to alert you 10 minutes before arriving at your destination station</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Kreta menggunakan lokasi Anda untuk memberitahu saat mendekati stasiun kereta</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Kreta menggunakan lokasi Anda di latar belakang untuk memberitahu saat mendekati stasiun kereta, bahkan saat aplikasi tidak sedang digunakan</string>
 	<key>POSTHOG_API_KEY</key>
 	<string>$(POSTHOG_API_KEY)</string>
 	<key>SENTRY_DSN</key>
 	<string>https://$(SENTRY_DSN)</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>location</string>
 		<string>remote-notification</string>
 	</array>
 </dict>
