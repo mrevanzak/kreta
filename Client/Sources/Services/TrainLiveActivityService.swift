@@ -155,7 +155,8 @@ final class TrainLiveActivityService: @unchecked Sendable {
 
     let initialState = initialJourneyState ?? .beforeBoarding
     let contentState = TrainActivityAttributes.ContentState(journeyState: initialState)
-    let content = ActivityContent(state: contentState, staleDate: nil)
+    let content = ActivityContent(
+      state: contentState, staleDate: destination.estimatedTime?.addingTimeInterval(10 * 60))
 
     do {
       return try Activity<TrainActivityAttributes>.request(
@@ -230,7 +231,10 @@ final class TrainLiveActivityService: @unchecked Sendable {
     let newContentState = TrainActivityAttributes.ContentState(
       journeyState: journeyState ?? contentState.journeyState,
     )
-    await activity.update(ActivityContent(state: newContentState, staleDate: nil))
+    await activity.update(
+      ActivityContent(
+        state: newContentState,
+        staleDate: activity.attributes.destination.estimatedTime?.addingTimeInterval(10 * 60)))
   }
 
   func getActiveLiveActivities() -> [Activity<TrainActivityAttributes>] {
