@@ -158,7 +158,7 @@ struct HomeScreen: View {
         .font(.subheadline)
         .foregroundStyle(Color(hex: "818181"))
     }
-    .frame(maxWidth: .infinity)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.vertical, 12)
     .padding(.horizontal)
   }

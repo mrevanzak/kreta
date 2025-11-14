@@ -134,7 +134,7 @@ struct AddTrainView: View {
             }
 
           Divider()
-            .padding(.leading, 72)
+            .padding(.horizontal)
         }
       }
     }
@@ -235,7 +235,7 @@ struct AddTrainView: View {
             }
 
             Divider()
-              .padding(.leading, 16)
+              .padding(.horizontal)
           }
 
           // Add bottom padding to prevent content from hiding under button
