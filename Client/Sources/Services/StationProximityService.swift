@@ -31,6 +31,7 @@ final class StationProximityService: NSObject, Sendable {
   
   private var currentStations: [Station] = []
   private var lastUserLocation: CLLocationCoordinate2D?
+  private var hasActiveJourney: Bool = false
   
   private override init() {
     super.init()
@@ -62,6 +63,12 @@ final class StationProximityService: NSObject, Sendable {
     @unknown default:
       logger.warning("Unknown location authorization status")
     }
+  }
+  
+  /// Update whether user currently has an active journey
+  func updateJourneyStatus(hasActiveJourney: Bool) {
+    self.hasActiveJourney = hasActiveJourney
+    logger.info("Journey status updated: hasActiveJourney = \(hasActiveJourney)")
   }
   
   /// Register the notification category for station proximity alerts
@@ -294,6 +301,7 @@ final class StationProximityService: NSObject, Sendable {
     
     let authStatus = locationManager.authorizationStatus
     logger.info("🔐 Location authorization: \(authStatus.rawValue) (\(authStatus == .authorizedAlways ? "Always - Background OK" : authStatus == .authorizedWhenInUse ? "When In Use - Background LIMITED" : "NOT AUTHORIZED"))")
+    logger.info("🚂 Active journey: \(hasActiveJourney ? "YES - notifications disabled" : "NO - notifications enabled")")
     logger.info("=====================================")
   }
   
@@ -386,6 +394,12 @@ extension StationProximityService: CLLocationManagerDelegate {
     
     Task { @MainActor in
       logger.info("🎯 Entered region for station: \(stationCode)")
+      
+      // Don't send notification if user is already tracking a journey
+      guard !hasActiveJourney else {
+        logger.info("⏭️ Skipping proximity notification - user has active journey")
+        return
+      }
       
       // Find station details
       guard let station = currentStations.first(where: { $0.code == stationCode }) else {

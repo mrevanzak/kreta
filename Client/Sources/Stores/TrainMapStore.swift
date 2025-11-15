@@ -197,6 +197,9 @@ extension TrainMapStore {
     selectedTrain = train
     selectedJourneyData = journeyData
     startProjectionUpdates()
+    
+    // Update proximity service that user now has active journey
+    proximityService.updateJourneyStatus(hasActiveJourney: true)
 
     // Start Live Activity
     logger.info("Attempting to start Live Activity...")
@@ -621,6 +624,9 @@ extension TrainMapStore {
     }
 
     cancelPendingTripReminder()
+    
+    // Update proximity service that user no longer has active journey
+    proximityService.updateJourneyStatus(hasActiveJourney: false)
 
     selectedTrain = nil
     selectedJourneyData = nil
@@ -629,6 +635,14 @@ extension TrainMapStore {
   func loadSelectedTrainFromCache() async throws {
     selectedTrain = try cacheService.loadSelectedTrain()
     selectedJourneyData = try cacheService.loadJourneyData()
+    
+    // Update proximity service based on whether we have an active journey
+    let hasJourney = selectedTrain != nil && selectedJourneyData != nil
+    proximityService.updateJourneyStatus(hasActiveJourney: hasJourney)
+    
+    if selectedTrain != nil {
+      startProjectionUpdates()
+    }
   }
 
   /// Restart failed live activities for the current selected journey
