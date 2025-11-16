@@ -17,110 +17,158 @@ struct TrainCard: View {
   @State private var showingDeleteAlert = false
 
   var body: some View {
-    VStack(spacing: 0) {
-      // Header with train name and delete button (only shown when not in compact mode)
-      if !compactMode {
-        ZStack {
-          // Centered title
-          HStack(spacing: 4) {
-            Text(train.name)
-              .fontWeight(.bold)
-              .foregroundStyle(.primary)
-              .portal(id: "trainName", .source)
-            Text("(\(train.code))")
-              .fontWeight(.bold)
-              .foregroundStyle(.sublime)
-              .portal(id: "trainCode", .source)
+    if compactMode {
+      compactView
+    } else {
+      fullSheetView
+    }
+  }
+  
+  // MARK: - Compact Mode View
+  
+  private var compactView: some View {
+    // Journey details with train image in HStack
+    HStack(alignment: .top, spacing: 10) {
+      // Departure station
+      VStack(spacing: 4) {
+        Text(departureStationCode)
+          .font(.title2)
+          .bold()
 
-          }
-          .frame(maxWidth: .infinity)
+        Text(departureStationName)
+          .font(.caption)
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
 
-          // Delete button aligned to trailing
-          HStack {
-            Spacer()
-
-            Button(action: {
-              showingDeleteAlert = true
-            }) {
-              Image(systemName: "trash")
-                .foregroundStyle(.red)
-            }
-            .alert("Hapus Tracking Kereta?", isPresented: $showingDeleteAlert) {
-              Button("Hapus", role: .destructive) {
-                onDelete()
-              }
-              Button("Batal", role: .cancel) {}
-            } message: {
-              Text("Kreta akan berhenti melacak \(train.name) (\(train.code))")
-            }
-          }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(.backgroundPrimary)
+        Text(formatTime(departureTime))
+          .font(.caption)
+          .foregroundStyle(.secondary)
       }
+      .frame(maxWidth: .infinity)
 
-      // Journey details
+      // Train icon - aligned with station codes
+      VStack(spacing: 4) {
+        Image("keretaDark")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 120)
+          .frame(maxWidth: .infinity)
+        
+        Text("Tiba dalam")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        
+        Text(formattedDurationTime())
+          .font(.caption)
+          .fontWeight(.semibold)
+          .foregroundStyle(.blue)
+          .multilineTextAlignment(.center)
+      }
+      .frame(maxWidth: .infinity)
+
+      // Arrival station
+      VStack(spacing: 4) {
+        Text(arrivalStationCode)
+          .font(.title2)
+          .bold()
+
+        Text(arrivalStationName)
+          .font(.caption)
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
+
+        Text(formatTime(arrivalTime))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity)
+    }
+    .padding(.horizontal)
+    .padding(.vertical, 16)
+  }
+  
+  // MARK: - Full Sheet View
+  
+  private var fullSheetView: some View {
+    VStack(spacing: 0) {
+      // Train image at top of journey details
+      Image("keretaDark")
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(width: 140, height: 20)
+        .padding(.top, 8)
+      
+      // Journey details without train image
       HStack(spacing: 10) {
-        // Departure station (use user selection if available)
+        // Departure station
         VStack(spacing: 4) {
           Text(departureStationCode)
-            .font(.title2)
+            .font(.title)
             .bold()
 
           Text(departureStationName)
-            .font(.caption)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            .font(.subheadline)
 
           Text(formatTime(departureTime))
-            .font(.caption)
+            .font(.subheadline)
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+        
+        Spacer()
 
-        // Train icon and duration
-        VStack(spacing: 8) {
-          Image("keretaDark")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 120)
-
-          Text(formattedDuration())
+        // Duration (separated text)
+        VStack(spacing: 4) {
+          Text("Tiba dalam")
             .font(.caption)
+            .foregroundStyle(.secondary)
+          
+          Text(formattedDurationTime())
+            .font(.caption)
+            .fontWeight(.semibold)
             .foregroundStyle(.blue)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+        
+        Spacer()
 
-        // Arrival station (use user selection if available)
+        // Arrival station
         VStack(spacing: 4) {
           Text(arrivalStationCode)
-            .font(.title2)
+            .font(.title)
             .bold()
 
           Text(arrivalStationName)
-            .font(.caption)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            .font(.subheadline)
 
           Text(formatTime(arrivalTime))
-            .font(.caption)
+            .font(.subheadline)
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
       }
-      .padding(.horizontal)
-      .padding(.vertical, 16)
-      .if(!compactMode) { view in
-        view.background(.backgroundPrimary)
+//      .padding(.top, 12)
+      .frame(maxWidth: .infinity)
+      
+      // Share button at bottom
+      Button(action: {
+        // Share action
+      }) {
+        HStack(spacing: 8) {
+          Image(systemName: "square.and.arrow.up")
+          Text("Share Perjalanan")
+            .fontWeight(.semibold)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical)
+        .glassEffect()
+        .foregroundStyle(.lessDark)
+        .cornerRadius(20)
       }
+      .padding(.vertical)
     }
-    .clipShape(RoundedRectangle(cornerRadius: 20))
-    .if(compactMode) { view in
-      view.shadow(color: .black.opacity(0.25), radius: 4, y: 4)
-    }
-
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 
   // MARK: - Computed Properties
@@ -153,7 +201,7 @@ struct TrainCard: View {
 
   // MARK: - Helper Functions
 
-  // Helper function to format duration
+  // Helper function to format duration (with status text)
   private func formattedDuration() -> String {
     guard let departure = departureTime, let arrival = arrivalTime else {
       return "Waktu tidak tersedia"
@@ -187,6 +235,42 @@ struct TrainCard: View {
       return "Tiba Dalam \(minutes)Menit"
     } else {
       return "Tiba Sebentar Lagi"
+    }
+  }
+  
+  // Helper function to format duration time only (without "Tiba dalam" prefix)
+  private func formattedDurationTime() -> String {
+    guard let departure = departureTime, let arrival = arrivalTime else {
+      return "Waktu tidak tersedia"
+    }
+
+    let now = Date()
+
+    // Check if train hasn't departed yet
+    if now < departure {
+      return "Kereta belum berangkat"
+    }
+
+    // Check if train has already arrived
+    if now >= arrival {
+      return "Sudah Tiba"
+    }
+
+    // Calculate time remaining until arrival
+    let timeInterval = arrival.timeIntervalSince(now)
+    let totalMinutes = Int(timeInterval / 60)
+
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
+
+    if hours > 0 && minutes > 0 {
+      return "\(hours) Jam \(minutes) Menit"
+    } else if hours > 0 {
+      return "\(hours) Jam"
+    } else if minutes > 0 {
+      return "\(minutes) Menit"
+    } else {
+      return "Sebentar Lagi"
     }
   }
 
@@ -234,7 +318,7 @@ struct TrainCard: View {
     Color.gray.opacity(0.2)
       .ignoresSafeArea()
 
-    TrainCard(train: train, journeyData: nil, onDelete: {}, compactMode: true)
+    TrainCard(train: train, journeyData: nil, onDelete: {}, compactMode: false)
       .padding()
   }
 }

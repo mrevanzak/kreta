@@ -301,7 +301,7 @@ final class StationProximityService: NSObject, Sendable {
     
     let authStatus = locationManager.authorizationStatus
     logger.info("🔐 Location authorization: \(authStatus.rawValue) (\(authStatus == .authorizedAlways ? "Always - Background OK" : authStatus == .authorizedWhenInUse ? "When In Use - Background LIMITED" : "NOT AUTHORIZED"))")
-    logger.info("🚂 Active journey: \(hasActiveJourney ? "YES - notifications disabled" : "NO - notifications enabled")")
+    logger.info("🚂 Active journey: \(self.hasActiveJourney ? "YES - notifications disabled" : "NO - notifications enabled")")
     logger.info("=====================================")
   }
   

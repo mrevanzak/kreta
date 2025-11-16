@@ -11,13 +11,13 @@ struct HomeScreen: View {
 
   @State private var isFollowing: Bool = true
   @State private var focusTrigger: Bool = false
-  @State private var selectedDetent: PresentationDetent = .height(200)
+  @State private var selectedDetent: PresentationDetent = .height(250)
 
   private var isPortalActive: Binding<Bool> {
     Binding(
       get: { selectedDetent == .large },
       set: { active in
-        selectedDetent = active ? .large : .height(200)
+        selectedDetent = active ? .large : .height(250)
       }
     )
   }
@@ -63,14 +63,14 @@ struct HomeScreen: View {
                   journeyData: trainMapStore.selectedJourneyData,
                   onDelete: {
                     deleteTrain()
-                    selectedDetent = .height(200)
+                    selectedDetent = .height(250)
                   }
                 )
               } else if selectedDetent == .height(80), let train = trainMapStore.selectedTrain {
                 // Minimal view with train name and destination
                 minimalTrainView(train: trainMapStore.liveTrainPosition ?? train)
               } else {
-                // Compact view with train card or add button
+                // Compact view with train name header and train card or add button
                 compactBottomSheet
               }
             }
@@ -85,7 +85,7 @@ struct HomeScreen: View {
               if newValue == nil {
                 selectedDetent = .fraction(0.35)
               } else if oldValue?.id != newValue?.id {
-                selectedDetent = .height(200)
+                selectedDetent = .height(250)
               }
             }
             .routerPresentation(router: router)
@@ -128,7 +128,7 @@ struct HomeScreen: View {
 
   private var presentationDetents: Set<PresentationDetent> {
     if trainMapStore.selectedTrain != nil {
-      return [.height(80), .height(200), .large]
+      return [.height(80), .height(250), .large]
     } else {
       return [.fraction(0.35)]
     }
@@ -160,14 +160,170 @@ struct HomeScreen: View {
   @ViewBuilder
   private var compactBottomSheet: some View {
     VStack(alignment: .leading, spacing: 10) {
-      HStack {
-        Text("Perjalanan Kereta")
-          .font(.title2).bold()
-        Spacer()
+      // Show train name header if train is selected
+      if let train = trainMapStore.selectedTrain {
+        HStack(alignment: .top) {
+          VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+              Text(train.name)
+                .font(.title2)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .foregroundStyle(.primary)
+                .portal(id: "trainName", .source)
+              Text("(\(train.code))")
+                .fontWeight(.bold)
+                .foregroundStyle(.sublime)
+                .portal(id: "trainCode", .source)
+            }
+            
+            if let date = trainMapStore.selectedJourneyData?.selectedDate {
+              Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+          }
+          
+          Spacer()
+          
+          Button(action: {
+            deleteTrain()
+          }) {
+            ZStack {
+              Circle()
+                .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
+                .frame(width: 44, height: 44)
 
-        if trainMapStore.selectedTrain != nil {
-          Button {
-            router.navigate(to: .sheet(.shareJourney))
+              Circle()
+                .strokeBorder(self.gradient, lineWidth: 1)
+                .opacity(1 * 1.2)
+                .frame(width: 44, height: 44)
+
+              Image(systemName: "trash")
+                .foregroundStyle(.textSecondary)
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
+
+          }
+          
+          HStack(spacing: 12) {
+            Menu {
+              Button("Atur Alarm Kedatangan", systemImage: "bell.badge") {
+                router.navigate(to: .sheet(.alarmConfiguration))
+              }
+              
+              Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
+                router.navigate(to: .sheet(.feedback))
+              }
+
+              #if DEBUG
+                Divider()
+
+                Menu("🧪 Proximity Debug", systemImage: "location.circle") {
+                  Button("Show Pending Notifications", systemImage: "list.bullet") {
+                    Task {
+                      await StationProximityService.shared.debugPendingNotifications()
+                    }
+                  }
+
+                  Button("Force Refresh Triggers", systemImage: "arrow.clockwise") {
+                    Task {
+                      await StationProximityService.shared.forceRefresh()
+                    }
+                  }
+
+                  Divider()
+
+                  Button("Test: Malang Station", systemImage: "bell.badge.fill") {
+                    Task {
+                      await StationProximityService.shared.testProximityNotification(stationCode: "ML")
+                    }
+                  }
+
+                  Button("Test: Pasar Senen", systemImage: "bell.badge.fill") {
+                    Task {
+                      await StationProximityService.shared.testProximityNotification(stationCode: "PSE")
+                    }
+                  }
+
+                  Button("Test: Gambir", systemImage: "bell.badge.fill") {
+                    Task {
+                      await StationProximityService.shared.testProximityNotification(stationCode: "GMR")
+                    }
+                  }
+                }
+              #endif
+            } label: {
+              ZStack {
+                Circle()
+                  .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
+                  .frame(width: 44, height: 44)
+
+                Circle()
+                  .strokeBorder(self.gradient, lineWidth: 1)
+                  .opacity(1 * 1.2)
+                  .frame(width: 44, height: 44)
+
+                Image(systemName: "ellipsis")
+                  .foregroundStyle(.textSecondary)
+              }
+              .frame(width: 44, height: 44)
+              .contentShape(Circle())
+
+            }
+          }
+        }
+      } else {
+        // Show "Perjalanan Kereta" only when no train is selected
+        HStack {
+          Text("Perjalanan Kereta")
+            .font(.title2).bold()
+          Spacer()
+
+          Menu {
+            Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
+              router.navigate(to: .sheet(.feedback))
+            }
+
+            #if DEBUG
+              Divider()
+
+              Menu("🧪 Proximity Debug", systemImage: "location.circle") {
+                Button("Show Pending Notifications", systemImage: "list.bullet") {
+                  Task {
+                    await StationProximityService.shared.debugPendingNotifications()
+                  }
+                }
+
+                Button("Force Refresh Triggers", systemImage: "arrow.clockwise") {
+                  Task {
+                    await StationProximityService.shared.forceRefresh()
+                  }
+                }
+
+                Divider()
+
+                Button("Test: Malang Station", systemImage: "bell.badge.fill") {
+                  Task {
+                    await StationProximityService.shared.testProximityNotification(stationCode: "ML")
+                  }
+                }
+
+                Button("Test: Pasar Senen", systemImage: "bell.badge.fill") {
+                  Task {
+                    await StationProximityService.shared.testProximityNotification(stationCode: "PSE")
+                  }
+                }
+
+                Button("Test: Gambir", systemImage: "bell.badge.fill") {
+                  Task {
+                    await StationProximityService.shared.testProximityNotification(stationCode: "GMR")
+                  }
+                }
+              }
+            #endif
           } label: {
             ZStack {
               Circle()
@@ -179,79 +335,12 @@ struct HomeScreen: View {
                 .opacity(1 * 1.2)
                 .frame(width: 44, height: 44)
 
-              Image(systemName: "square.and.arrow.up")
+              Image(systemName: "ellipsis")
                 .foregroundStyle(.textSecondary)
             }
-            .frame(width: 44, height: 44)  // Larger tap area
-            .contentShape(Circle())  // Make entire area tappable
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
           }
-          .padding(.trailing, 4)
-        }
-
-        Menu {
-          if trainMapStore.selectedTrain != nil, trainMapStore.selectedJourneyData != nil {
-            Button("Atur Alarm Kedatangan", systemImage: "bell.badge") {
-              router.navigate(to: .sheet(.alarmConfiguration))
-            }
-          }
-
-          Button("Feedback Board", systemImage: "bubble.left.and.bubble.right") {
-            router.navigate(to: .sheet(.feedback))
-          }
-
-          #if DEBUG
-            Divider()
-
-            Menu("🧪 Proximity Debug", systemImage: "location.circle") {
-              Button("Show Pending Notifications", systemImage: "list.bullet") {
-                Task {
-                  await StationProximityService.shared.debugPendingNotifications()
-                }
-              }
-
-              Button("Force Refresh Triggers", systemImage: "arrow.clockwise") {
-                Task {
-                  await StationProximityService.shared.forceRefresh()
-                }
-              }
-
-              Divider()
-
-              Button("Test: Malang Station", systemImage: "bell.badge.fill") {
-                Task {
-                  await StationProximityService.shared.testProximityNotification(stationCode: "ML")
-                }
-              }
-
-              Button("Test: Pasar Senen", systemImage: "bell.badge.fill") {
-                Task {
-                  await StationProximityService.shared.testProximityNotification(stationCode: "PSE")
-                }
-              }
-
-              Button("Test: Gambir", systemImage: "bell.badge.fill") {
-                Task {
-                  await StationProximityService.shared.testProximityNotification(stationCode: "GMR")
-                }
-              }
-            }
-          #endif
-        } label: {
-          ZStack {
-            Circle()
-              .strokeBorder(.gray.opacity(0.2), lineWidth: 1)
-              .frame(width: 44, height: 44)
-
-            Circle()
-              .strokeBorder(self.gradient, lineWidth: 1)
-              .opacity(1 * 1.2)
-              .frame(width: 44, height: 44)
-
-            Image(systemName: "ellipsis")
-              .foregroundStyle(.textSecondary)
-          }
-          .frame(width: 44, height: 44)  // Larger tap area
-          .contentShape(Circle())  // Make entire area tappable
         }
       }
 
