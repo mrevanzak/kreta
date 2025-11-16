@@ -29,6 +29,10 @@ func view(for destination: SheetDestination) -> some View {
         .presentationDragIndicator(.visible)
     case .alarmConfiguration:
       AlarmConfigurationSheetContainer()
+    case .permissionsOnboarding:
+      PermissionsOnboardingScreen()
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
   }
 }
