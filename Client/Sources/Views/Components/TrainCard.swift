@@ -9,6 +9,7 @@ import Portal
 import SwiftUI
 
 struct TrainCard: View {
+  @Environment(Router.self) private var router
   let train: ProjectedTrain
   let journeyData: TrainJourneyData?
   let onDelete: () -> Void
@@ -120,12 +121,12 @@ struct TrainCard: View {
         // Duration (separated text)
         VStack(spacing: 4) {
           Text("Tiba dalam")
-            .font(.caption)
+            .font(.subheadline)
             .foregroundStyle(.secondary)
           
           Text(formattedDurationTime())
-            .font(.caption)
-            .fontWeight(.semibold)
+            .font(.headline)
+            .fontWeight(.bold)
             .foregroundStyle(.blue)
             .multilineTextAlignment(.center)
         }
@@ -148,12 +149,12 @@ struct TrainCard: View {
         }
         .frame(maxWidth: .infinity)
       }
-//      .padding(.top, 12)
       .frame(maxWidth: .infinity)
       
       // Share button at bottom
       Button(action: {
         // Share action
+        router.navigate(to: .sheet(.shareJourney))
       }) {
         HStack(spacing: 8) {
           Image(systemName: "square.and.arrow.up")
@@ -162,11 +163,11 @@ struct TrainCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical)
-        .glassEffect()
-        .foregroundStyle(.lessDark)
+        .glassEffect(.regular.tint(.backgroundPrimary.opacity(0.15)))
+        .foregroundStyle(.textSecondary)
         .cornerRadius(20)
       }
-      .padding(.vertical)
+      .padding(.top)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
